@@ -1,10 +1,16 @@
 document.addEventListener("DOMContentLoaded", () => {
+  const tocContainer = document.getElementById("toc");
+  if (!tocContainer) return;
+
   const headers = [...document.querySelectorAll("h2, h3")];
+  if (headers.length === 0) return;
+
   const toc = [];
   let lastH2 = null;
-  let previousToc = [];
   let previousH2Id = null;
   let previousH3Id = null;
+  let lastActiveH2Id = null;
+  let lastActiveH3Id = null;
 
   headers.forEach((header) => {
     const title = header.textContent.trim();
@@ -30,12 +36,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  const tocItems = (tocContainer.children[1] && tocContainer.children[1].children) || [];
+
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
         const id = entry.target.id;
         const isVisible = !!entry.intersectionRatio;
-        const isH2 = toc.findIndex((h2) => h2.id === id) !== -1;
         toc.forEach((h2) => {
           if (h2.id === id) {
             h2.visible = isVisible;
@@ -60,6 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
       });
+
       const activeH2Index = toc.findIndex(
         (tocItem) => tocItem.passiveVisible || tocItem.visible,
       );
@@ -80,23 +88,63 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       const activeH2 = toc.find((item) =>
-        typeof anchoringId !== undefined && anchoringId
+        typeof anchoringId !== "undefined" && anchoringId
           ? item.id === anchoringId
           : item.active,
       );
+
+      let targetH2Id = null;
+      let targetH3Id = null;
+
       if (activeH2) {
-        if (isEqual(toc, previousToc) && !anchoringId) {
-          return;
+        targetH2Id = activeH2.id;
+        const activeH3 = (activeH2.children || []).find((item) => item.active);
+        targetH3Id = activeH3 ? activeH3.id : null;
+      } else {
+        const isScrollingUp = window.scrollY < previousScrollY;
+        if (isScrollingUp) {
+          const previousH2Index = toc.findIndex((h2) => h2.id === previousH2Id);
+          const previousH3ParentIndex = toc.findIndex((h2) =>
+            h2 && h2.children && h2.children.find((h3) => h3.id === previousH3Id),
+          );
+          let targetH2Index = 0;
+          if (!previousH3Id || previousH3ParentIndex > previousH2Index) {
+            targetH2Index = previousH2Index - 1;
+          } else {
+            targetH2Index = previousH3ParentIndex;
+          }
+          const newActiveH2 = toc[targetH2Index];
+          if (newActiveH2) {
+            targetH2Id = newActiveH2.id;
+            let activeH3Index = (newActiveH2.children ? newActiveH2.children.length : 0) - 1;
+            if (newActiveH2.children && newActiveH2.children.find((h3) => h3.id === previousH3Id)) {
+              const previousH3Index = newActiveH2.children.findIndex(
+                (h3) => h3.id === previousH3Id,
+              );
+              activeH3Index =
+                previousH3Index - 1 > -1 ? previousH3Index - 1 : 0;
+            }
+            targetH3Id = (newActiveH2.children && newActiveH2.children[activeH3Index] && newActiveH2.children[activeH3Index].id) || null;
+          }
         } else {
-          previousToc = cloneDeep(toc);
+          targetH2Id = previousH2Id;
+          targetH3Id = previousH3Id;
         }
-        if (activeH2?.children?.every((h3) => !h3?.active)) {
+      }
+
+      if (targetH2Id) {
+        if (lastActiveH2Id === targetH2Id && lastActiveH3Id === targetH3Id && !anchoringId) {
+          return;
+        }
+        lastActiveH2Id = targetH2Id;
+        lastActiveH3Id = targetH3Id;
+
+        if (activeH2 && activeH2.children && activeH2.children.every((h3) => !h3.active)) {
           previousH3Id = null;
         }
-        const tocItems =
-          document.getElementById("toc")?.children[1]?.children || [];
-        Array.prototype.forEach.call(tocItems, (tocItem) => {
-          if (tocItem.children[0].dataset.id === activeH2.id) {
+
+        Array.from(tocItems).forEach((tocItem) => {
+          if (tocItem.children[0].dataset.id === targetH2Id) {
             tocItem.className = "toc-item-wrap active";
             tocItem.scrollIntoView({
               block: "nearest",
@@ -106,121 +154,23 @@ document.addEventListener("DOMContentLoaded", () => {
             tocItem.className = "toc-item-wrap";
           }
           const subItems = tocItem.children[1];
-          const activeH3 = (activeH2.children || []).find(
-            (item) => item.active,
-          );
           if (subItems) {
-            Array.prototype.forEach.call(
-              subItems?.children || [],
-              (subItem) => {
-                if (subItem.children[0].dataset.id === activeH3?.id) {
-                  subItem.children[0].className = "toc-sub-item-link active";
-                  subItem.children[0].scrollIntoView({
-                    block: "nearest",
-                    inline: "nearest",
-                  });
-                } else {
-                  subItem.children[0].className = "toc-sub-item-link";
-                }
-              },
-            );
+            Array.from(subItems.children || []).forEach((subItem) => {
+              if (subItem.children[0].dataset.id === targetH3Id) {
+                subItem.children[0].className = "toc-sub-item-link active";
+                subItem.children[0].scrollIntoView({
+                  block: "nearest",
+                  inline: "nearest",
+                });
+              } else {
+                subItem.children[0].className = "toc-sub-item-link";
+              }
+            });
           }
         });
+
         if (anchoringId) {
           anchoringId = null;
-        }
-      } else {
-        const isScrollingUp = window.scrollY < previousScrollY;
-        if (isScrollingUp) {
-          const previousH2 = toc.find((h2) => h2.id === previousH2Id);
-          const previousH2Index = toc.findIndex((h2) => h2.id === previousH2Id);
-          const previousH3ParentIndex = toc.findIndex((h2) =>
-            h2?.children?.find((h3) => h3.id === previousH3Id),
-          );
-          const newToc = cloneDeep(toc);
-          let targetH2Index = 0;
-          if (!previousH3Id || previousH3ParentIndex > previousH2Index) {
-            targetH2Index = previousH2Index - 1;
-          } else {
-            targetH2Index = previousH3ParentIndex;
-          }
-          newToc.forEach((h2, index) => {
-            h2.active = index === targetH2Index;
-          });
-          const newActiveH2 = newToc.find((item) => item.active);
-          if (!newActiveH2) {
-            return;
-          }
-          const tocItems =
-            document.getElementById("toc")?.children[1]?.children || [];
-          Array.prototype.forEach.call(tocItems, (tocItem) => {
-            if (tocItem.children[0].dataset.id === newActiveH2.id) {
-              tocItem.className = "toc-item-wrap active";
-              tocItem.scrollIntoView({
-                block: "nearest",
-                inline: "nearest",
-              });
-            } else {
-              tocItem.className = "toc-item-wrap";
-            }
-            const subItems = tocItem.children[1];
-            let activeH3Index = newActiveH2?.children?.length - 1;
-            if (newActiveH2?.children?.find((h3) => h3.id === previousH3Id)) {
-              const previousH3Index = newActiveH2?.children?.findIndex(
-                (h3) => h3.id === previousH3Id,
-              );
-              activeH3Index =
-                previousH3Index - 1 > -1 ? previousH3Index - 1 : 0;
-            }
-            const activeH3Id = newActiveH2?.children?.[activeH3Index]?.id;
-            if (subItems) {
-              Array.prototype.forEach.call(
-                subItems?.children || [],
-                (subItem) => {
-                  if (subItem.children[0].dataset.id === activeH3Id) {
-                    subItem.children[0].className = "toc-sub-item-link active";
-                    subItem.children[0].scrollIntoView({
-                      block: "nearest",
-                      inline: "nearest",
-                    });
-                  } else {
-                    subItem.children[0].className = "toc-sub-item-link";
-                  }
-                },
-              );
-            }
-          });
-        } else {
-          const tocItems =
-            document.getElementById("toc")?.children[1]?.children || [];
-          Array.prototype.forEach.call(tocItems, (tocItem) => {
-            if (tocItem.children[0].dataset.id === previousH2Id) {
-              tocItem.className = "toc-item-wrap active";
-              tocItem.scrollIntoView({
-                block: "nearest",
-                inline: "nearest",
-              });
-            } else {
-              tocItem.className = "toc-item-wrap";
-            }
-            const subItems = tocItem.children[1];
-            if (subItems) {
-              Array.prototype.forEach.call(
-                subItems?.children || [],
-                (subItem) => {
-                  if (subItem.children[0].dataset.id === previousH3Id) {
-                    subItem.children[0].className = "toc-sub-item-link active";
-                    subItem.children[0].scrollIntoView({
-                      block: "nearest",
-                      inline: "nearest",
-                    });
-                  } else {
-                    subItem.children[0].className = "toc-sub-item-link";
-                  }
-                },
-              );
-            }
-          });
         }
       }
     },

@@ -162,6 +162,14 @@ module.exports = function (hexo) {
     };
     if (/<\/body>/gi.test(htmlContent)) {
       htmlContent = appendToHead(settingsContent, htmlContent);
+      htmlContent = appendToHead(
+        `<link rel="preload" as="image" href="${loadingImage}" />`,
+        htmlContent,
+      );
+      htmlContent = appendToHead(
+        `<link rel="preload" as="image" href="${errorTipImage}" />`,
+        htmlContent,
+      );
       injectExtraScript(lazyLoadPath);
       injectExtraStyles(injectedStyles);
       htmlContent = htmlContent.replace(

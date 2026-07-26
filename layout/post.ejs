@@ -89,7 +89,7 @@
 <div id="page-donates"><%=__('common.donateToAuthor')%>
   <div id="donate-modal">
     <% page.donates.forEach(donateMethod => { %>
-    <img class="qr-code" src="<%=donateMethod.qrcode%>" alt="<%=donateMethod.type%>" />
+    <img class="qr-code" src="<%=url_for(donateMethod.qrcode)%>" alt="<%=donateMethod.type%>" />
     <% }); %>
   </div>
 </div>
@@ -130,10 +130,10 @@ const seriesInfo = getSeriesInfo(page?.series);
   <div class="post-nav-wrap">
     <div class="post-nav">
       <% if (previousPost) { %>
-      <a class="post-nav-item prev" target="_self" href="<%= url_for(previousPost.path) %>"><span class="item-link"><%= previousPost.title %></span><% if (previousPost.subTitle) { %><span class="sub-title"><%=previousPost.subTitle%></span><% } %><span class="nav-indicator-text"><%=__('common.prevPost')%></span></a>
+      <a class="post-nav-item prev" target="_self" href="<%=url_for(previousPost.path)%>"><span class="item-link"><%=previousPost.title %></span><% if (previousPost.subTitle) { %><span class="sub-title"><%=previousPost.subTitle%></span><% } %><span class="nav-indicator-text"><%=__('common.prevPost')%></span></a>
       <% } %>
       <% if (nextPost) { %>
-      <a class="post-nav-item next" target="_self" href="<%= url_for(nextPost.path) %>"><span class="item-link"><%= nextPost.title %></span><% if (nextPost.subTitle) { %><span class="sub-title"><%=nextPost.subTitle%></span><% } %><span class="nav-indicator-text"><%=__('common.nextPost')%></a>
+      <a class="post-nav-item next" target="_self" href="<%=url_for(nextPost.path)%>"><span class="item-link"><%=nextPost.title %></span><% if (nextPost.subTitle) { %><span class="sub-title"><%=nextPost.subTitle%></span><% } %><span class="nav-indicator-text"><%=__('common.nextPost')%></a>
       <% } %>
     </div>
   </div>
@@ -150,9 +150,21 @@ const seriesInfo = getSeriesInfo(page?.series);
       </span>
     </div>
     <div class="series-items">
-      <% series.forEach((item, index) => { %>
+      <%
+      let currentSeriesYear = null;
+      series.forEach((item, index) => {
+        const itemYear = item.date?.year ? item.date.year() : new Date(item.date).getFullYear();
+        const showYearDivider = seriesInfo?.yearDivider && itemYear && itemYear !== currentSeriesYear;
+        const showIndex = seriesInfo?.showMobileIndex !== false
+        if (showYearDivider) {
+          currentSeriesYear = itemYear;
+        }
+      %>
+      <% if (showYearDivider) { %>
+      <div class="series-year-divider"><%=itemYear%></div>
+      <% } %>
       <a class="series-item-link<%-item.source === page.source ? ' active': ''%>" href="<%=url_for(item.path)%>">
-        <span class="item-index"><%-`${seriesInfo?.noOrder === 'asc' ? index + 1 : series.length - index}. `%></span><%=item.title%><% if (item.subTitle) { %><span class="sub-title"><%=item.subTitle%></span><% } %>
+        <% if (showIndex) { %><span class="item-index"><%-`${seriesInfo?.noOrder === 'asc' ? index + 1 : series.length - index}. `%></span><% }%><%=item.title%><% if (item.subTitle) { %><span class="sub-title"><%=item.subTitle%></span><% } %>
       </a>
       <% }); %>
     </div>
@@ -236,7 +248,7 @@ const seriesInfo = getSeriesInfo(page?.series);
 </script>
 <% } %>
 
-<% if ([config?.theme_config?.photoswipe ?? true, page.photoswipe ?? true, /<img/.test(page?.content)].every(enable=>enable)) {
+<% if ([config?.theme_config?.photoswipe, page.photoswipe ?? true, /<img|\/static\/live-photo\/|live-photo-gallery-item|data-live-photo-src/.test(page?.content)].every(enable=>enable)) {
   const version = theme.version;
   const hdrAssetsPrefix = page?.hdrAssetsPrefix || '';
 %>
@@ -248,10 +260,11 @@ const seriesInfo = getSeriesInfo(page?.series);
   import PhotoSwipeDynamicCaption from '<%=url_for(`/linen-theme/js/photoswipe/photoswipe-dynamic-caption-plugin.esm.js?v=${version}`)%>';
   let isPswpOpening = false;
   let hdrAssetsPrefix = '<%=hdrAssetsPrefix%>';
+  const hiddenLivePhotoTriggers = new Map();
   const getSafeAreaHeight = () => {
     const el = document.getElementById('safe-area-test');
     const height = window.getComputedStyle(el).height;
-    return parseInt(height) ?? 0
+    return parseInt(height) || 0;
   }
   const smallScreenPadding = {
     top: 0,
@@ -277,14 +290,14 @@ const seriesInfo = getSeriesInfo(page?.series);
   });
 
   const getExif = (element) => {
-    const exifString = element?.dataset?.pspwExif || '';
-    const locationString = element?.dataset?.pspwLocation || '';
+    const exifString = (element && element.dataset && element.dataset.pspwExif) || '';
+    const locationString = (element && element.dataset && element.dataset.pspwLocation) || '';
     const matches = [...exifString.matchAll(/\{([^}]*)\}/g)].map(match => match[1])
-    if (matches?.length) {
+    if (matches && matches.length) {
       const locationMatches = [...locationString.matchAll(/\{([^}]*)\}/g)].map(match => match[1]);
       const keys = ['camera', 'lens', 'iso', 'focusLength', 'ev', 'aperture', 'shutterSpeed', 'hdr'];
       const [camera, iso, focusLength, aperture, shutterSpeed, ev, lens, isHDR] = matches;
-      const isHDRActive = (isHDRScreen && (!!isHDR || element?.href?.includes(hdrAssetsPrefix)) && window.hdrEnabled) ? 'HDR' : ''
+      const isHDRActive = (isHDRScreen && (!!isHDR || (element && element.href && element.href.includes(hdrAssetsPrefix))) && window.hdrEnabled) ? 'HDR' : ''
       const exifObj = {
         camera,
         iso,
@@ -294,7 +307,7 @@ const seriesInfo = getSeriesInfo(page?.series);
         ev,
         lens,
         hdr: isHDRActive,
-        location: locationMatches?.length === 2 ? {
+        location: (locationMatches && locationMatches.length === 2) ? {
           url: locationMatches[0],
           title: locationMatches[1]
         } : null
@@ -310,18 +323,252 @@ const seriesInfo = getSeriesInfo(page?.series);
         hdr: 'HDR Photo',
         location: 'Location'
       }
-      return `<div class="img-exif">${keys.map(key=>exifObj[key]?`<span class="${key}" title="${altTextMap[key]}">${typeof exifObj[key] === 'boolean' ? '' : exifObj[key]}</span>`: '').join('')}${exifObj.location ? `<a href="${exifObj.location.url}"><span class="location">${exifObj.location.title}</span></a>`: ''}</div>`
+      return `<div class="img-exif">${keys.map(key=>exifObj[key]?`<span class="${key}" title="${altTextMap[key]}">${typeof exifObj[key] === 'boolean' ? '' : exifObj[key]}</span>`: '').join('')}${exifObj.location ? `<a href="${exifObj.location.url}"><span class="location">${exifObj.location.title}</span></a>`: ''}</div>`;
     }
-    return ''
+    return '';
   }
   const captionPlugin = new PhotoSwipeDynamicCaption(lightbox, {
     type: 'auto',
   });
 
-  lightbox.addFilter('placeholderSrc', (placeholderSrc, content) => {
-    const thumbnail = content?.slide?.data?.msrc || ''
-    return thumbnail || placeholderSrc;
+  const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[char]));
+
+  const normalizeUrl = (url) => {
+    try {
+      return new URL(url, location.href).href;
+    } catch (error) {
+      return url;
+    }
+  }
+
+  const pauseLivePhotos = () => {
+    document.querySelectorAll('.pswp-live-photo-video').forEach((video) => {
+      video.pause();
+      const livePhotoWrap = video.closest('.pswp-live-photo-wrap');
+      if (livePhotoWrap) {
+        livePhotoWrap.classList.remove('is-playing');
+      }
+    });
+  }
+
+  const setPswpLivePhotoClosing = (enabled) => {
+    if (lightbox && lightbox.pswp && lightbox.pswp.element) {
+      lightbox.pswp.element.classList.toggle('is-closing-live-photo', enabled);
+    }
+  }
+
+  const setPswpLivePhotoOpening = (enabled) => {
+    if (lightbox && lightbox.pswp && lightbox.pswp.element) {
+      lightbox.pswp.element.classList.toggle('is-opening-live-photo', enabled);
+      if (!enabled) {
+        lightbox.pswp.element.classList.remove('is-live-photo-trigger-visible');
+      }
+    }
+  }
+
+  const revealOpeningLivePhotoTrigger = () => {
+    if (!lightbox || !lightbox.pswp || !lightbox.pswp.element) {
+      return;
+    }
+
+    if (!lightbox.pswp.element.classList.contains('is-opening-live-photo')) {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      if (!lightbox || !lightbox.pswp || !lightbox.pswp.element) {
+        return;
+      }
+      lightbox.pswp.element.classList.add('is-live-photo-trigger-visible');
+      window.setTimeout(() => {
+        setPswpLivePhotoOpening(false);
+      }, 360);
+    });
+  }
+
+  const getCurrentGalleryElement = () => (
+    lightbox && lightbox.pswp && lightbox.pswp.currSlide && lightbox.pswp.currSlide.data && lightbox.pswp.currSlide.data.element
+  );
+
+  const isLivePhotoGalleryElement = (element) => (
+    element && element.classList && element.classList.contains('live-photo-gallery-item')
+  );
+
+  const setPageLivePhotoTriggerHidden = (galleryElement) => {
+    const scrollTarget = getScrollTarget(galleryElement);
+    const iframe = scrollTarget && scrollTarget.querySelector && scrollTarget.querySelector('iframe[src*="/static/live-photo/"]');
+    let iframeDocument = null;
+    try {
+      iframeDocument = iframe && iframe.contentDocument;
+    } catch (error) {
+      return;
+    }
+
+    const trigger = iframeDocument && iframeDocument.querySelector('.live-trigger');
+    if (!trigger || hiddenLivePhotoTriggers.has(trigger)) {
+      return;
+    }
+
+    hiddenLivePhotoTriggers.set(trigger, {
+      opacity: trigger.style.opacity,
+      transition: trigger.style.transition,
+      pointerEvents: trigger.style.pointerEvents,
+      visibility: trigger.style.visibility
+    });
+    trigger.style.opacity = '0';
+    trigger.style.transition = 'none';
+    trigger.style.pointerEvents = 'none';
+    trigger.style.visibility = 'hidden';
+  }
+
+  const restorePageLivePhotoTriggers = () => {
+    hiddenLivePhotoTriggers.forEach((previousStyle, trigger) => {
+      trigger.style.opacity = previousStyle.opacity;
+      trigger.style.transition = previousStyle.transition;
+      trigger.style.pointerEvents = previousStyle.pointerEvents;
+      trigger.style.visibility = previousStyle.visibility;
+    });
+    hiddenLivePhotoTriggers.clear();
+  }
+
+  const prepareCurrentLivePhotoClose = () => {
+    const currentElement = getCurrentGalleryElement();
+    const isLivePhoto = isLivePhotoGalleryElement(currentElement);
+    setPswpLivePhotoClosing(isLivePhoto);
+    if (isLivePhoto) {
+      setPageLivePhotoTriggerHidden(currentElement);
+    }
+  }
+
+  const getScrollTarget = (galleryElement) => {
+    if (!galleryElement || !galleryElement.classList || !galleryElement.classList.contains('live-photo-gallery-item')) {
+      return galleryElement;
+    }
+
+    return galleryElement.closest('.lazyload-outer-wrap') || galleryElement;
+  }
+
+  const getLivePhotoThumbElement = (itemData) => {
+    const galleryElement = itemData && itemData.element;
+    if (!galleryElement || !galleryElement.classList || !galleryElement.classList.contains('live-photo-gallery-item')) {
+      return null;
+    }
+
+    const thumbId = galleryElement.dataset && galleryElement.dataset.pswpThumbId;
+    return (thumbId && document.getElementById(thumbId)) ||
+      (galleryElement.closest('.lazyload-outer-wrap') && galleryElement.closest('.lazyload-outer-wrap').querySelector('.lazyload-wrap')) ||
+      null;
+  }
+
+  const syncSwitcherWithGalleryElement = (galleryElement) => {
+    const gridItem = galleryElement && galleryElement.closest && galleryElement.closest('.image-grid.switcher .grid-item');
+    const switcher = gridItem && gridItem.closest && gridItem.closest('.image-grid.switcher');
+    if (!gridItem || !switcher) {
+      return;
+    }
+
+    const items = Array.from(switcher.children).filter((child) => child.classList && child.classList.contains('grid-item'));
+    const activeIndex = items.indexOf(gridItem);
+    const controls = switcher.querySelector('.image-grid-switcher-controls');
+    const buttons = Array.from(switcher.querySelectorAll('.image-grid-switcher-button'));
+
+    if (activeIndex < 0) {
+      return;
+    }
+
+    if (controls && controls.style) {
+      controls.style.setProperty('--switcher-active-index', activeIndex);
+    }
+
+    items.forEach((item, index) => {
+      const isActive = index === activeIndex;
+      item.classList.toggle('active', isActive);
+      item.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+    });
+
+    buttons.forEach((button, index) => {
+      const isActive = index === activeIndex;
+      button.classList.toggle('active', isActive);
+      button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+  }
+
+  const getLivePhotoHtml = (iframeSrc) => {
+    const livePhotoUrl = new URL(iframeSrc, location.href);
+    const picUrl = livePhotoUrl.searchParams.get('picUrl') || livePhotoUrl.searchParams.get('photoSrc') || '';
+    const videoUrl = livePhotoUrl.searchParams.get('videoUrl') || livePhotoUrl.searchParams.get('videoSrc') || '';
+    const isMuted = livePhotoUrl.searchParams.has('muted');
+    const shouldLoop = livePhotoUrl.searchParams.has('loop');
+    const volume = Number(livePhotoUrl.searchParams.get('volume') || 100);
+
+    if (!picUrl || !videoUrl) {
+      return `<div class="pswp-live-photo-wrap"><img class="pswp-live-photo-img" src="${escapeHtml(picUrl)}" draggable="false" alt="" /></div>`;
+    }
+
+    return `<div class="pswp-live-photo-wrap" data-volume="${Math.min(Math.max(volume, 0), 100)}">
+      <img class="pswp-live-photo-img" src="${escapeHtml(picUrl)}" draggable="false" alt="" />
+      <video class="pswp-live-photo-video" src="${escapeHtml(videoUrl)}" playsinline webkit-playsinline preload="metadata"${isMuted ? ' muted' : ''}${shouldLoop ? ' loop' : ''}></video>
+      <button class="pswp-live-photo-trigger" type="button" aria-label="Play Live Photo">
+        <span class="icon-wrap">
+          <span class="trigger-icon ready"></span>
+          <span class="progress-circle loaded" aria-hidden="true">
+            <svg width="25" height="25" viewBox="0 0 25 25" focusable="false">
+              <circle cx="12.5" cy="12.5" r="11" stroke="#eee" stroke-width="3" fill="none"></circle>
+              <circle cx="12.5" cy="12.5" r="11" stroke="#232323" stroke-width="3" fill="none" stroke-linecap="round"></circle>
+            </svg>
+          </span>
+        </span>
+        <span class="trigger-text">LIVE</span>
+      </button>
+    </div>`;
+  }
+
+  lightbox.addFilter('itemData', (itemData) => {
+    const livePhotoSrc = itemData && itemData.element && itemData.element.dataset && itemData.element.dataset.livePhotoSrc;
+    if (!livePhotoSrc) {
+      return itemData;
+    }
+
+    const iframeSrc = decodeURIComponent(livePhotoSrc);
+    return {
+      ...itemData,
+      msrc: (itemData.element.dataset && itemData.element.dataset.livePhotoPicUrl) || itemData.msrc || itemData.src,
+      thumbCropped: true,
+      src: undefined,
+      type: 'html',
+      html: getLivePhotoHtml(iframeSrc)
+    };
   });
+
+  lightbox.addFilter('thumbEl', (thumbEl, itemData) => {
+    return getLivePhotoThumbElement(itemData) || thumbEl;
+  });
+
+  lightbox.addFilter('useContentPlaceholder', (usePlaceholder, content) => {
+    const itemData = content && content.data;
+    return getLivePhotoThumbElement(itemData) ? true : usePlaceholder;
+  });
+
+  lightbox.addFilter('placeholderSrc', (placeholderSrc, content) => {
+    const galleryElement = content && content.data && content.data.element;
+    if (galleryElement && galleryElement.classList && galleryElement.classList.contains('live-photo-gallery-item')) {
+      return (galleryElement.dataset && galleryElement.dataset.livePhotoPicUrl) || placeholderSrc;
+    }
+    return placeholderSrc;
+  });
+
+  <% if (page.path === 'gallery/index.html') { %>
+    lightbox.addFilter('placeholderSrc', (placeholderSrc, content) => {
+      const thumbnail = (content && content.slide && content.slide.data && content.slide.data.msrc) || '';
+      return thumbnail || placeholderSrc;
+    });
+  <% } %>
 
   lightbox.on('uiRegister', function() {
     lightbox.pswp.ui.registerElement({
@@ -336,7 +583,7 @@ const seriesInfo = getSeriesInfo(page?.series);
           let captionHTML = '';
           if (currSlideElement) {
             const gap = (window.innerHeight - lightbox.pswp.currSlide.data.height / lightbox.pswp.currSlide.data.width * window.innerWidth) / 2;
-            captionHTML = getExif(lightbox.pswp.currSlide.data?.element) || ''
+            captionHTML = getExif(lightbox.pswp.currSlide.data && lightbox.pswp.currSlide.data.element) || '';
             if (window.innerWidth <= 600) {
               el.style.top = `${gap}px`;
               el.classList.add('mobile');
@@ -355,17 +602,108 @@ const seriesInfo = getSeriesInfo(page?.series);
     isPswpOpening = true;
   });
 
+  lightbox.on('openingAnimationEnd', () => {
+    revealOpeningLivePhotoTrigger();
+  });
+
+  lightbox.on('closingAnimationStart', () => {
+    prepareCurrentLivePhotoClose();
+  });
+
+  lightbox.on('closingAnimationEnd', () => {
+    setPswpLivePhotoClosing(false);
+    window.requestAnimationFrame(restorePageLivePhotoTriggers);
+  });
+
   lightbox.on('change', (e) => {
+    pauseLivePhotos();
+    const currentElement = getCurrentGalleryElement();
+    syncSwitcherWithGalleryElement(currentElement);
     if (isPswpOpening) {
+      setPswpLivePhotoOpening(isLivePhotoGalleryElement(currentElement));
       return isPswpOpening = false;
     }
-    const currentImage = lightbox?.pswp?.currSlide?.data?.element;
-    currentImage && currentImage.scrollIntoView({
-      block: 'center',
-      behavior: 'instant'
-    })
+    setPswpLivePhotoOpening(false);
+    const currentImage = getScrollTarget(currentElement);
+    if (currentImage && currentImage.scrollIntoView) {
+      currentImage.scrollIntoView({
+        block: 'center',
+        behavior: 'instant'
+      });
+    }
   });
+
+  lightbox.on('close', () => {
+    prepareCurrentLivePhotoClose();
+    pauseLivePhotos();
+  });
+
   lightbox.init();
+
+  document.addEventListener('pointerdown', (event) => {
+    if (event.target.closest('.pswp-live-photo-trigger')) {
+      event.stopPropagation();
+    }
+  });
+
+  document.addEventListener('click', async (event) => {
+    const trigger = event.target.closest('.pswp-live-photo-trigger');
+    if (!trigger) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const livePhoto = trigger.closest('.pswp-live-photo-wrap');
+    const video = livePhoto && livePhoto.querySelector && livePhoto.querySelector('.pswp-live-photo-video');
+    if (!video) {
+      return;
+    }
+
+    if (video.paused) {
+      video.volume = Number(livePhoto.dataset.volume || 100) / 100;
+      await video.play();
+      livePhoto.classList.add('is-playing');
+    } else {
+      video.pause();
+      livePhoto.classList.remove('is-playing');
+    }
+  });
+
+  document.addEventListener('pause', (event) => {
+    if (event.target.matches('.pswp-live-photo-video')) {
+      const livePhotoWrap = event.target.closest('.pswp-live-photo-wrap');
+      if (livePhotoWrap) {
+        livePhotoWrap.classList.remove('is-playing');
+      }
+    }
+  }, true);
+
+  window.addEventListener('message', (event) => {
+    if (event.origin !== location.origin) {
+      return;
+    }
+
+    if (lightbox.pswp) {
+      return;
+    }
+
+    const messageUrl = typeof event.data === 'string' ? event.data : (event.data && event.data.picUrl);
+    if (!messageUrl) {
+      return;
+    }
+
+    const targetUrl = normalizeUrl(messageUrl);
+    const target = Array.from(document.querySelectorAll('#post a.gallery-item')).find((element) => {
+      const livePhotoPicUrl = element.dataset.livePhotoPicUrl;
+      return normalizeUrl(livePhotoPicUrl || element.href) === targetUrl;
+    });
+
+    if (target) {
+      target.click();
+    }
+  });
 </script>
 <% } %>
 

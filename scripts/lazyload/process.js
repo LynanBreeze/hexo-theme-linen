@@ -5,13 +5,11 @@ const path = require("path");
 const { defaultConfig } = require("./config");
 function getElemAttributes(elemText) {
   // Regex to pick out start tag from start of element's HTML.
-  var re_start_tag =
-    /^<\w+\b(?:\s+[\w\-.:]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[\w\-.:]+))?)*\s*\/?>/;
+  var re_start_tag = /^<\w+\b(?:\s+[\w\-.:]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[\w\-.:]+))?)*\s*\/?>/;
   var start_tag = elemText.match(re_start_tag);
   start_tag = start_tag ? start_tag[0] : "";
   // Regex to pick out attribute name and (optional) value from start tag.
-  var re_attribs =
-    /\s+([\w\-.:]+)(\s*=\s*(?:"([^"]*)"|'([^']*)'|([\w\-.:]+)))?/g;
+  var re_attribs = /\s+([\w\-.:]+)(\s*=\s*(?:"([^"]*)"|'([^']*)'|([\w\-.:]+)))?/g;
   var attribs = {}; // Store attribute name=value pairs in object.
   var match = re_attribs.exec(start_tag);
   while (match != null) {
@@ -22,8 +20,8 @@ function getElemAttributes(elemText) {
       value = match[3]
         ? match[3] // Attribute value is in $3, $4 or $5.
         : match[4]
-        ? match[4]
-        : match[5];
+          ? match[4]
+          : match[5];
     }
     attribs[attrib] = value;
     match = re_attribs.exec(start_tag);
@@ -70,11 +68,46 @@ function getInlineWidthStyle(style) {
   return filtered ? `style="${filtered};"` : "";
 }
 
+function escapeAttribute(value = "") {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function getLivePhotoInfo(src = "", style = "") {
+  src = decodeHexEntity(src).replace(/&amp;/g, "&");
+
+  if (!/\/static\/live-photo\//.test(src)) {
+    return null;
+  }
+
+  try {
+    const livePhotoUrl = new URL(src, "https://lynan.cn");
+    const picUrl = livePhotoUrl.searchParams.get("picUrl") || livePhotoUrl.searchParams.get("photoSrc");
+    const aspectRatio = /aspect-ratio\s*:\s*([^;]+)/i.exec(style)?.[1]?.trim() || "";
+    const [width, height] = aspectRatio.includes("/")
+      ? aspectRatio.split("/").map((value) => Number(value.trim()))
+      : [Number(aspectRatio) || 16, 1];
+
+    if (!picUrl || !width || !height) {
+      return null;
+    }
+
+    return {
+      picUrl,
+      width,
+      height
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
 function decodeHexEntity(str) {
   return str
-    ? str.replace(/&#x([0-9a-fA-F]+);/g, (_, hex) =>
-        String.fromCharCode(parseInt(hex, 16))
-      )
+    ? str.replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
     : "";
 }
 
@@ -83,14 +116,24 @@ function isUrlEqual(src1 = "", src2 = "") {
     const u1 = new URL(src1);
     const u2 = new URL(src2);
 
-    return (
-      u1.pathname === u2.pathname &&
-      u1.search === u2.search &&
-      u1.hash === u2.hash
-    );
+    return u1.pathname === u2.pathname && u1.search === u2.search && u1.hash === u2.hash;
   } catch (e) {
     return false;
   }
+}
+
+function appendAttributeToTag(tag, attrName, attrValue) {
+  if (!attrValue || new RegExp(`\\s${attrName}=`).test(tag)) {
+    return tag;
+  }
+  return tag.replace(/\s*\/?>$/, (end) => ` ${attrName}="${attrValue}"${end}`);
+}
+
+function getPlaceholderStyle(placeholder = "") {
+  if (!placeholder || placeholder.startsWith("blurhash:")) {
+    return "";
+  }
+  return /http|data:image/.test(placeholder) ? `background-image: url(${placeholder})` : placeholder;
 }
 
 function formatAttributes(str, src, imgs = [], language) {
@@ -117,9 +160,7 @@ function formatAttributes(str, src, imgs = [], language) {
       aspectRatio = `${imgItem.width}/${imgItem.height}`;
     }
     if (styleAttr) {
-      const styleObj = styleStringToObject(
-        styleAttr.replace(/style="(.*?)"/gi, "$1")
-      );
+      const styleObj = styleStringToObject(styleAttr.replace(/style="(.*?)"/gi, "$1"));
       if (styleObj["aspect-ratio"]) {
         aspectRatio = styleObj["aspect-ratio"];
       }
@@ -136,11 +177,9 @@ function formatAttributes(str, src, imgs = [], language) {
     if (aspectRatio) {
       if (/\//.test(aspectRatio)) {
         percentage =
-          (
-            (Number(aspectRatio.split("/")[1]) /
-              Number(aspectRatio.split("/")[0])) *
-            100
-          ).toFixed(5) + "%";
+          ((Number(aspectRatio.split("/")[1]) / Number(aspectRatio.split("/")[0])) * 100).toFixed(
+            5
+          ) + "%";
       } else {
         percentage = 100 / Number(aspectRatio) + "%";
       }
@@ -150,9 +189,7 @@ function formatAttributes(str, src, imgs = [], language) {
 
   const getPlaceholderImage = (returnStr) => {
     let placeholderImage = attributesObj["data-placeholderimg"] || "";
-    var placeholderImageRes = /placeholder=(\S+)=placeholder/gi.exec(
-      attributesObj.alt
-    );
+    var placeholderImageRes = /placeholder=(\S+)=placeholder/gi.exec(attributesObj.alt);
     if (placeholderImageRes && placeholderImageRes[1]) {
       placeholderImage = placeholderImageRes[1];
     }
@@ -170,8 +207,8 @@ function formatAttributes(str, src, imgs = [], language) {
     return isBlurHash
       ? ""
       : /http|data:image/.test(placeholderImage)
-      ? `url(${placeholderImage})`
-      : placeholderImage;
+        ? `url(${placeholderImage})`
+        : placeholderImage;
   };
 
   const getAltText = () => {
@@ -230,20 +267,14 @@ const getformatedStr = (str, attrs, placeholerStyle = "") => {
 
   if (placeholderImageStr) {
     if (/data-placeholderimg/.test(formatedStr)) {
-      formatedStr = formatedStr.replace(
-        `data-placeholderimg="${placeholderImageStr}"`,
-        ""
-      );
+      formatedStr = formatedStr.replace(`data-placeholderimg="${placeholderImageStr}"`, "");
       noScriptElementStr = noScriptElementStr.replace(
         `data-placeholderimg="${placeholderImageStr}"`,
         ""
       );
     }
     if (/\$placeholder=/.test(formatedStr)) {
-      formatedStr = formatedStr.replace(
-        `$placeholder=${placeholderImageStr}=placeholder`,
-        ""
-      );
+      formatedStr = formatedStr.replace(`$placeholder=${placeholderImageStr}=placeholder`, "");
       noScriptElementStr = noScriptElementStr.replace(
         `$placeholder=${placeholderImageStr}=placeholder`,
         ""
@@ -252,10 +283,7 @@ const getformatedStr = (str, attrs, placeholerStyle = "") => {
   }
   if (aspectRatioStr) {
     if (/\$aspect-ratio=/.test(formatedStr)) {
-      formatedStr = formatedStr.replace(
-        `$aspect-ratio=${aspectRatioStr}=aspect-ratio`,
-        ""
-      );
+      formatedStr = formatedStr.replace(`$aspect-ratio=${aspectRatioStr}=aspect-ratio`, "");
     }
   }
   if (style) {
@@ -273,110 +301,94 @@ function lazyProcess(htmlContent) {
   const language = this.config.language;
   const { showAltText, placeholderRatio } = {
     ...defaultConfig,
-    ...(themeConfig?.lazyload || {}),
+    ...(themeConfig?.lazyload || {})
   };
 
-  const enableGallery = themeConfig?.photoswipe ?? true;
-  const imgs = readAllImgs(
-    path.join(this.base_dir, "assets-db/imgs")
-  );
+  const enableGallery = themeConfig?.photoswipe === true;
+  const imgs = readAllImgs(path.join(this.base_dir, "assets-db/imgs"));
+  let livePhotoThumbIndex = 0;
 
   return htmlContent
-    .replace(
-      /<img([\s\S]*?)src="(.*?)"([\s\S]*?)(>|<\/img>)/gi,
-      function (str, p1, src, attrStr) {
-        if (/no-lazy/gi.test(str)) {
-          return str.replace(/\$?no-lazy/, "");
-        }
-
-        const formatedAttributes = formatAttributes(str, src, imgs, language);
-        const wrapStyle = formatedAttributes.style;
-
-        let placeholerStyle = "";
-        if (
-          formatedAttributes.paddingBottom ||
-          formatedAttributes.placeholderImage
-        ) {
-          placeholerStyle = `style="${
-            formatedAttributes.paddingBottom
-              ? `padding-bottom: ${formatedAttributes.paddingBottom};`
-              : ""
-          }${
-            formatedAttributes.placeholderImage
-              ? `background-image: ${formatedAttributes.placeholderImage}`
-              : ""
-          }"`;
-        }
-
-        const { formatedStr, noScriptElementStr } = getformatedStr(
-          str,
-          formatedAttributes
-        );
-
-        const defaultpswpConfig = {
-          width: 1920,
-          height: 1920 / placeholderRatio,
-        };
-        const hasSizeConfig =
-          formatedAttributes?.originalWidth ||
-          formatedAttributes.aspectRatioStr?.split("/")?.[0];
-        const pswpWidth =
-          formatedAttributes?.originalWidth ??
-          (/\//.test(formatedAttributes.aspectRatioStr)
-            ? formatedAttributes.aspectRatioStr?.split("/")?.[0]
-            : defaultpswpConfig.width);
-        const pswpHeight =
-          formatedAttributes?.originalHeight ??
-          (/\//.test(formatedAttributes.aspectRatioStr)
-            ? formatedAttributes.aspectRatioStr?.split("/")?.[1]
-            : defaultpswpConfig.height);
-        const pswpConfig = enableGallery
-          ? `data-pswp-hassize="${(!!hasSizeConfig).toString()}" data-pswp-width="${pswpWidth}" data-pswp-height="${pswpHeight}" ${
-              formatedAttributes["pswp-src"]
-                ? `data-pswp-src="${formatedAttributes["pswp-src"]}"`
-                : ""
-            } data-cropped="true"${
-              formatedAttributes.exif
-                ? ` data-pspw-exif="${formatedAttributes.exif}"`
-                : ""
-            }${
-              formatedAttributes.location
-                ? ` data-pspw-location="${formatedAttributes.location}"`
-                : ""
-            }`
-          : "";
-
-        const itemTag = formatedAttributes.isLink ? "a" : "span";
-        const widthStyle = getInlineWidthStyle(wrapStyle || "");
-
-        return `<span class="lazyload-outer-wrap" style="width: 100%;"><${itemTag} class="gallery-item" href="${src}" ${pswpConfig} target="_blank" rel="noopener" ${
-          theme === "landscape" ? 'data-fancybox="gallery"' : ""
-        } ${widthStyle}><noscript>${noScriptElementStr}</noscript><span class="lazyload-wrap" data-content="${encodeURIComponent(
-          formatedStr
-        )}" ${
-          wrapStyle ? `style="${wrapStyle}"` : ""
-        }><span class="placeholder" ${placeholerStyle}></span></span>${
-          formatedAttributes.caption
-            ? `<span class="pswp-caption-content">${formatedAttributes.caption}</span>`
-            : ""
-        }</${itemTag}>${
-          showAltText && formatedAttributes.alt
-            ? `<span class="caption" ${widthStyle}>${formatedAttributes.alt}</span>`
-            : ``
-        }</span>`;
+    .replace(/<img([\s\S]*?)src="(.*?)"([\s\S]*?)(>|<\/img>)/gi, function (str, p1, src, attrStr) {
+      if (/no-lazy/gi.test(str)) {
+        return str.replace(/\$?no-lazy/, "");
       }
-    )
-    .replace(/<iframe(.*?)src="(.*?)"(.*?)<\/iframe>/gi, function (str) {
+
+      const formatedAttributes = formatAttributes(str, src, imgs, language);
+      const wrapStyle = formatedAttributes.style;
+
+      let placeholerStyle = "";
+      if (formatedAttributes.paddingBottom || formatedAttributes.placeholderImage) {
+        placeholerStyle = `style="${
+          formatedAttributes.paddingBottom
+            ? `padding-bottom: ${formatedAttributes.paddingBottom};`
+            : ""
+        }${
+          formatedAttributes.placeholderImage
+            ? `background-image: ${formatedAttributes.placeholderImage}`
+            : ""
+        }"`;
+      }
+
+      const { formatedStr, noScriptElementStr } = getformatedStr(str, formatedAttributes);
+
+      const defaultpswpConfig = {
+        width: 1920,
+        height: 1920 / placeholderRatio
+      };
+      const hasSizeConfig =
+        formatedAttributes?.originalWidth || formatedAttributes.aspectRatioStr?.split("/")?.[0];
+      const pswpWidth =
+        formatedAttributes?.originalWidth ??
+        (/\//.test(formatedAttributes.aspectRatioStr)
+          ? formatedAttributes.aspectRatioStr?.split("/")?.[0]
+          : defaultpswpConfig.width);
+      const pswpHeight =
+        formatedAttributes?.originalHeight ??
+        (/\//.test(formatedAttributes.aspectRatioStr)
+          ? formatedAttributes.aspectRatioStr?.split("/")?.[1]
+          : defaultpswpConfig.height);
+      const pswpConfig = enableGallery
+        ? `data-pswp-hassize="${(!!hasSizeConfig).toString()}" data-pswp-width="${pswpWidth}" data-pswp-height="${pswpHeight}" ${
+            formatedAttributes["pswp-src"]
+              ? `data-pswp-src="${formatedAttributes["pswp-src"]}"`
+              : ""
+          } data-cropped="true"${
+            formatedAttributes.exif ? ` data-pspw-exif="${formatedAttributes.exif}"` : ""
+          }${
+            formatedAttributes.location
+              ? ` data-pspw-location="${formatedAttributes.location}"`
+              : ""
+          }`
+        : "";
+
+      const itemTag = formatedAttributes.isLink ? "a" : "span";
+      const widthStyle = getInlineWidthStyle(wrapStyle || "");
+
+      return `<span class="lazyload-outer-wrap" style="width: 100%;"><${itemTag} class="gallery-item" href="${src}" ${pswpConfig} target="_blank" rel="noopener" ${
+        theme === "landscape" ? 'data-fancybox="gallery"' : ""
+      } ${widthStyle}><noscript>${noScriptElementStr}</noscript><span class="lazyload-wrap" data-content="${encodeURIComponent(
+        formatedStr
+      )}" ${
+        wrapStyle ? `style="${wrapStyle}"` : ""
+      }><span class="placeholder" ${placeholerStyle}></span></span>${
+        formatedAttributes.caption
+          ? `<span class="pswp-caption-content">${formatedAttributes.caption}</span>`
+          : ""
+      }</${itemTag}>${
+        showAltText && formatedAttributes.alt
+          ? `<span class="caption" ${widthStyle}>${formatedAttributes.alt}</span>`
+          : ``
+      }</span>`;
+    })
+    .replace(/<iframe(.*?)src="(.*?)"(.*?)<\/iframe>/gi, function (str, p1, src) {
       if (/no-lazy/gi.test(str)) {
         return str;
       }
       const formatedAttributes = formatAttributes(str);
       const wrapStyle = formatedAttributes.style;
       let placeholerStyle = "";
-      if (
-        formatedAttributes.paddingBottom ||
-        formatedAttributes.placeholderImage
-      ) {
+      if (formatedAttributes.paddingBottom || formatedAttributes.placeholderImage) {
         placeholerStyle = `style="${
           formatedAttributes.paddingBottom
             ? `padding-bottom: ${formatedAttributes.paddingBottom};`
@@ -395,48 +407,56 @@ function lazyProcess(htmlContent) {
           : ""
       );
 
+      const livePhotoInfo = enableGallery ? getLivePhotoInfo(src, wrapStyle || "") : null;
+      const livePhotoThumbId = livePhotoInfo ? `live-photo-thumb-${livePhotoThumbIndex++}` : "";
+      const livePhotoGalleryItem = livePhotoInfo
+        ? `<a class="gallery-item live-photo-gallery-item" href="${escapeAttribute(
+            livePhotoInfo.picUrl
+          )}" data-pswp-width="${livePhotoInfo.width}" data-pswp-height="${
+            livePhotoInfo.height
+          }" data-cropped="true" data-pswp-thumb-id="${livePhotoThumbId}" data-live-photo-src="${encodeURIComponent(src)}" data-live-photo-pic-url="${escapeAttribute(
+            livePhotoInfo.picUrl
+          )}" target="_blank" rel="noopener" style="display: none;" aria-hidden="true"></a>`
+        : "";
+
+      return `<span class="lazyload-outer-wrap" style="width: 100%;">${livePhotoGalleryItem}<span class="lazyload-wrap" data-content="${encodeURIComponent(
+        formatedStr
+      )}" ${livePhotoThumbId ? `id="${livePhotoThumbId}"` : ""} ${
+        wrapStyle ? `style="${wrapStyle}"` : ""
+      }><span class="placeholder" ${placeholerStyle}></span></span><noscript>[This iframe content needs to be loaded by JavaScript.]</noscript></span>`;
+    })
+    .replace(/<video([\s\S]*?)src="(.*?)"([\s\S]*?)(>|<\/video>)/gi, function (str) {
+      if (/no-lazy/gi.test(str)) {
+        return str;
+      }
+      const formatedAttributes = formatAttributes(str);
+      const wrapStyle = formatedAttributes.style;
+      let placeholerStyle = "";
+      if (formatedAttributes.paddingBottom || formatedAttributes.placeholderImage) {
+        placeholerStyle = `style="${
+          formatedAttributes.paddingBottom
+            ? `padding-bottom: ${formatedAttributes.paddingBottom};`
+            : ""
+        }${
+          formatedAttributes.placeholderImage
+            ? `background-image: ${formatedAttributes.placeholderImage}`
+            : ""
+        }"`;
+      }
+      const { formatedStr, noScriptElementStr } = getformatedStr(
+        str,
+        formatedAttributes,
+        formatedAttributes.placeholderImage
+          ? `style="background-image: ${formatedAttributes.placeholderImage}; background-size: 100% 100%;"`
+          : ""
+      );
+
       return `<span class="lazyload-outer-wrap" style="width: 100%;"><span class="lazyload-wrap" data-content="${encodeURIComponent(
         formatedStr
-      )}" ${wrapStyle ? `style="${wrapStyle}"` : ""}><span class="placeholder" ${placeholerStyle}></span></span><noscript>[This iframe content needs to be loaded by JavaScript.]</noscript></span>`;
-    })
-    .replace(
-      /<video([\s\S]*?)src="(.*?)"([\s\S]*?)(>|<\/video>)/gi,
-      function (str) {
-        if (/no-lazy/gi.test(str)) {
-          return str;
-        }
-        const formatedAttributes = formatAttributes(str);
-        const wrapStyle = formatedAttributes.style;
-        let placeholerStyle = "";
-        if (
-          formatedAttributes.paddingBottom ||
-          formatedAttributes.placeholderImage
-        ) {
-          placeholerStyle = `style="${
-            formatedAttributes.paddingBottom
-              ? `padding-bottom: ${formatedAttributes.paddingBottom};`
-              : ""
-          }${
-            formatedAttributes.placeholderImage
-              ? `background-image: ${formatedAttributes.placeholderImage}`
-              : ""
-          }"`;
-        }
-        const { formatedStr, noScriptElementStr } = getformatedStr(
-          str,
-          formatedAttributes,
-          formatedAttributes.placeholderImage
-            ? `style="background-image: ${formatedAttributes.placeholderImage}; background-size: 100% 100%;"`
-            : ""
-        );
-
-        return `<span class="lazyload-outer-wrap" style="width: 100%;"><span class="lazyload-wrap" data-content="${encodeURIComponent(
-          formatedStr
-        )}" ${
-          wrapStyle ? `style="${wrapStyle}"` : ""
-        }><span class="placeholder" ${placeholerStyle}></span></span><noscript>${noScriptElementStr}</noscript></span>`;
-      }
-    );
+      )}" ${
+        wrapStyle ? `style="${wrapStyle}"` : ""
+      }><span class="placeholder" ${placeholerStyle}></span></span><noscript>${noScriptElementStr}</noscript></span>`;
+    });
 }
 
 module.exports.processPost = function (data) {
@@ -456,6 +476,25 @@ module.exports.processCovers = function (str, data) {
         })">`
       );
     }
+    str = str.replace(
+      /<div class="cover-img">\s*(<img\b[^>]*\bsrc="([^"]+)"[^>]*>)\s*<\/div>/gi,
+      (coverStr, imgStr, src) => {
+        if (/no-lazy/gi.test(imgStr)) {
+          return coverStr.replace(/\s+\$?no-lazy\b/i, "");
+        }
+
+        const imgData = imgs.find((item) => isUrlEqual(item.url, src || ""));
+        const placeholder = imgData?.placeholder || "";
+        const contentImgStr = appendAttributeToTag(imgStr, "data-placeholderimg", placeholder);
+        const placeholderStyle = getPlaceholderStyle(placeholder);
+
+        return `<div class="cover-img"><noscript>${imgStr}</noscript><span class="lazyload-wrap post-list-cover-lazy" data-content="${encodeURIComponent(
+          contentImgStr
+        )}"><span class="placeholder"${
+          placeholderStyle ? ` style="${placeholderStyle}"` : ""
+        }></span></span></div>`;
+      }
+    );
   } catch (error) {
     console.log(error);
     return str;

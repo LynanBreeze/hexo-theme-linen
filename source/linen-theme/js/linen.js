@@ -3,6 +3,18 @@ var isResizing = false;
 var viewportWidth = window.innerWidth;
 var isAnchoring = false;
 var anchoringId = null;
+var anchoringTimer = null;
+function triggerAnchoring() {
+  isAnchoring = true;
+  var header = document.querySelector(".nav-header");
+  if (header) {
+    header.classList.add("hide");
+  }
+  clearTimeout(anchoringTimer);
+  anchoringTimer = setTimeout(function () {
+    isAnchoring = false;
+  }, 800);
+}
 
 (function addUAClass() {
   const isIOS = /iPhone/.test(window.navigator.userAgent);
@@ -161,30 +173,14 @@ function copyToClipboard(text) {
   copyToClipboard(text);
 }
 
-function highlightAnchor(
-  hash,
-  highlightClass = "anchor-highlight",
-  element = null,
-) {
-  if (element) {
-    element.classList.remove(highlightClass);
-    void element.offsetWidth;
-    element.classList.add(highlightClass);
-    setTimeout(() => {
-      element.classList.remove(highlightClass);
-    }, 4000);
-  } else {
-    if (!hash) return;
-    const id = hash.replace(/^#/, "");
-    const el = document.getElementById(id);
-    if (el) {
-      el.classList.remove(highlightClass);
-      void el.offsetWidth;
-      el.classList.add(highlightClass);
-      setTimeout(() => {
-      el.classList.remove(highlightClass);
-    }, 4000);
-    }
+function highlightAnchor(hash, highlightClass = "anchor-highlight") {
+  if (!hash) return;
+  const id = hash.replace(/^#/, "");
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.remove(highlightClass);
+    void el.offsetWidth;
+    el.classList.add(highlightClass);
   }
 }
 
@@ -192,6 +188,7 @@ function initAnchorHighlighter({
   highlightClass = "anchor-highlight",
   duration = 2000,
 } = {}) {
+  // 动态注入高亮样式
   if (!document.getElementById("anchor-highlight-style")) {
     const style = document.createElement("style");
     style.id = "anchor-highlight-style";
@@ -218,55 +215,117 @@ initAnchorHighlighter({
   duration: 4000,
 });
 
+function initImageGridSwitchers() {
+  var switchers = document.querySelectorAll(".image-grid.switcher");
+  for (var i = 0; i < switchers.length; i++) {
+    (function (switcher) {
+      var items = switcher.querySelectorAll(".grid-item");
+      var buttons = switcher.querySelectorAll(".image-grid-switcher-button");
+      var controls = switcher.querySelector(".image-grid-switcher-controls");
+
+      if (controls) {
+        if (!controls.style.getPropertyValue("--switcher-item-count")) {
+          controls.style.setProperty("--switcher-item-count", buttons.length);
+        }
+        controls.style.setProperty("--switcher-active-index", 0);
+        controls.classList.add("is-ready");
+      }
+
+      var setActiveItem = function (activeIndex) {
+        if (controls) {
+          controls.style.setProperty("--switcher-active-index", activeIndex);
+        }
+
+        for (var index = 0; index < items.length; index++) {
+          var isActive = index === activeIndex;
+          items[index].classList.toggle("active", isActive);
+          items[index].setAttribute("aria-hidden", isActive ? "false" : "true");
+
+          if (buttons[index]) {
+            buttons[index].classList.toggle("active", isActive);
+            buttons[index].setAttribute("aria-selected", isActive ? "true" : "false");
+          }
+        }
+      };
+
+      for (var index = 0; index < buttons.length; index++) {
+        (function (buttonIndex) {
+          buttons[buttonIndex].addEventListener("click", function () {
+            setActiveItem(buttonIndex);
+          });
+        })(index);
+      }
+    })(switchers[i]);
+  }
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initImageGridSwitchers);
+} else {
+  initImageGridSwitchers();
+}
+
 function onScroll() {
   var backToTop = document.querySelector("#back-to-top");
   var header = document.querySelector(".nav-header");
+  if (!header) return;
+
+  var currentScrollY = window.scrollY;
   var triggerHeight = window.innerHeight * 1.5;
-  if (!window.$gitalkInitiated && previousScrollY > window.innerHeight) {
+
+  if (!window.$gitalkInitiated && currentScrollY > window.innerHeight) {
     typeof loadGitalk !== "undefined" && loadGitalk();
   }
-  if (window.scrollY < previousScrollY) {
+
+  if (isAnchoring) {
+    header.classList.add("hide");
+    previousScrollY = currentScrollY;
+    return;
+  }
+
+  if (currentScrollY <= 10) {
+    header.classList.remove("hide");
+    previousScrollY = currentScrollY;
+    return;
+  }
+
+  var scrollDelta = currentScrollY - previousScrollY;
+  if (Math.abs(scrollDelta) < 5) {
+    return;
+  }
+
+  if (scrollDelta < 0) {
     if (!document.querySelector(".pswp--open")) {
       header.classList.remove("hide");
     }
-    if (window.scrollY >= triggerHeight) {
+    if (currentScrollY >= triggerHeight) {
       backToTop.classList.add("visible");
     }
-  } else if (window.scrollY > previousScrollY) {
+  } else {
     backToTop.classList.remove("visible");
-    if (window.scrollY > window.innerHeight * 0.75) {
+    if (currentScrollY > window.innerHeight * 0.75) {
       header.classList.add("hide");
     }
   }
-  if (
-    window.scrollY < window.innerHeight * 0.75 &&
-    window.scrollY < previousScrollY
-  ) {
-    header.classList.remove("hide");
-  }
-  previousScrollY = window.scrollY;
-  if (isAnchoring) {
-    header.classList.add("hide");
-    isAnchoring = false;
-  }
+
+  previousScrollY = currentScrollY;
 }
 
 window.addEventListener("scroll", throttle(onScroll, 300));
 
-window.addEventListener(
-  "resize",
-  debounce(function (e) {
-    const body = document.body;
-    if (!isResizing && window.innerWidth !== viewportWidth) {
-      isResizing = true;
-      viewportWidth = window.innerWidth;
-      body.classList.add("resizing");
-      return;
-    }
-    isResizing = false;
+var resizeTimer = null;
+window.addEventListener("resize", function () {
+  if (window.innerWidth === viewportWidth) return;
+
+  const body = document.body;
+  body.classList.add("resizing");
+  viewportWidth = window.innerWidth;
+
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(function () {
     body.classList.remove("resizing");
-  }, 1000),
-);
+  }, 200);
+});
 
 function onclickPostItem(element) {
   const selection = window.getSelection();
@@ -288,34 +347,6 @@ function handleClick(e) {
     var maskElement = document.getElementById("mask");
     var bodyElement = document.body;
     var donateModal = document.getElementById("donate-modal");
-    if(target?.className === 'footnote-href') {
-      const footNoteDefinitionId = target.getAttribute("href").substring(1);
-      const footNoteDefinitionElement = document.getElementById(footNoteDefinitionId);
-      if (footNoteDefinitionElement) {
-        footNoteDefinitionElement.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-        e.preventDefault();
-        highlightAnchor(undefined, undefined, footNoteDefinitionElement);
-        return;
-      }
-    }
-    if (target?.className === "footnote-backref") {
-      const footNoteId = target.getAttribute("href").substring(1);
-      const footNoteTextElements = document.querySelectorAll('.footnote-anchor-wrap');
-      if (footNoteTextElements.length) {
-        footNoteTextElements[0].scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-        e.preventDefault();
-        Array.prototype.forEach.call(footNoteTextElements, (el) => {
-          highlightAnchor(undefined, undefined, el);
-        })
-        return;
-      }
-    }
     if (/content-switch/.test(target.id)) {
       if (document.body.classList.contains("render-raw")) {
         target.innerText = target.dataset.rawcontentlabel;
@@ -390,7 +421,7 @@ function handleClick(e) {
         window.scrollTo({
           top: 0,
           left: 0,
-          behavior: "smooth",
+          behavior: "instant",
         });
       } else {
         anchor &&
@@ -398,7 +429,7 @@ function handleClick(e) {
             behavior: "instant",
             block: "start",
           });
-        isAnchoring = true;
+        triggerAnchoring();
       }
       highlightAnchor(targetId);
       if (

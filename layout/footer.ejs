@@ -1,0 +1,62 @@
+<footer id="footer">
+  <div class="footerInner">
+    <div class="footerTop">
+      <div class="footerBrand">
+        <img src="<%=url_for('/linen-theme/img/logo_black.svg')%>" class="footerLogo" alt="logo" />
+        <% if (theme?.info?.site_desc) { %>
+        <p class="footerDesc"><%= theme.info.site_desc %></p>
+        <% } %>
+      </div>
+      <div class="footerLinks">
+        <div class="footerLinkCol">
+          <h4><%= __('common.navigation') %></h4>
+          <% if (theme?.navItems) { %>
+            <% theme.navItems.forEach(item => { %>
+              <a href="<%=url_for(item.path)%>"><%=item.name%></a>
+            <% }); %>
+          <% } %>
+        </div>
+        <div class="footerLinkCol">
+          <h4><%= __('common.subscribe') %></h4>
+          <% 
+          const rssPath = config?.feed?.path || theme?.feed?.path;
+          if (rssPath) { 
+          %>
+          <a href="<%=url_for(rssPath)%>" target="_blank" class="footerRssLink">
+            <svg class="rssSvg" viewBox="0 0 24 24" width="14" height="14">
+              <path fill="currentColor" d="M6.18,15.64A2.18,2.18,0,0,1,8.36,17.82a2.18,2.18,0,0,1-2.18,2.18A2.18,2.18,0,0,1,4,17.82,2.18,2.18,0,0,1,6.18,15.64M4,4.44A15.56,15.56,0,0,1,19.56,20h-2.8A12.76,12.76,0,0,0,4,7.24V4.44m0,5.6A9.96,9.96,0,0,1,13.96,20h-2.8A7.16,7.16,0,0,0,4,12.84V10.04Z" />
+            </svg>
+            <span>RSS</span>
+          </a>
+          <% } %>
+        </div>
+        <div class="footerLinkCol footerMetaCol">
+          <h4><a href="<%=url_for('/explorers-guide')%>"><%= __('common.aboutThisSite') %></a></h4>
+          <span class="footerMetaText copyright">
+            <span class="copyright-popover-container">
+              <span class="copyright-trigger" tabindex="0" aria-haspopup="true">©</span>
+              <span class="copyright-popover-content">
+                <span class="copyright-popover-arrow"></span>
+                <span class="copyright-popover-header">
+                  <svg class="copyright-popover-icon" viewBox="0 0 24 24" width="14" height="14">
+                    <path fill="currentColor" d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2V7h-2v2z"/>
+                  </svg>
+                  <span class="copyright-popover-title"><%=__('common.copyrightTitle')%></span>
+                </span>
+                <span class="copyright-popover-text"><%=__('common.copyright')%></span>
+              </span>
+            </span>&nbsp;<%=date(Date.now(), 'YYYY')+' '+config.author%>
+          </span>
+          <span class="footerMetaText">
+            Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> & <a href="https://github.com/LynanBreeze/hexo-theme-linen" target="_blank">Linen</a>
+          </span>
+          <% if (theme?.info?.registration) { %>
+          <span class="footerMetaText registration">
+            <a href="http://beian.miit.gov.cn/" target="_blank"><%=theme.info.registration%></a>
+          </span>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>

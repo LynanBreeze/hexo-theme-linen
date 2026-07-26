@@ -9,6 +9,24 @@
 .lazyload-wrap {
   display: none;
 }
+.travel-map-loading {
+  display: none !important;
+}
+.travel-place-fallback-img {
+  display: block !important;
+}
+.travel-place-cover noscript {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.travel-place-cover noscript img {
+  display: block;
+  width: 100%;
+  height: 100% !important;
+  object-fit: cover;
+  z-index: 1;
+}
 .post-cover-img-wrap .cover-img {
   opacity: 1 !important;
 }
@@ -64,4 +82,56 @@
 #post figure.highlight.folded .fold-toggle,
 #raw-markdown-block figure.highlight.folded .fold-toggle {
   display: none;
+}
+.image-grid.scroll,
+.image-grid.slider,
+.image-grid.switcher {
+  display: flex !important;
+  gap: var(--image-grid-gap) !important;
+  overflow-x: auto !important;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: x mandatory !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+.image-grid.scroll .grid-item,
+.image-grid.slider .grid-item,
+.image-grid.switcher .grid-item {
+  display: block !important;
+  flex: 0 0 min(86%, 760px) !important;
+  width: min(86%, 760px) !important;
+  margin-right: 0 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  scroll-snap-align: center !important;
+  transition: none !important;
+}
+.image-grid.scroll .grid-item .lazyload-wrap,
+.image-grid.slider .grid-item .lazyload-wrap,
+.image-grid.switcher .grid-item .lazyload-wrap {
+  display: none !important;
+}
+.image-grid.scroll .grid-item .caption,
+.image-grid.slider .grid-item .caption,
+.image-grid.switcher .grid-item .caption,
+.image-grid.scroll .grid-item .pswp-caption-content,
+.image-grid.slider .grid-item .pswp-caption-content,
+.image-grid.switcher .grid-item .pswp-caption-content {
+  display: block !important;
+}
+.image-grid.scroll .grid-item .lazyload-outer-wrap noscript,
+.image-grid.slider .grid-item .lazyload-outer-wrap noscript,
+.image-grid.switcher .grid-item .lazyload-outer-wrap noscript {
+  display: block;
+}
+.image-grid.scroll .grid-item .lazyload-outer-wrap noscript img,
+.image-grid.slider .grid-item .lazyload-outer-wrap noscript img,
+.image-grid.switcher .grid-item .lazyload-outer-wrap noscript img {
+  display: block;
+  width: 100%;
+  height: auto !important;
+  margin: 0 auto !important;
+}
+.image-grid.switcher .image-grid-switcher-controls {
+  display: none !important;
 }

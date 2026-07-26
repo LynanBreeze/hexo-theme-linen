@@ -15,7 +15,7 @@ const relatedPosts = site.posts.filter(item=>item.source !== page.source).filter
 <div id="related-posts">
   <div class="related-posts-title"><%=__('common.relatedPosts')%></div>
   <% relatedPosts.each(post => { 
-      const coverImg = post.thumbnail || post.cover || '../img/related-post.jpg'
+      const coverImg = post.thumbnail || post.cover || url_for('/linen-theme/img/related-post.jpg')
       %>
   <a href="<%=url_for(post.path)%>">
     <div class="shared-link">

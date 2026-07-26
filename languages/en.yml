@@ -20,6 +20,7 @@ common:
   prevPost: "Prev"
   nextPost: "Next"
   copyright: "This site and its content are licensed under a Creative Commons Attribution-NonCommercial 4.0 International License."
+  copyrightTitle: "Copyright License"
   gallery: "Gallery"
   relatedPosts: "Related Posts"
   series: "Series"
@@ -37,3 +38,5 @@ common:
   thanks: "Thanks to"
   sponsored: "sponsored"
   seriesPostCountShort: "articles"
+  navigation: "Navigation"
+  subscribe: "Subscribe"

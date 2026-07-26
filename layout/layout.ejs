@@ -5,6 +5,7 @@ const version = theme.version;
 <% 
   var tocs = is_post() ? extractTocFromHtml(page.content) : null;
   var series = is_post() ? site.posts.filter(item=>item.series && item.series === page?.series).sort('date', -1) : []
+  var seriesInfo = is_post() && page?.series ? getSeriesInfo(page.series) : {}
 %>
 
 <!DOCTYPE html>
@@ -12,7 +13,7 @@ const version = theme.version;
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1" />
   <title><%=getPageTitle()%></title>
   <link rel="icon" type="image/x-icon" href="<%=url_for(theme?.icon ?? '/linen-theme/favicon.svg')%>" />
   <meta name="referrer" content="no-referrer-when-downgrade" />
@@ -44,7 +45,8 @@ const version = theme.version;
   <% } %>
 </head>
 
-<body>
+<body class="<%- is_post() ? 'is-post' : '' %>">
+  <div id=" "></div>
   <div id="page-top"></div>
   <%-partial('partials/header', {
       hasTocs: page?.toc ?? !!tocs?.length
@@ -79,7 +81,18 @@ const version = theme.version;
       <div class="post-series">
         <a class="series-title" href="<%=url_for(`/series/${page.series}/`)%>"><%=page.series%></a>
         <div class="series-items">
-          <% take(series, 50).forEach((item, index) => { %>
+          <%
+          let currentSeriesYear = null;
+          take(series, 50).forEach((item, index) => {
+            const itemYear = item.date?.year ? item.date.year() : new Date(item.date).getFullYear();
+            const showYearDivider = seriesInfo?.yearDivider && itemYear && itemYear !== currentSeriesYear;
+            if (showYearDivider) {
+              currentSeriesYear = itemYear;
+            }
+          %>
+          <% if (showYearDivider) { %>
+          <div class="series-year-divider<%-itemYear === page?.date?.year() ? ' active': ''%>"><%=itemYear%></div>
+          <% } %>
           <a class="series-item-link<%-item.source === page.source ? ' active': ''%>" href="<%=url_for(item.path)%>"><%-`${item.title}`%><% if (item.subTitle) { %><span class="sub-title"><%=item.subTitle%></span><% } %></a>
           <% }); %>
           <% if(series.length > 50) { %>
@@ -90,15 +103,15 @@ const version = theme.version;
       <% } %>
     </div>
     <div id="content-outer" class="<%= is_post() ? 'post-outer' : page.seriesInfo?.cover ? 'series-outer': '' %>">
-      <div id="content-inner">
+      <main id="content-inner" class="content-inner">
         <%- body %>
-      </div>
+      </main>
     </div>
   </div>
 
-  <%-partial('partials/footer')%>
+  <%-partial('footer')%>
   <div id="mask"></div>
-  <a id="back-to-top" href="#page-top" title="back to top"></a>
+  <a id="back-to-top" href="# " title="back to top"></a>
   <noscript id="noscript-styles"></noscript>
   <% if(is_post()) { %>
   <script src="<%=url_for(`/linen-theme/js/toc.js?v=${version}`)%>" defer></script>
@@ -118,7 +131,7 @@ const version = theme.version;
   </script>
   <% } %>
   <% if (page.hdrSwitch) { %>
-  <script src="<%url_for(`/linen-theme/js/hdr.js?v=${version}`)%>"></script>
+  <script src="<%=url_for(`/linen-theme/js/hdr.js?v=${version}`)%>"></script>
   <% } %>
   <% if (theme?.appends?.length > 0) { %>
   <% theme.appends.forEach(appendItem => { %>

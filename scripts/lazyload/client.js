@@ -114,6 +114,16 @@
   }
   var lazyloadItems = document.querySelectorAll(".lazyload-wrap");
   var loadingQueue = [];
+  var appendStyles = function appendStyles(element, styles) {
+    var currentStyle = element.getAttribute("style");
+    var newStyles = "";
+    if (currentStyle) {
+      var hasSemicolon = currentStyle.endsWith(";");
+      newStyles = currentStyle + (hasSemicolon ? "" : ";");
+    }
+    newStyles += styles;
+    element.setAttribute("style", newStyles);
+  };
   var createResourceElement = function createResourceElement(contentStr) {
     var nElement = document.createElement("div");
     nElement.innerHTML = contentStr;
@@ -324,8 +334,7 @@
   }
 
   var createObserver = function createObserver(element) {
-    const observer = observeWithStableVisible(element);
-    observer.observe(element);
+    observeWithStableVisible(element);
   };
   if (!window.IntersectionObserver) {
     for (var i = 0; i < lazyloadItems.length; i++) {

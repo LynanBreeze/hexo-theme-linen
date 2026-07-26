@@ -1,6 +1,7 @@
 @use "./vars.scss" as *;
 
-@media (max-width: 1280px) {
+@mixin rules {
+  @media (max-width: 1280px) {
   #post .post-meta .page-pv {
     display: none;
   }
@@ -239,29 +240,149 @@
         display: none;
       }
       .site-info {
-        padding: 0;
-        padding-bottom: 1rem;
+        padding: 24px 0 0 0;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        margin-top: 20px;
+        &.home {
+          padding: 24px 0 0 0;
+        }
+        .info-row {
+          &:not(:first-child) {
+            margin-top: 10px !important;
+          }
+        }
         .author {
-          flex-direction: column;
+          flex-direction: row;
           align-items: center;
+          gap: 12px;
           .avatar {
-            width: 25vw !important;
-            height: 25vw !important;
+            width: 50px !important;
+            height: 50px !important;
           }
           .name {
-            margin-top: 10px;
+            margin-top: 0;
             margin-left: 0 !important;
+            font-size: 16px;
+            font-weight: 600;
+          }
+        }
+        .description.description {
+          text-align: left;
+          margin-top: 6px;
+          font-size: 13px;
+          color: $moreGrayText;
+          padding-left: 60px;
+        }
+        .site-statisc.site-statisc {
+          margin-top: 12px !important;
+          padding-left: 60px;
+          justify-content: flex-start;
+          gap: 10px;
+          font-size: 12px;
+          color: $moreGrayText;
+          max-width: 100%;
+          margin-left: 0;
+          margin-right: 0;
+          a {
+            color: $grayerText;
+          }
+          .divider {
+            color: rgba(0, 0, 0, 0.08);
+            margin: 0;
           }
         }
         .info-row.about {
-          text-align: center;
-          margin-top: 15px;
-        }
-        .description.description {
-          text-align: center;
-          margin-top: 10px;
+          text-align: left;
+          margin-top: 12px !important;
+          padding-left: 60px;
+          font-size: 12px;
+          display: flex;
+          gap: 16px;
+          a {
+            margin-right: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: $linkColor;
+            i.about-icon,
+            i.new-icon {
+              width: 14px;
+              height: 14px;
+              margin-bottom: 0;
+              margin-right: 0;
+            }
+          }
         }
       }
+    }
+  }
+  .series-layout {
+    .travel-map-section {
+      margin-top: 0;
+    }
+    .travel-map-panel {
+      grid-template-columns: 1fr;
+      min-height: 0;
+    }
+    .travel-map-copy {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 10px 16px;
+      padding: 20px 18px;
+      border-right: none;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+
+      .travel-map-eyebrow {
+        grid-column: 1;
+        grid-row: 1;
+      }
+
+      h2 {
+        grid-column: 1;
+        grid-row: 2;
+        margin: 4px 0 0;
+        font-size: 22px;
+      }
+
+      .travel-map-stats {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        margin-top: 0;
+        text-align: right;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        justify-content: center;
+        font-size: 11px;
+        color: $metaText;
+        line-height: 1.2;
+
+        span {
+          display: block;
+          margin-right: 0;
+          font-size: 32px;
+          line-height: 1.1;
+          font-weight: bold;
+          color: $green;
+        }
+      }
+    }
+    .travel-map-canvas,
+    .travel-map-loading {
+      min-height: 250px;
+    }
+    .travel-place-list {
+      grid-template-columns: 1fr;
+      padding: 0 14px;
+    }
+    .travel-place-card {
+      grid-template-columns: 116px minmax(0, 1fr);
+      min-height: 116px;
+    }
+    .travel-place-cover {
+      width: 116px;
+      min-height: 116px;
     }
   }
   #top-posts {
@@ -363,12 +484,61 @@
   }
   .image-grid {
     margin-bottom: 1em;
+
+    &.scroll,
+    &.slider {
+      gap: $commonPadding;
+
+      .grid-item {
+        flex-basis: 86% !important;
+        width: 86% !important;
+      }
+    }
+
+    &.switcher {
+      margin-left: 0;
+      margin-right: 0;
+      padding: 0;
+      border-radius: 0;
+      gap: 14px;
+
+      .image-grid-switcher-controls {
+        width: 100%;
+        justify-content: flex-start;
+        overflow-x: hidden;
+      }
+
+      .image-grid-switcher-button {
+        min-width: 0;
+        min-height: 30px;
+        padding: 0 6px;
+        font-size: 10px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
   }
   #post .post-meta #content-switch {
     width: fit-content;
     display: block;
     margin-left: 0;
     margin-top: 0.5rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .series-layout {
+    .travel-place-card {
+      grid-template-columns: 1fr;
+    }
+    .travel-place-cover {
+      width: 100%;
+      aspect-ratio: 2 / 1;
+      min-height: unset;
+    }
+    .travel-place-body {
+      padding: 12px 16px 14px;
+    }
   }
 }
 
@@ -443,4 +613,5 @@
   footer {
     margin-top: 1em;
   }
+}
 }

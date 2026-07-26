@@ -111,7 +111,7 @@
 }
 
 .img-exif .location {
-  color: #232323;
+  margin-top: 1px;
 }
 
 .img-exif .location::before {

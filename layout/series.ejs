@@ -1,5 +1,50 @@
-<div class="series-layout">
-  <% if (page.seriesInfo?.cover) { %>
+<%
+const isTravelSeries = ['旅行', 'Travel'].includes(page.series);
+const parseMapCoordinate = (post) => {
+  if (post?.mapPlace?.coordinate?.length === 2) {
+    return { lat: Number(post.mapPlace.coordinate[0]), lng: Number(post.mapPlace.coordinate[1]) };
+  }
+
+  const mapUrl = post?.mapPlace?.url || post?.coverInfo?.url;
+  if (!mapUrl) return null;
+
+  try {
+    const url = new URL(mapUrl);
+    const value = url.searchParams.get('coordinate') || url.searchParams.get('ll');
+    if (!value) return null;
+
+    const [lat, lng] = value.split(',').map(Number);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      return { lat, lng };
+    }
+  } catch (error) {
+    return null;
+  }
+
+  return null;
+};
+const travelPlaces = isTravelSeries ? page.seriesPosts.map((post, index) => {
+  const coordinate = parseMapCoordinate(post);
+  if (!coordinate) return null;
+  return {
+    id: `travel-place-${index}`,
+    title: post.title,
+    subTitle: post.subTitle || '',
+    path: url_for(post.path),
+    date: post.date && !date(post.date).startsWith('1970') ? getPostDate(post) : '',
+    location: post?.mapPlace?.location || post?.coverInfo?.location || post.title,
+    excerpt: post?.excerpt || '',
+    cover: post.thumbnail || post.cover || '',
+    mapUrl: post?.mapPlace?.url || post?.coverInfo?.url || '',
+    lat: coordinate.lat,
+    lng: coordinate.lng,
+  };
+}).filter(Boolean) : [];
+const travelPlacesJson = encodeURIComponent(JSON.stringify(travelPlaces));
+%>
+
+<div class="series-layout<%=isTravelSeries && travelPlaces.length ? ' travel-series-layout' : ''%>">
+  <% if (page.seriesInfo?.cover && !isTravelSeries) { %>
   <div class="series-cover-img-wrap" style="<%=page.seriesInfo?.coverPlaceholder ? `background-image: url(${page.seriesInfo?.coverPlaceholder})`: ''%>">
     <div class="series-cover-img-placeholder"></div>
     <script>
@@ -41,12 +86,239 @@
   </div>
   <% } %>
 </div>
-<% } else { %>
+<% } else if (!isTravelSeries) { %>
 <h1><%=__('common.series') + ': ' + page.series %></h1>
 <% if (page?.seriesInfo?.description) { %>
 <div class="series-description"><%=page.seriesInfo.description||''%> <i class="post-count-icon"></i><%=__('common.total')%> <%=page?.seriesPosts?.length%> <%=__('common.seriesPostCount')%></div>
 <% } %>
 <% } %>
+
+<% if (isTravelSeries && travelPlaces.length) { %>
+<noscript>
+  <link rel="stylesheet" href="<%-url_for('/css/leaflet.css')%>" />
+</noscript>
+<section class="travel-map-section" aria-label="<%=page.series === 'Travel' ? 'Travel map' : '旅行地图'%>">
+  <div class="travel-map-panel">
+    <div class="travel-map-copy">
+      <div class="travel-map-eyebrow"><%=page.series === 'Travel' ? 'Travel Map' : '旅行地图'%></div>
+      <h2><%=page.series === 'Travel' ? 'Places I have been' : '去过的地方'%></h2>
+      <div class="travel-map-stats">
+        <span><%=travelPlaces.length%></span>
+        <%=page.series === 'Travel' ? 'mapped trips' : '次旅行足迹'%>
+      </div>
+    </div>
+    <div id="travel-map" class="travel-map-canvas" data-places="<%=travelPlacesJson%>">
+      <div class="travel-map-loading"><%=page.series === 'Travel' ? 'Loading map...' : '地图加载中...'%></div>
+      <noscript>
+        <img
+          class="travel-map-fallback-img"
+          src="<%=url_for('/linen-theme/img/travel-map-fallback.svg')%>"
+          alt="<%=page.series === 'Travel' ? 'Static travel map' : '旅行地图静态图'%>"
+        />
+      </noscript>
+    </div>
+  </div>
+  <div class="travel-place-list">
+    <% travelPlaces.forEach((place, index) => { %>
+    <article class="travel-place-card" data-travel-place="<%=place.id%>">
+      <a href="<%=place.path%>" class="travel-place-cover" aria-label="<%=place.title%>">
+        <span class="travel-place-index"><%=String(travelPlaces.length - index).padStart(2, '0')%></span>
+        <% if (place.cover) { %>
+        <div class="cover-img">
+          <img src="<%=place.cover%>" alt="" loading="lazy" />
+        </div>
+        <% } %>
+      </a>
+      <div class="travel-place-body">
+        <a class="travel-place-title" href="<%=place.path%>"><%=place.title%><% if (place.subTitle) { %><span class="sub-title"><%=place.subTitle%></span><% } %></a>
+        <div class="travel-place-meta"><%=place.location%><% if (place.date) { %><span><%=place.date%></span><% } %></div>
+        <div class="travel-place-excerpt"><%-place.excerpt%></div>
+      </div>
+    </article>
+    <% }) %>
+  </div>
+</section>
+<script>
+  (() => {
+    const mapEl = document.getElementById('travel-map');
+    if (!mapEl) return;
+
+    // Leaflet assets will be loaded asynchronously below.
+
+    const initMap = () => {
+      const places = JSON.parse(decodeURIComponent(mapEl.dataset.places || '%5B%5D'));
+      const items = document.querySelectorAll('[data-travel-place]');
+      const markers = new Map();
+      const setActive = (id, active) => {
+        items.forEach((item) => {
+          if (item.dataset.travelPlace === id) item.classList.toggle('active', active);
+        });
+      };
+
+      if (!window.L) {
+        mapEl.innerHTML = '<div class="travel-map-loading"><%=page.series === "Travel" ? "Map failed to load." : "地图加载失败。"%></div>';
+        return;
+      }
+
+      mapEl.innerHTML = '';
+      const mapLanguage = '<%=String(page.language || config.language || "").startsWith("zh") ? "zh" : "en"%>';
+      const tileConfig = mapLanguage === 'zh'
+        ? {
+          url: 'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
+          options: {
+            maxZoom: 18,
+            subdomains: ['1', '2', '3', '4'],
+            attribution: '&copy; 高德地图',
+          },
+        }
+        : {
+          url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          options: {
+            maxZoom: 18,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          },
+        };
+      const map = L.map(mapEl, {
+        scrollWheelZoom: false,
+        attributionControl: true,
+        tap: false,
+      });
+      L.tileLayer(tileConfig.url, tileConfig.options).addTo(map);
+
+      const createMarkerIcon = (count = 1) => L.divIcon({
+        className: 'travel-leaflet-marker',
+        html: `<span data-place-count="${count}">${count > 1 ? `<strong>${count}</strong>` : ''}</span>`,
+        iconSize: [18, 18],
+        iconAnchor: [9, 9],
+        popupAnchor: [0, -10],
+      });
+      const bounds = [];
+      const placeGroups = places.reduce((groups, place) => {
+        const key = `${place.lat.toFixed(3)},${place.lng.toFixed(3)}`;
+        if (!groups.has(key)) {
+          groups.set(key, {
+            lat: place.lat,
+            lng: place.lng,
+            places: [],
+          });
+        }
+        groups.get(key).places.push(place);
+        return groups;
+      }, new Map());
+
+      const escapeHtml = (value = '') => String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
+      const getPopupHtml = (group) => {
+        const items = group.places
+          .map((place) => {
+            const subTitle = place.subTitle ? `<small class="travel-map-popup-subtitle">${escapeHtml(place.subTitle)}</small>` : '';
+            const coverImg = place.cover ? `<img class="travel-map-popup-cover" src="${escapeHtml(place.cover)}" alt="" />` : '';
+            return `<a class="travel-map-popup-record" href="${escapeHtml(place.path)}">${coverImg}<div class="travel-map-popup-content"><span>${escapeHtml(place.title)}${subTitle}</span><small>${escapeHtml(place.date || place.location)}</small></div></a>`;
+          })
+          .join('');
+        return `<div class="travel-map-popup-list">${items}</div>`;
+      };
+
+      placeGroups.forEach((group) => {
+        const placeCount = group.places.length;
+        const marker = L.marker([group.lat, group.lng], { icon: createMarkerIcon(placeCount) })
+          .addTo(map)
+          .bindPopup(getPopupHtml(group));
+        marker.placeCount = placeCount;
+        group.places.forEach((place) => markers.set(place.id, marker));
+        bounds.push([group.lat, group.lng]);
+
+        marker.on('mouseover', () => {
+          const el = marker.getElement();
+          if (el) el.classList.add('active');
+          group.places.forEach((place) => setActive(place.id, true));
+        });
+        marker.on('mouseout', () => {
+          const el = marker.getElement();
+          if (el) el.classList.remove('active');
+          group.places.forEach((place) => setActive(place.id, false));
+        });
+      });
+
+      if (bounds.length) {
+        map.fitBounds(bounds, { padding: [28, 28] });
+        map.setMinZoom(map.getZoom());
+      }
+
+      items.forEach((item) => {
+        const id = item.dataset.travelPlace;
+        const marker = markers.get(id);
+        item.addEventListener('mouseenter', () => {
+          setActive(id, true);
+          if (marker) {
+            const el = marker.getElement();
+            if (el) el.classList.add('active');
+          }
+        });
+        item.addEventListener('mouseleave', () => {
+          setActive(id, false);
+          if (marker) {
+            const el = marker.getElement();
+            if (el) el.classList.remove('active');
+          }
+        });
+        item.addEventListener('focus', () => {
+          setActive(id, true);
+          if (marker) {
+            const el = marker.getElement();
+            if (el) el.classList.add('active');
+          }
+        });
+        item.addEventListener('blur', () => {
+          setActive(id, false);
+          if (marker) {
+            const el = marker.getElement();
+            if (el) el.classList.remove('active');
+          }
+        });
+      });
+    };
+
+    const loadResources = () => {
+      // 1. Dynamic load of Leaflet CSS if not already loaded
+      if (!document.querySelector('link[href*="leaflet.css"]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = '<%-url_for("/css/leaflet.css")%>';
+        document.head.appendChild(link);
+      }
+
+      // 2. Load Leaflet script dynamically
+      if (window.L) {
+        initMap();
+      } else {
+        const script = document.createElement('script');
+        script.src = '<%-url_for("/js/leaflet.js")%>';
+        script.async = true;
+        script.onload = initMap;
+        script.onerror = () => {
+          mapEl.innerHTML = '<div class="travel-map-loading"><%=page.series === "Travel" ? "Map failed to load." : "地图加载失败。"%></div>';
+        };
+        document.body.appendChild(script);
+      }
+    };
+
+    // Use requestIdleCallback or setTimeout to yield the main thread and prevent blocking initial paint/layout of the place list
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(() => loadResources());
+    } else {
+      setTimeout(loadResources, 100);
+    }
+  })();
+</script>
+<% } %>
+
+<% if (!isTravelSeries) { %>
 <div class="posts-info-layout">
   <div class="posts-wrap">
     <div id="recent-posts">
@@ -56,4 +328,5 @@
   </div>
   <div class="info-wrap"><%-partial('partials/site-info')%></div>
 </div>
+<% } %>
 </div>

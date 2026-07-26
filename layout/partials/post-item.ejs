@@ -1,5 +1,10 @@
 <div class="post-item" href="<%=url_for(post.path)%>" onclick="onclickPostItem(this)">
   <div class="item-body">
+    <% if (post.thumbnail || post.cover) { %>
+    <div class="cover-img">
+      <img src="<%=url_for(post.thumbnail || post.cover)%>" alt="" loading="lazy" />
+    </div>
+    <% } %>
     <div class="title-excerpt">
       <div class="title-excerpt-text">
         <a class="title" href="<%=url_for(post.path)%>" onclick="event.stopPropagation()"><%=post.title%><% if (post.subTitle) { %><span class="sub-title"><%=post.subTitle%></span><% } %></a>
@@ -26,10 +31,5 @@
         <span class="read-time"><%-partial('partials/words', { post, count: false, readTime: true })%></span>
       </div>
     </div>
-    <% if (post.thumbnail || post.cover) { %>
-    <div class="cover-img">
-      <img src="<%=url_for(post.thumbnail || post.cover)%>" alt="" loading="lazy" />
-    </div>
-    <% } %>
   </div>
 </div>

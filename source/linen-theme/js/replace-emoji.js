@@ -1,7 +1,5 @@
 function replaceEmojis() {
-  const replacements = [
-    { emoji: "✅", className: "custom-checked-checkbox" },
-  ];
+  const replacements = [{ emoji: "✅", className: "custom-checked-checkbox" }];
 
   replacements.forEach(({ emoji, className }) => {
     const walker = document.createTreeWalker(
@@ -13,7 +11,7 @@ function replaceEmojis() {
             ? NodeFilter.FILTER_ACCEPT
             : NodeFilter.FILTER_REJECT;
         },
-      }
+      },
     );
 
     const nodesToReplace = [];

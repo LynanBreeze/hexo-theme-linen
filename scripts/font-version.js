@@ -9,6 +9,8 @@ hexo.extend.filter.register('before_generate', function () {
   const content = fs.readFileSync(lettersFilePath);
   const hash = crypto.createHash('md5').update(content).digest('hex').slice(0, 8);
 
-  const scssPath = path.join(hexo.base_dir, 'themes', hexo.config.theme, 'source', 'css', 'font-version.scss');
-  fs.writeFileSync(scssPath, `$font-version: "${hash}";\n`);
+  const scssPath = path.join(hexo.theme_dir, "source/linen-theme/css/font-version.scss");
+  const scssContent = `$font-version: "${hash}";\n`;
+  if (fs.existsSync(scssPath) && fs.readFileSync(scssPath, 'utf8') === scssContent) return;
+  fs.writeFileSync(scssPath, scssContent);
 });

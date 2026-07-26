@@ -7,8 +7,18 @@
   background-position: center;
   border-radius: 4px;
   overflow: hidden;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
   margin-bottom: 1.2rem;
   cursor: pointer;
   box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
@@ -29,7 +39,8 @@
   .link-content {
     width: 0;
     flex: 1 1 auto;
-    height: 100%;
+    height: calc(100% + 2px);
+    margin-top: -1px;
     background-image: linear-gradient(
       to right,
       rgba(255, 255, 255, 1),
@@ -110,8 +121,18 @@
   color: unset;
   margin-left: 0;
   margin-bottom: 1.2rem;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
   transition: box-shadow ease 0.3s;
 
   &:visited,
@@ -200,7 +221,8 @@
 }
 
 .github-link {
-  max-width: 325px;
+  width: 100%;
+  max-width: 100%;
   display: inline-block;
   background-color: rgb(229, 229, 229);
   box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
@@ -209,8 +231,13 @@
   &:hover {
     box-shadow: rgba(149, 157, 165, 0.4) 0px 8px 24px;
   }
+  .lazyload-outer-wrap {
+    margin: 0;
+  }
   .preview-img {
     display: block;
+    width: 100%;
+    height: auto;
     aspect-ratio: 2 / 1;
     background-color: #fff;
   }
@@ -220,15 +247,30 @@
     padding: 0.25em 0.6em 0.5em 0.6em;
     font-weight: bold;
     display: block;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-      Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+    font-family:
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      Oxygen,
+      Ubuntu,
+      Cantarell,
+      "Open Sans",
+      "Helvetica Neue",
       sans-serif;
-    &::after{
-      content: 'github.com';
+    &::after {
+      content: "github.com";
       display: block;
       font-weight: normal;
       color: #777;
     }
   }
   border-radius: 8px;
+}
+
+@media (min-width: 451px) {
+  .github-link {
+    width: 450px;
+  }
 }

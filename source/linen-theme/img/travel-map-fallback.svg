@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 360" role="img" aria-label="Travel map">
+  <rect width="960" height="360" fill="#e8f1ee"/>
+  <path d="M78 56c42-24 106-26 153-7 34 14 55 40 92 43 39 3 82-20 119-7 36 13 47 54 83 66 43 15 88-25 132-12 35 10 46 48 77 64 35 18 87-7 116 22 22 22 16 63-9 82-31 23-83 8-116-8-43-21-83-51-131-48-41 2-73 28-113 34-57 9-105-25-158-40-64-19-126 11-188-8-54-16-92-67-90-124 1-24 12-44 33-57z" fill="#cfded7"/>
+  <path d="M202 142c32-22 82-16 113 4 27 17 39 48 71 54 39 8 78-23 115-8 28 12 32 47 57 64 29 20 77 9 98 39 11 16 6 37-8 48H205c-43-19-74-55-70-99 3-41 33-78 67-102z" fill="#dbe7e1"/>
+  <path d="M622 72c18-13 50-11 65 5 18 19 8 51-16 59-27 9-58-12-58-40 0-10 3-18 9-24zM714 102c24-12 64 1 73 28 9 25-12 51-40 50-26-1-49-25-45-51 2-12 6-21 12-27z" fill="#f2f6f4"/>
+  <g fill="none" stroke="#ffffff" stroke-linecap="round" opacity=".72">
+    <path d="M54 104c87 23 176 22 266 15 99-8 196-28 296-20 105 9 201 47 297 89" stroke-width="2"/>
+    <path d="M84 250c110-34 223-40 337-31 137 11 262 49 393 85" stroke-width="2"/>
+    <path d="M162 28c-2 69 8 130 29 197 13 42 28 80 30 124" stroke-width="1.5"/>
+    <path d="M448 20c-14 78-11 156 9 233 8 30 18 59 20 90" stroke-width="1.5"/>
+    <path d="M727 25c-26 71-31 146-17 220 6 30 15 60 13 91" stroke-width="1.5"/>
+  </g>
+  <g font-family="Arial, sans-serif" font-size="15" fill="#5c6b66">
+    <text x="474" y="157">China</text>
+    <text x="675" y="109">Japan</text>
+    <text x="715" y="168">Kansai</text>
+  </g>
+  <g fill="#a8452e" stroke="#ffffff" stroke-width="3">
+    <circle cx="562" cy="178" r="8"/>
+    <circle cx="455" cy="185" r="8"/>
+    <circle cx="386" cy="156" r="8"/>
+    <circle cx="294" cy="118" r="8"/>
+    <circle cx="634" cy="156" r="8"/>
+    <circle cx="704" cy="124" r="8"/>
+    <circle cx="736" cy="163" r="8"/>
+    <circle cx="606" cy="218" r="8"/>
+    <circle cx="532" cy="217" r="8"/>
+  </g>
+  <path d="M0 0h960v360H0z" fill="none" stroke="rgba(35,35,35,.08)"/>
+</svg>

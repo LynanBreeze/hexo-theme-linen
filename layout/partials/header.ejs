@@ -3,7 +3,7 @@ const { hasTranslatation, targetLanguagePath, targetLanguage } = getTranslationP
 
 const logoConfig = theme?.logo || {};
 const { src: logoSrc, text: logoText, width: logoWidth, height: logoHeight } = logoConfig;
-const rssPath = theme?.feed === false ? '' : theme?.feed?.path ?? '/feed.xml';
+const rssPath = config?.feed?.path || theme?.feed?.path;
 %>
 
 <% if (is_post()) { %>
