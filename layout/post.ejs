@@ -201,7 +201,7 @@ const seriesInfo = getSeriesInfo(page?.series);
     }
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "<%=url_for('/linen-theme/css/gitalk/gitalk.css')%>";
+    link.href = "<%=url_for('/linen-theme/js/gitalk/gitalk.css')%>";
     document.head.appendChild(link);
     const script = document.createElement("script");
     script.src = "<%=url_for('/linen-theme/js/gitalk/gitalk.min.js')%>";

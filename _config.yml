@@ -1,6 +1,5 @@
 stylesheets:
 - /linen-theme/css/linen.css
-- /linen-theme/css/mediaquery.css
 
 scripts:
 - /linen-theme/js/linen.js
