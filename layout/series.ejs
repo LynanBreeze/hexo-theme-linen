@@ -95,7 +95,7 @@ const travelPlacesJson = encodeURIComponent(JSON.stringify(travelPlaces));
 
 <% if (isTravelSeries && travelPlaces.length) { %>
 <noscript>
-  <link rel="stylesheet" href="<%-url_for('/css/leaflet.css')%>" />
+  <link rel="stylesheet" href="<%-url_for('/linen-theme/css/leaflet.css')%>" />
 </noscript>
 <section class="travel-map-section" aria-label="<%=page.series === 'Travel' ? 'Travel map' : '旅行地图'%>">
   <div class="travel-map-panel">
@@ -289,7 +289,7 @@ const travelPlacesJson = encodeURIComponent(JSON.stringify(travelPlaces));
       if (!document.querySelector('link[href*="leaflet.css"]')) {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = '<%-url_for("/css/leaflet.css")%>';
+        link.href = '<%-url_for("/linen-theme/css/leaflet.css")%>';
         document.head.appendChild(link);
       }
 
@@ -298,7 +298,7 @@ const travelPlacesJson = encodeURIComponent(JSON.stringify(travelPlaces));
         initMap();
       } else {
         const script = document.createElement('script');
-        script.src = '<%-url_for("/js/leaflet.js")%>';
+        script.src = '<%-url_for("/linen-theme/js/leaflet.js")%>';
         script.async = true;
         script.onload = initMap;
         script.onerror = () => {
