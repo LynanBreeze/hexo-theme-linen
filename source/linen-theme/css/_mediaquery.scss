@@ -39,6 +39,7 @@
     border-right: none;
     -ms-overflow-style: unset;
     scrollbar-width: unset;
+    overscroll-behavior: contain;
     @include safe-padding(15px);
     .toc-item-wrap {
       transition: unset;

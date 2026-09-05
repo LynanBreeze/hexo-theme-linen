@@ -358,6 +358,18 @@ function onclickPostItem(element) {
   }
 }
 
+function setBodyScrollLocked(locked) {
+  var body = document.body;
+  var html = document.documentElement;
+  if (locked) {
+    body && body.classList.add("no-scroll");
+    html && html.classList.add("no-scroll");
+  } else {
+    body && body.classList.remove("no-scroll");
+    html && html.classList.remove("no-scroll");
+  }
+}
+
 function handleClick(e) {
   try {
     var target = e.target;
@@ -377,7 +389,7 @@ function handleClick(e) {
     if (/close-series-popup-icon/.test(target.className)) {
       seriesElement?.classList?.remove("visible");
       maskElement.classList.remove("visible");
-      bodyElement.classList.remove("no-scroll");
+      setBodyScrollLocked(false);
     } else if (["H2", "H3"].includes(target.tagName) && target.id) {
       const newLocation = new URL(location.href);
       newLocation.hash = `#${target.id}`;
@@ -434,7 +446,7 @@ function handleClick(e) {
       if (tocElement?.classList?.contains("visible")) {
         tocElement.classList.remove("visible");
         maskElement.classList.remove("visible");
-        bodyElement.classList.remove("no-scroll");
+        setBodyScrollLocked(false);
       }
       if (targetId === "to-page-top") {
         window.scrollTo({
@@ -475,11 +487,11 @@ function handleClick(e) {
       if (tocElement?.classList?.contains("visible")) {
         tocElement.classList.remove("visible");
         maskElement.classList.remove("visible");
-        bodyElement.classList.remove("no-scroll");
+        setBodyScrollLocked(false);
       } else {
         tocElement.classList.add("visible");
         maskElement.classList.add("visible");
-        bodyElement.classList.add("no-scroll");
+        setBodyScrollLocked(true);
       }
       return;
     } else if (
@@ -492,13 +504,13 @@ function handleClick(e) {
       seriesElement?.classList?.add("visible");
       maskElement?.classList?.add("visible");
       donateModal?.classList?.remove("visible");
-      bodyElement.classList.add("no-scroll");
+      setBodyScrollLocked(true);
       return;
     } else if (target?.className?.includes("series-item-link")) {
       e.preventDefault();
       seriesElement?.classList?.remove("visible");
       maskElement.classList.remove("visible");
-      bodyElement.classList.remove("no-scroll");
+      setBodyScrollLocked(false);
       const href =
         target.getAttribute("href") ||
         target.parentElement.getAttribute("href");
@@ -508,7 +520,7 @@ function handleClick(e) {
       tocElement?.classList?.remove("visible");
       seriesElement?.classList?.remove("visible");
       maskElement.classList.remove("visible");
-      bodyElement.classList.remove("no-scroll");
+      setBodyScrollLocked(false);
       return;
     } else if (target?.className?.includes("fold-toggle")) {
       const parentElement = target.parentElement;
@@ -573,3 +585,23 @@ function initAgeWarning() {
 }
 
 initAgeWarning();
+
+function initMaskScrollLock() {
+  var mask = document.getElementById("mask");
+  if (!mask) return;
+  mask.addEventListener(
+    "touchmove",
+    function (e) {
+      if (mask.classList.contains("visible")) {
+        e.preventDefault();
+      }
+    },
+    { passive: false }
+  );
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initMaskScrollLock);
+} else {
+  initMaskScrollLock();
+}

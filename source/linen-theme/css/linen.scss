@@ -41,6 +41,9 @@ html {
   min-width: 320px;
   scroll-behavior: smooth;
   overscroll-behavior: auto none;
+  &.no-scroll {
+    overflow: hidden !important;
+  }
 }
 
 * {
@@ -216,6 +219,9 @@ body {
     #raw-markdown-block {
       display: block;
     }
+  }
+  &.no-scroll {
+    overflow: hidden !important;
   }
 }
 * {
@@ -1831,6 +1837,7 @@ body {
     transition: transform cubic-bezier(0.4, 0, 0.6, 1) 0.3s;
     display: flex;
     flex-direction: column;
+    overscroll-behavior: contain;
     @include safe-padding(15px);
     &.visible {
       transform: translateY(0);
@@ -2595,6 +2602,7 @@ body {
   &.visible {
     pointer-events: all;
     opacity: 1;
+    touch-action: none;
   }
 }
 
