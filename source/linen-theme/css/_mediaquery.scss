@@ -10,9 +10,6 @@
   }
   .nav-header.is-post {
     position: fixed;
-    .header-inner {
-      padding: 0 $commonPadding;
-    }
   }
   .nav-header.is-post.hide {
     transform: translateY(-100%);
