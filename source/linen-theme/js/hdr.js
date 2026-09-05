@@ -52,7 +52,7 @@ function switchHDR() {
           } else {
             var hrefAttr = link.getAttribute("href");
             if (hrefAttr && hrefAttr.includes(SDRPath)) {
-              link.setAttribute("href", HDRPath);
+              link.setAttribute("href", hrefAttr.replace(SDRPath, HDRPath));
             }
           }
         } else {
@@ -61,7 +61,7 @@ function switchHDR() {
           } else {
             var hrefAttr = link.getAttribute("href");
             if (hrefAttr && hrefAttr.includes(HDRPath)) {
-              link.setAttribute("href", SDRPath);
+              link.setAttribute("href", hrefAttr.replace(HDRPath, SDRPath));
             }
           }
         }
