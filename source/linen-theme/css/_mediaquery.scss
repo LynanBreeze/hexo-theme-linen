@@ -17,12 +17,6 @@
   .nav-header.is-post.hide {
     transform: translateY(-100%);
   }
-  .nav-header .header-inner .right .buttonSet .button.rss {
-    margin-right: 16px;
-    &:last-child {
-      margin-right: 0;
-    }
-  }
   .nav-header .header-inner .right .buttonSet .button.toc {
     display: block;
   }
@@ -49,9 +43,14 @@
     -ms-overflow-style: unset;
     scrollbar-width: unset;
     @include safe-padding(15px);
-    .toc-item-wrap:not(.active) {
-      opacity: unset;
+    .toc-item-wrap {
       transition: unset;
+      will-change: auto;
+      transform: none;
+      &:not(.active) {
+        opacity: unset;
+        transition: unset;
+      }
     }
     &:hover {
       .toc-item-wrap:not(.active) {
@@ -89,7 +88,7 @@
   }
   body.resizing {
     #toc,
-    post-series {
+    .post-series {
       display: none;
     }
     .nav-header {
@@ -568,8 +567,8 @@
   .nav-header .header-inner .right .navItems .navItem:not(:last-child) {
     margin-right: 10px;
   }
-  .nav-header .header-inner .right .buttonSet .button:not(:last-child) {
-    margin-right: 10px;
+  .nav-header .header-inner .right .buttonSet {
+    gap: 10px;
   }
   .nav-header .header-inner .right .buttonSet .button.hdr-switch {
     display: none;

@@ -286,13 +286,11 @@ body {
         flex: 0 0 auto;
         display: flex;
         align-items: center;
+        gap: 16px;
         .button {
           width: 25px;
           height: 25px;
           transition: opacity ease 0.3s;
-          &:not(:last-child) {
-            margin-right: 16px;
-          }
           &.toc {
             background-image: url("../img/icons/toc1.svg");
             background-size: contain;
@@ -324,7 +322,6 @@ body {
           &.rss {
             background-image: url("../img/icons/rss.svg");
             background-size: cover;
-            margin-right: 0;
           }
           &.hdr-switch {
             background-image: url("../img/icons/hdr.svg");
@@ -572,6 +569,9 @@ body {
   }
   #page-content {
     text-autospace: normal;
+    > :last-child {
+      margin-bottom: 0;
+    }
   }
   .post-meta {
     @include defaultFont;
@@ -934,6 +934,10 @@ body {
 
   .tags {
     @include tags;
+    margin-top: 1em;
+    &:empty {
+      display: none;
+    }
   }
   .lazyload-outer-wrap {
     .caption {
@@ -1085,12 +1089,11 @@ body {
 }
 
 .post-nav-wrap {
-  margin-top: 1em;
+  margin: $postWidgetGap auto 0 auto;
   box-sizing: border-box;
   padding: 1em $commonPadding 0 $commonPadding;
   padding-top: 14px;
   background-color: #fff;
-  margin-bottom: 1em;
   .post-nav {
     display: flex;
     justify-content: space-between;
@@ -1159,7 +1162,7 @@ body {
 }
 
 .copyright-desc {
-  margin: $postWidgetGap auto;
+  margin: $postWidgetGap auto 0 auto;
   padding: 0 $commonPadding;
   font-size: 14px;
   color: $grayerText;
@@ -1504,7 +1507,7 @@ body {
       }
     }
     #gitalk-container {
-      margin-top: 1em;
+      margin-top: $postWidgetGap;
       padding: 0 $commonPadding;
       background-color: #fff;
       min-height: 197px;
@@ -1772,7 +1775,7 @@ body {
 .series-nav {
   background-color: #f5f5f5;
   width: calc(100% - min(6vw, 30px));
-  margin: $postWidgetGap auto 1em auto;
+  margin: $postWidgetGap auto 0 auto;
   padding: 1em;
   padding-top: 0.65em;
   border-radius: 2px;
@@ -2338,6 +2341,11 @@ body {
   user-select: none;
   -ms-overflow-style: none;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
   &::after {
     content: "";
     position: absolute;
@@ -2347,9 +2355,15 @@ body {
     height: 100%;
     background-color: #f5f5f5;
   }
-  .toc-item-wrap:not(.active) {
-    opacity: 0.1;
-    transition: ease opacity 0.3s;
+  .toc-item-wrap {
+    transition: opacity 0.3s ease;
+    will-change: opacity;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    &:not(.active) {
+      opacity: 0.1;
+    }
   }
   &:hover {
     .toc-item-wrap:not(.active) {
@@ -2462,6 +2476,11 @@ body {
   max-height: 100vh;
   overflow-y: auto;
   position: relative;
+  -webkit-overflow-scrolling: touch;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
   &::after {
     content: "";
     position: absolute;
@@ -2492,10 +2511,16 @@ body {
       margin-bottom: 4px;
     }
   }
-  .series-item-link:not(.active),
-  .series-year-divider:not(.active) {
-    opacity: 0.1;
-    transition: ease opacity 0.3s;
+  .series-item-link,
+  .series-year-divider {
+    transition: opacity 0.3s ease;
+    will-change: opacity;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    &:not(.active) {
+      opacity: 0.1;
+    }
   }
   &:hover {
     .series-item-link:not(.active),
@@ -2612,6 +2637,7 @@ html[lang="zh-CN"] {
 }
 
 #related-posts {
+  margin-top: $postWidgetGap;
   @include pageXPadding;
   border-top: solid 1px #f5f5f5;
   .related-posts-title {
@@ -2664,6 +2690,7 @@ html[lang="zh-CN"] {
 }
 
 .sponsor-list {
+  margin: $postWidgetGap auto 0 auto;
   padding: 0 1em;
   .sponsor-list-header {
     font-size: 1.2em;

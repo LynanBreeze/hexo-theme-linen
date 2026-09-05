@@ -86,9 +86,6 @@ $postWidth: max(min(1192px, 68vw), 960px);
 @mixin tags {
   @include defaultFont;
   margin-bottom: -10px;
-  &:last-child {
-    margin-bottom: calc(1rem - 10px);
-  }
   .tag-item {
     background-color: #f5f5f5;
     padding: 4px 7px 4px 6px;
