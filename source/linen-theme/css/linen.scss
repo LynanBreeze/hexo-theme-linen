@@ -233,7 +233,8 @@ body {
   background-color: #fff;
   // backdrop-filter: saturate(180%) blur(20px);
   transform: translateY(0);
-  transition: transform 0.3s ease;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
   z-index: 9;
   position: relative;
   top: 0;
@@ -362,7 +363,7 @@ body {
     }
   }
   &.hide {
-    transform: translateY(0);
+    transform: translateY(-100%);
   }
 }
 

@@ -270,7 +270,8 @@ function onScroll() {
   var header = document.querySelector(".nav-header");
   if (!header) return;
 
-  var currentScrollY = window.scrollY;
+  var rawScrollY = window.scrollY;
+  var currentScrollY = Math.max(0, rawScrollY);
   var triggerHeight = window.innerHeight * 1.5;
 
   if (!window.$gitalkInitiated && currentScrollY > window.innerHeight) {
@@ -283,27 +284,32 @@ function onScroll() {
     return;
   }
 
-  if (currentScrollY <= 10) {
+  // 接近顶部时（<= 60px），强制展开并退出，消除 iOS/Mac 橡皮筋回弹误判与闪烁
+  if (currentScrollY <= 60) {
     header.classList.remove("hide");
+    if (backToTop) backToTop.classList.remove("visible");
     previousScrollY = currentScrollY;
     return;
   }
 
   var scrollDelta = currentScrollY - previousScrollY;
-  if (Math.abs(scrollDelta) < 5) {
+  // 滤除手指微小抖动
+  if (Math.abs(scrollDelta) < 8) {
     return;
   }
 
   if (scrollDelta < 0) {
+    // 向上滑动：即刻平滑展开导航栏
     if (!document.querySelector(".pswp--open")) {
       header.classList.remove("hide");
     }
-    if (currentScrollY >= triggerHeight) {
+    if (backToTop && currentScrollY >= triggerHeight) {
       backToTop.classList.add("visible");
     }
   } else {
-    backToTop.classList.remove("visible");
-    if (currentScrollY > window.innerHeight * 0.75) {
+    // 向下滑动：离开顶部 60% 视口后平滑收起导航栏
+    if (backToTop) backToTop.classList.remove("visible");
+    if (currentScrollY > window.innerHeight * 0.6) {
       header.classList.add("hide");
     }
   }
@@ -311,7 +317,20 @@ function onScroll() {
   previousScrollY = currentScrollY;
 }
 
-window.addEventListener("scroll", throttle(onScroll, 300));
+var isScrollTicking = false;
+window.addEventListener(
+  "scroll",
+  function () {
+    if (!isScrollTicking) {
+      isScrollTicking = true;
+      window.requestAnimationFrame(function () {
+        onScroll();
+        isScrollTicking = false;
+      });
+    }
+  },
+  { passive: true }
+);
 
 var resizeTimer = null;
 window.addEventListener("resize", function () {
