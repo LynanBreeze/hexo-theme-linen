@@ -147,30 +147,27 @@ function isElementInViewport(el) {
 }
 
 function copyToClipboard(text) {
-  if (navigator.clipboard) {
-    copyToClipboard = function () {
-      navigator.clipboard
-        .writeText(text)
-        .then(() => {})
-        .catch((err) => {
-          console.error("复制失败:", err);
-        });
-    };
-  } else {
-    copyToClipboard = function () {
-      const textArea = document.createElement("textarea");
-      textArea.value = text;
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        document.execCommand("copy");
-      } catch (err) {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {})
+      .catch((err) => {
         console.error("复制失败:", err);
-      }
-      document.body.removeChild(textArea);
-    };
+      });
+  } else {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.opacity = "0";
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand("copy");
+    } catch (err) {
+      console.error("复制失败:", err);
+    }
+    document.body.removeChild(textArea);
   }
-  copyToClipboard(text);
 }
 
 function highlightAnchor(hash, highlightClass = "anchor-highlight") {
@@ -548,24 +545,27 @@ function handleClick(e) {
   }
 }
 
+var isClickHandlerBound = false;
 function bindClickHandler() {
+  if (isClickHandlerBound) return;
   document.addEventListener("click", handleClick, true);
+  isClickHandlerBound = true;
 }
 
 window.addEventListener("load", bindClickHandler);
-window.addEventListener("pageshow", (e) => {
-  requestAnimationFrame(() => {
-    bindClickHandler();
-  });
+window.addEventListener("pageshow", () => {
+  bindClickHandler();
 });
 
 function initAgeWarning() {
   const ageWarningElement = document.getElementById("post-age-warning");
   if (!ageWarningElement) return;
-  const dateStr = document
-    .querySelector("#post .post-meta .date")
-    .getAttribute("datetime");
+  const dateElement = document.querySelector("#post .post-meta .date");
+  const dateStr = dateElement ? dateElement.getAttribute("datetime") : null;
+  if (!dateStr) return;
+
   const postDate = new Date(dateStr);
+  if (isNaN(postDate.getTime())) return;
   const now = new Date();
 
   const diffTime = now - postDate;
@@ -578,7 +578,7 @@ function initAgeWarning() {
     }
   } else {
     if (ageWarningElement) {
-      ageWarningElement.style = "display: none";
+      ageWarningElement.style.display = "none";
     }
   }
   return diffDays;

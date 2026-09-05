@@ -19,9 +19,11 @@ module.exports = function (hexo) {
       ...(hexo?.config?.theme_config?.lazyload || {}),
     };
 
-    const placeholderImage = /^(https?:\/\/|\/|data:image)/i.test(loadingImage) || loadingImage?.startsWith('../img')
-      ? `url(${loadingImage})`
-      : loadingImage;
+    const placeholderImage =
+      /^(https?:\/\/|\/|data:image|\.\.\/)/i.test(loadingImage) ||
+      /\.(svg|png|jpg|jpeg|webp|gif)$/i.test(loadingImage)
+        ? `url(${loadingImage})`
+        : loadingImage;
 
     const injectedStyles = `.lazyload-outer-wrap .caption{
     width: 100%;

@@ -1,4 +1,5 @@
 function replaceEmojis() {
+  if (!document.body) return;
   const replacements = [{ emoji: "✅", className: "custom-checked-checkbox" }];
 
   replacements.forEach(({ emoji, className }) => {
@@ -7,9 +8,16 @@ function replaceEmojis() {
       NodeFilter.SHOW_TEXT,
       {
         acceptNode(node) {
-          return node.nodeValue.includes(emoji)
-            ? NodeFilter.FILTER_ACCEPT
-            : NodeFilter.FILTER_REJECT;
+          if (!node.nodeValue || !node.nodeValue.includes(emoji)) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          if (
+            node.parentElement &&
+            node.parentElement.closest("pre, code, textarea, script, style")
+          ) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return NodeFilter.FILTER_ACCEPT;
         },
       },
     );
