@@ -5,6 +5,7 @@ var isAnchoring = false;
 var anchoringId = null;
 var anchoringTimer = null;
 function triggerAnchoring() {
+  if (window.innerWidth > 1280) return;
   isAnchoring = true;
   var header = document.querySelector(".nav-header");
   if (header) {
@@ -13,6 +14,12 @@ function triggerAnchoring() {
   clearTimeout(anchoringTimer);
   anchoringTimer = setTimeout(function () {
     isAnchoring = false;
+    if (window.scrollY <= 60) {
+      var header = document.querySelector(".nav-header");
+      if (header) {
+        header.classList.remove("hide");
+      }
+    }
   }, 800);
 }
 
@@ -275,16 +282,24 @@ function onScroll() {
     typeof loadGitalk !== "undefined" && loadGitalk();
   }
 
-  if (isAnchoring) {
-    header.classList.add("hide");
-    previousScrollY = currentScrollY;
-    return;
+  var isMobilePost =
+    window.innerWidth <= 1280 && header.classList.contains("is-post");
+
+  // PC 端没有 header 隐藏逻辑，确保无 hide 类
+  if (!isMobilePost && header.classList.contains("hide")) {
+    header.classList.remove("hide");
   }
 
   // 接近顶部时（<= 60px），强制展开并退出，消除 iOS/Mac 橡皮筋回弹误判与闪烁
   if (currentScrollY <= 60) {
-    header.classList.remove("hide");
+    if (isMobilePost) header.classList.remove("hide");
     if (backToTop) backToTop.classList.remove("visible");
+    previousScrollY = currentScrollY;
+    return;
+  }
+
+  if (isMobilePost && isAnchoring) {
+    header.classList.add("hide");
     previousScrollY = currentScrollY;
     return;
   }
@@ -297,7 +312,7 @@ function onScroll() {
 
   if (scrollDelta < 0) {
     // 向上滑动：即刻平滑展开导航栏
-    if (!document.querySelector(".pswp--open")) {
+    if (isMobilePost && !document.querySelector(".pswp--open")) {
       header.classList.remove("hide");
     }
     if (backToTop && currentScrollY >= triggerHeight) {
@@ -306,7 +321,7 @@ function onScroll() {
   } else {
     // 向下滑动：离开顶部 60% 视口后平滑收起导航栏
     if (backToTop) backToTop.classList.remove("visible");
-    if (currentScrollY > window.innerHeight * 0.6) {
+    if (isMobilePost && currentScrollY > window.innerHeight * 0.6) {
       header.classList.add("hide");
     }
   }
@@ -336,6 +351,11 @@ window.addEventListener("resize", function () {
   const body = document.body;
   body.classList.add("resizing");
   viewportWidth = window.innerWidth;
+
+  if (window.innerWidth > 1280) {
+    const header = document.querySelector(".nav-header");
+    if (header) header.classList.remove("hide");
+  }
 
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(function () {
@@ -445,23 +465,46 @@ function handleClick(e) {
         maskElement.classList.remove("visible");
         setBodyScrollLocked(false);
       }
-      if (targetId === "to-page-top") {
+      const firstTocLink = tocElement
+        ? tocElement.querySelector(".toc-item-link")
+        : null;
+      const isFirstToc =
+        target === firstTocLink ||
+        target.closest(".toc-item-link") === firstTocLink;
+
+      if (targetId === "to-page-top" || targetId === "page-top") {
         window.scrollTo({
           top: 0,
           left: 0,
           behavior: "instant",
         });
+        isAnchoring = false;
+        clearTimeout(anchoringTimer);
+        var header = document.querySelector(".nav-header");
+        if (header) {
+          header.classList.remove("hide");
+        }
       } else {
         anchor &&
           anchor.scrollIntoView({
             behavior: "instant",
             block: "start",
           });
-        triggerAnchoring();
+        if (isFirstToc) {
+          isAnchoring = false;
+          clearTimeout(anchoringTimer);
+          var header = document.querySelector(".nav-header");
+          if (header) {
+            header.classList.remove("hide");
+          }
+        } else {
+          triggerAnchoring();
+        }
       }
       highlightAnchor(targetId);
       if (
         target.className?.includes("toc-item-link") &&
+        anchor &&
         isElementInViewport(anchor)
       ) {
         anchoringId = anchor.id;

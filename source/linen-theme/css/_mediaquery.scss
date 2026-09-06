@@ -10,6 +10,8 @@
   }
   .nav-header.is-post {
     position: fixed;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
   }
   .nav-header.is-post.hide {
     transform: translateY(-100%);
