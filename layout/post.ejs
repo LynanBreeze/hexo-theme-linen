@@ -278,7 +278,8 @@ const seriesInfo = getSeriesInfo(page?.series);
     left: 0,
     right: 0
   };
-  const isHDRScreen = window.screen.colorDepth >= 30;
+  const isHDRScreen = typeof window.matchMedia === 'function' &&
+    window.matchMedia('(dynamic-range: high)').matches;
   const lightbox = new PhotoSwipeLightbox({
     gallery: '#post',
     children: 'a.gallery-item',

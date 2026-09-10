@@ -3,33 +3,33 @@ var hdrEnabled = false;
 var lang = document.documentElement.getAttribute("lang") || "en";
 
 function testHDRSupport() {
-  const ua = navigator.userAgent;
-  
-  // 1. Exclude WeChat
-  if (/MicroMessenger/i.test(ua)) {
-    return false;
-  }
-  
-  // 2. Exclude extremely small screen devices
-  if (window.screen.width <= 330) {
-    return false;
-  }
-
-  // 3. Exclude macOS Safari (Option A) due to EDR image rendering inconsistencies
-  const isMac = /Macintosh|Mac OS X/i.test(ua);
-  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
-  if (isMac && isSafari) {
+  // `dynamic-range: high` describes the combination of the user agent and the
+  // current output device. `screen.colorDepth` alone is not sufficient: a
+  // 10-bit framebuffer can still be SDR, and some HDR displays report 8-bit
+  // color depth (for example, through FRC or an OS compositor).
+  if (
+    typeof window.matchMedia !== "function" ||
+    !window.matchMedia("(dynamic-range: high)").matches
+  ) {
     return false;
   }
 
-  // 4. Modern standard: check dynamic-range media query
-  if (window.matchMedia) {
-    const hasHDR = window.matchMedia("(dynamic-range: high)").matches;
-    if (hasHDR) return true;
+  // There is no web API that exposes "ISO 21496-1 gain map decoding" as a
+  // standalone feature. `dynamic-range-limit: no-limit` is the closest
+  // standards-based signal: the property applies to HDR images and browsers
+  // that implement it have an HDR image rendering pipeline.
+  if (
+    typeof CSS !== "undefined" &&
+    typeof CSS.supports === "function" &&
+    CSS.supports("dynamic-range-limit: no-limit")
+  ) {
+    return true;
   }
 
-  // 5. Legacy fallback: check 10-bit color depth
-  return window.screen.colorDepth >= 30;
+  // Do not use a user-agent or color-depth fallback here. Both are only
+  // heuristics and can report support when the browser will actually decode
+  // an ISO gain map as its SDR base image.
+  return false;
 }
 hdrSupport = testHDRSupport();
 const HDRSwitchButton = document.querySelector(".hdr-switch");
