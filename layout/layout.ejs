@@ -122,9 +122,6 @@ const version = theme.version;
   <script src="<%=url_for(`${url}?v=${version}`)%>"></script>
   <% }); %>
   <% } %>
-  <% if (theme?.lazyload?.enable ?? true) { %>
-  <script src="<%=url_for(`/linen-theme/js/lazyload.js?v=${version}`)%>"></script>
-  <% } %>
   <% if (page.hdrAssetsPrefix) { %>
   <script>
     var hdrAssetsPrefix = "<%-page.hdrAssetsPrefix%>"
@@ -132,6 +129,9 @@ const version = theme.version;
   <% } %>
   <% if (page.hdrSwitch) { %>
   <script src="<%=url_for(`/linen-theme/js/hdr.js?v=${version}`)%>"></script>
+  <% } %>
+  <% if (theme?.lazyload?.enable ?? true) { %>
+  <script src="<%=url_for(`/linen-theme/js/lazyload.js?v=${version}`)%>"></script>
   <% } %>
   <% if (theme?.appends?.length > 0) { %>
   <% theme.appends.forEach(appendItem => { %>

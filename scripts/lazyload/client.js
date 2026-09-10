@@ -94,26 +94,34 @@
   if (typeof window === "undefined") {
     return;
   }
-  function get(object, path, defaultValue) {
-    if (object == null) return defaultValue;
-
-    // 把 a[0].b 转成 a.0.b
-    var pathArray =
-      typeof path === "string"
-        ? path.replace(/\[(\w+)\]/g, ".$1").split(".")
-        : path;
-
-    var result = object;
-
-    for (var i = 0; i < pathArray.length; i++) {
-      if (result == null) return defaultValue;
-      result = result[pathArray[i]];
-    }
-
-    return result === undefined ? defaultValue : result;
-  }
   var lazyloadItems = document.querySelectorAll(".lazyload-wrap");
   var loadingQueue = [];
+  var scheduleFrame = window.requestAnimationFrame || function (callback) {
+    return window.setTimeout(callback, 16);
+  };
+  var revealQueue = [];
+  var revealScheduled = false;
+  var flushRevealQueue = function flushRevealQueue() {
+    var callbacks = revealQueue.splice(0);
+    revealScheduled = false;
+    callbacks.forEach(function (callback) {
+      if (callback) callback();
+    });
+    if (revealQueue.length) {
+      scheduleReveal();
+    }
+  };
+  var scheduleReveal = function scheduleReveal(callback) {
+    if (callback) revealQueue.push(callback);
+    if (revealScheduled) return;
+    revealScheduled = true;
+    // Wait for one paint opportunity before revealing. The second frame is
+    // shared by all images that become ready together, avoiding per-image
+    // frame callbacks and preserving the transition for cached HDR images.
+    scheduleFrame(function () {
+      scheduleFrame(flushRevealQueue);
+    });
+  };
   var appendStyles = function appendStyles(element, styles) {
     var currentStyle = element.getAttribute("style");
     var newStyles = "";
@@ -128,6 +136,10 @@
     var nElement = document.createElement("div");
     nElement.innerHTML = contentStr;
     nElement.classList.add("inner-wrap");
+    nElement.style.opacity = "0";
+    if (!window.$lazyload || window.$lazyload.showTransition !== false) {
+      nElement.style.transition = "opacity ease-in-out 0.3s";
+    }
     return nElement;
   };
   var restore_fallback = function restore_fallback(element) {
@@ -151,6 +163,28 @@
     }
     return obj;
   };
+  var renderBlurHashPlaceholder = function renderBlurHashPlaceholder(element) {
+    var placeholderImage = element.dataset.blurhash;
+    if (!placeholderImage || element.dataset.blurhashRendered === "true") {
+      return;
+    }
+    var width = 32;
+    var height = 32;
+    var pixels = blurhash.decodeBlurHash(
+      placeholderImage.replace("blurhash:", ""),
+      width,
+      height,
+    );
+    var canvas = document.createElement("canvas");
+    var ctx = canvas.getContext("2d");
+    canvas.width = width;
+    canvas.height = height;
+    var imageData = ctx.createImageData(width, height);
+    imageData.data.set(pixels);
+    ctx.putImageData(imageData, 0, 0);
+    element.children[0].appendChild(canvas);
+    element.dataset.blurhashRendered = "true";
+  };
   var initPlaceholder = function initPlaceholder(element) {
     var wrap = document.createElement("div");
     // prevent triggering load event
@@ -166,25 +200,9 @@
     var placeholderImage =
       resourceElement.dataset.placeholderimg || altAttributes.placeholderImage;
     if (placeholderImage && /blurhash:/.test(placeholderImage)) {
-      var createCanvas = function createCanvas() {
-        var canvas = document.createElement("canvas");
-        var width = 32;
-        var height = 32;
-        var pixels = blurhash.decodeBlurHash(
-          placeholderImage.replace("blurhash:", ""),
-          width,
-          height,
-        );
-        var ctx = canvas.getContext("2d");
-        canvas.width = width;
-        canvas.height = height;
-        var imageData = ctx.createImageData(width, height);
-        imageData.data.set(pixels);
-        ctx.putImageData(imageData, 0, 0);
-        return canvas;
-      };
-      var cv = createCanvas();
-      element.children[0].appendChild(cv);
+      // Decode only when this item is actually restored. Doing this for
+      // every image during page initialization can block the main thread.
+      element.dataset.blurhash = placeholderImage;
     }
     element.dataset.content = element.dataset.content
       .replace(/%24placeholder%3D(\S+)%3Dplaceholder/gi, "")
@@ -196,34 +214,70 @@
       loadingQueue.push(element);
     }
     if (element.classList && element.classList.contains("loaded")) return;
+    renderBlurHashPlaceholder(element);
     var contentStr = decodeURIComponent(element.dataset.content);
     var newElement = createResourceElement(contentStr);
     var initOnLoadEvent = function initOnLoadEvent(resourceElement) {
-      resourceElement.children[0].onload = function () {
+      var imageElement = resourceElement.children[0];
+      var revealedSource = "";
+      var revealToken = 0;
+      var showTransition =
+        !window.$lazyload || window.$lazyload.showTransition !== false;
+      var clearPlaceholder = function clearPlaceholder() {
+        var keepPlaceholder =
+          element.getAttribute("data-hdr-active") === "true" ||
+          (window.$lazyload && window.$lazyload.keepPlaceholder === true);
+        if (!keepPlaceholder) {
+          element.children[0].classList.add("loaded");
+        }
+      };
+      var revealResource = function revealResource() {
+        var source = imageElement.currentSrc || imageElement.src || "";
+        if (revealedSource === source && element.classList.contains("loaded")) {
+          return;
+        }
+        var token = ++revealToken;
+        // `load` means the resource is available, but the browser may still
+        // need a paint opportunity before the image becomes visible. Do not
+        // call HTMLImageElement.decode() here: some HDR decoders crash the
+        // renderer before JavaScript can handle the resulting exception.
+        scheduleReveal(function () {
+          if (token !== revealToken) return;
+          if ((imageElement.currentSrc || imageElement.src || "") !== source) {
+            return;
+          }
+          revealedSource = source;
+          // The inline opacity is already 0 and the inline transition is set
+          // before insertion, so the next frame can reveal without forcing a
+          // synchronous layout for every image.
+          resourceElement.style.opacity = "1";
+          resourceElement.classList.add("loaded");
+          element.classList.add("loaded");
+          if (!showTransition) {
+            clearPlaceholder();
+          }
+        });
+      };
+      imageElement.onload = function () {
         try {
-          setTimeout(function () {
-            element.classList.add("loaded");
-            var isImage =
-              resourceElement.children &&
-              resourceElement.children[0] &&
-              resourceElement.children[0].tagName === "IMG";
-            var wrapElement = element.parentElement;
-            var width = resourceElement.children[0].naturalWidth;
-            if (
-              isImage &&
-              wrapElement &&
-              wrapElement.tagName === "A" &&
-              wrapElement.getAttribute("data-pswp-hassize") !== "true"
-            ) {
-              var height = resourceElement.children[0].naturalHeight;
-              element.children[0].style.paddingBottom = `${
-                (height / width) * 100
-              }%`;
-              wrapElement.setAttribute("data-pswp-width", width);
-              wrapElement.setAttribute("data-pswp-height", height);
-              wrapElement.setAttribute("data-cropped", true);
-            }
-          }, 100);
+          revealResource();
+          var isImage = imageElement && imageElement.tagName === "IMG";
+          var wrapElement = element.parentElement;
+          var width = imageElement.naturalWidth;
+          if (
+            isImage &&
+            wrapElement &&
+            wrapElement.tagName === "A" &&
+            wrapElement.getAttribute("data-pswp-hassize") !== "true"
+          ) {
+            var height = imageElement.naturalHeight;
+            element.children[0].style.paddingBottom = `${
+              (height / width) * 100
+            }%`;
+            wrapElement.setAttribute("data-pswp-width", width);
+            wrapElement.setAttribute("data-pswp-height", height);
+            wrapElement.setAttribute("data-cropped", true);
+          }
           var errorElement = element.querySelectorAll(".error-wrap")[0];
           if (errorElement) {
             element.removeChild(errorElement);
@@ -232,10 +286,17 @@
           console.log(e);
         }
       };
-      resourceElement.ontransitionend = function () {
-        if (get(window, "$lazyload.keepPlaceholder", false) === false) {
-          element.children[0].classList.add("loaded");
-        }
+      // Cached images can already be complete before the load listener is
+      // observed. Use the same paint-safe path for that case.
+      if (imageElement.complete && imageElement.naturalWidth) {
+        revealResource();
+      }
+      resourceElement.ontransitionend = function (event) {
+        if (event.propertyName && event.propertyName !== "opacity") return;
+        // HDR gain-map composition can finish after the normal image
+        // load/opacity transition. Keep its placeholder, but clear it for
+        // normal images so transparent PNG/WebP images are not covered by it.
+        clearPlaceholder();
       };
       if (/<video/.test(contentStr)) {
         setTimeout(function () {

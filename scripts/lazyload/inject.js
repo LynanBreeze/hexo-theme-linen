@@ -135,7 +135,8 @@ module.exports = function (hexo) {
 
     let settingsContent = `<script>var $lazyload = {
     intersectionRatio: ${intersectionRatio},
-    preloadCount: ${preloadCount}, 
+    preloadCount: ${preloadCount},
+    showTransition: ${showTransition},
     keepPlaceholder: ${
       page?.lazyload?.keepPlaceholder ?? false
     }}</script>`;
