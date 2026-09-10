@@ -1,6 +1,7 @@
 var hdrSupport = false;
 var hdrEnabled = false;
 var lang = document.documentElement.getAttribute("lang") || "en";
+var hdrAutoEnableMinWidth = 500;
 
 function testHDRSupport() {
   // `dynamic-range: high` describes the combination of the user agent and the
@@ -139,7 +140,7 @@ function switchHDR() {
   }
 }
 
-if (hdrSupport) {
+if (hdrSupport && window.innerWidth >= hdrAutoEnableMinWidth) {
   switchHDR();
 }
 
