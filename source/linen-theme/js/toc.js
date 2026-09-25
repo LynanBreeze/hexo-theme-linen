@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   );
   if (headerElements.length === 0) return;
 
-  // 1. 保证所有标题均具备有效 ID（补全缺失的 ID 并写回 DOM）
+  // 1. Ensure every heading has a valid ID, filling in missing IDs in the DOM.
   headerElements.forEach((header, index) => {
     if (!header.id) {
       const text = (header.textContent || "").trim();
@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // 2. 解析 TOC 目录的 DOM 结构建立映射字典
+  // 2. Parse the TOC DOM and build lookup maps.
   const tocItemWraps = Array.from(
     tocContainer.querySelectorAll(".toc-item-wrap"),
   );
@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // 3. 构建正文标题列表
+  // 3. Build the ordered list of content headings.
   let currentH2Id = null;
   const headers = headerElements.map((header) => {
     const isH2 = header.tagName === "H2";
@@ -66,13 +66,13 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   });
 
-  // 顶部导航栏避让阈值
+  // Offset used to account for the fixed top navigation bar.
   const TOP_OFFSET = 80;
 
   let lastActiveH2Id = null;
   let lastActiveH3Id = null;
 
-  // 4. 目录容器内部滚动居中/可见，避免触发外部 window 的异常抖动
+  // Keep the active TOC item visible without affecting the page scroll position.
   function scrollIntoTocView(element) {
     if (!element || !tocContainer) return;
     const containerRect = tocContainer.getBoundingClientRect();
@@ -85,30 +85,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 5. 计算当前应当激活的 H2 / H3
+  // 5. Determine the currently active H2 / H3.
   function determineActive() {
-    // 优先兼容外部锚定参数 window.anchoringId
-    const currentAnchoringId =
-      typeof window !== "undefined" && "anchoringId" in window
-        ? window.anchoringId
-        : null;
-
-    if (currentAnchoringId) {
-      if (tocItemsMap.has(currentAnchoringId)) {
-        return {
-          h2Id: currentAnchoringId,
-          h3Id: null,
-        };
-      }
-      if (h3ToH2Map.has(currentAnchoringId)) {
-        return {
-          h2Id: h3ToH2Map.get(currentAnchoringId),
-          h3Id: currentAnchoringId,
-        };
+    // At the bottom of the page, the last heading may not reach the top trigger
+    // line. In that case, the last heading represents the current section.
+    const scrollElement = document.scrollingElement || document.documentElement;
+    const isAtBottom =
+      window.scrollY + window.innerHeight >= scrollElement.scrollHeight - 1;
+    if (isAtBottom) {
+      const lastHeader = headers[headers.length - 1];
+      if (lastHeader) {
+        return lastHeader.isH2
+          ? { h2Id: lastHeader.id, h3Id: null }
+          : { h2Id: lastHeader.h2Id, h3Id: lastHeader.id };
       }
     }
 
-    // 根据滚动位置，查找位于视口顶部触发线（top <= TOP_OFFSET）之上的最后一个标题
+    // Find the last heading above the viewport trigger line (top <= TOP_OFFSET).
     let activeHeading = null;
     for (let i = 0; i < headers.length; i++) {
       const header = headers[i];
@@ -120,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // 若未滚动到任何标题（如文章开头前言），激活第一个 H2
+    // If no heading has reached the trigger line, activate the first H2.
     if (!activeHeading) {
       const firstH2 = headers.find((h) => h.isH2);
       return {
@@ -142,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // 6. 执行高亮更新与 DOM 渲染
+  // 6. Apply the active state to the TOC DOM.
   function updateActive() {
     const { h2Id, h3Id } = determineActive();
 
@@ -164,7 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
         item.wrap.classList.remove("active");
       }
 
-      // 仅在当前 H2 为 active 时匹配子项 H3，彻底杜绝跨章节残留
+      // Match H3 items only within the active H2 to prevent cross-section residue.
       item.subMap.forEach((subLink, currentH3Id) => {
         if (isH2Active && currentH3Id === h3Id) {
           subLink.classList.add("active");
@@ -180,7 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 7. 使用 requestAnimationFrame 优化滚动触发频率
+  // 7. Throttle scroll updates with requestAnimationFrame.
   let isTicking = false;
   function requestUpdate() {
     if (isTicking) return;
@@ -191,7 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 8. 监听视口变化与滚动
+  // 8. Listen for viewport changes and scrolling.
   window.addEventListener("scroll", requestUpdate, { passive: true });
   window.addEventListener("resize", requestUpdate, { passive: true });
 
@@ -208,6 +201,6 @@ document.addEventListener("DOMContentLoaded", () => {
     headerElements.forEach((header) => observer.observe(header));
   }
 
-  // 初始执行一次
+  // Run once on initialization.
   updateActive();
 });
