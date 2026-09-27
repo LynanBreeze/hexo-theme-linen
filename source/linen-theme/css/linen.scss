@@ -651,6 +651,12 @@ body {
       vertical-align: middle;
       margin-bottom: 0.25em;
     }
+    &:empty::after {
+      display: none;
+    }
+    &:has(img)::after {
+      display: none;
+    }
     &:hover {
       opacity: 0.85;
       border-bottom: solid 1px $green;
