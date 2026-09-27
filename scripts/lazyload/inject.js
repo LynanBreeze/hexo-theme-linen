@@ -19,11 +19,27 @@ module.exports = function (hexo) {
       ...(hexo?.config?.theme_config?.lazyload || {}),
     };
 
+    const resolveSiteAsset = (assetPath) => {
+      if (!assetPath || /^(https?:)?\/\//i.test(assetPath) || /^data:/i.test(assetPath)) {
+        return assetPath;
+      }
+      if (!assetPath.startsWith("/")) return assetPath;
+
+      const rootSegments = String(hexo.config.root || "")
+        .split("/")
+        .filter(Boolean)
+        .join("/");
+      const root = rootSegments ? `/${rootSegments}/` : "/";
+      return `${root}${assetPath.replace(/^\/+/, "")}`;
+    };
+    const resolvedLoadingImage = resolveSiteAsset(loadingImage);
+    const resolvedErrorTipImage = resolveSiteAsset(errorTipImage);
+
     const placeholderImage =
-      /^(https?:\/\/|\/|data:image|\.\.\/)/i.test(loadingImage) ||
-      /\.(svg|png|jpg|jpeg|webp|gif)$/i.test(loadingImage)
-        ? `url(${loadingImage})`
-        : loadingImage;
+      /^(https?:\/\/|\/|data:image|\.\.\/)/i.test(resolvedLoadingImage) ||
+      /\.(svg|png|jpg|jpeg|webp|gif)$/i.test(resolvedLoadingImage)
+        ? `url(${resolvedLoadingImage})`
+        : resolvedLoadingImage;
 
     const injectedStyles = `.lazyload-outer-wrap .caption{
     width: 100%;
@@ -47,7 +63,7 @@ module.exports = function (hexo) {
     padding-bottom: ${(100 / Number(placeholderRatio)).toFixed(5)}%;
     background-size: 100% 100%;
     background-repeat: no-repeat;
-    ${loadingImage ? `background-image: ${placeholderImage};` : ""}
+    ${resolvedLoadingImage ? `background-image: ${placeholderImage};` : ""}
     background-color: #fff;
   }
   .lazyload-wrap .placeholder canvas{
@@ -104,7 +120,7 @@ module.exports = function (hexo) {
   .lazyload-wrap .error-wrap .error-tip{
     width: 60%;
     background-size: cover;
-    background-image: url(${errorTipImage});
+    background-image: url(${resolvedErrorTipImage});
   }
   .lazyload-wrap .error-wrap .error-tip::before{
     content: '';
@@ -166,11 +182,11 @@ module.exports = function (hexo) {
     if (/<\/body>/gi.test(htmlContent)) {
       htmlContent = appendToHead(settingsContent, htmlContent);
       htmlContent = appendToHead(
-        `<link rel="preload" as="image" href="${loadingImage}" />`,
+        `<link rel="preload" as="image" href="${resolvedLoadingImage}" />`,
         htmlContent,
       );
       htmlContent = appendToHead(
-        `<link rel="preload" as="image" href="${errorTipImage}" />`,
+        `<link rel="preload" as="image" href="${resolvedErrorTipImage}" />`,
         htmlContent,
       );
       injectExtraScript(lazyLoadPath);
