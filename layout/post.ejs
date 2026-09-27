@@ -289,6 +289,15 @@ const seriesInfo = getSeriesInfo(page?.series);
       return viewportSize.x < 700 ? smallScreenPadding : largeScreenPadding
     },
   });
+  const isSafari = !!(navigator.vendor && navigator.vendor.match(/apple/i));
+  lightbox.on('lazyLoadSlide', (event) => {
+    const imageSrc = event.itemData && event.itemData.src;
+    if (isSafari && imageSrc && imageSrc.includes('/hdr/')) {
+      // Let PhotoSwipe's main Content create and reuse its placeholder image.
+      // The bundled Lightbox preloader uses a separate, older Content class.
+      event.preventDefault();
+    }
+  });
 
   const getExif = (element) => {
     const exifString = (element && element.dataset && element.dataset.pspwExif) || '';
