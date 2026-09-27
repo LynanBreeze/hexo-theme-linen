@@ -685,6 +685,32 @@ body {
     }
   }
 
+  .footnote-anchor-wrap {
+    scroll-margin-top: 1.5em;
+  }
+
+  .footnotes .footnote-backref {
+    display: inline-block;
+    margin-left: 0.35em;
+    font-weight: normal;
+
+    svg {
+      display: inline-block;
+      width: 1em;
+      height: 1em;
+      overflow: visible;
+      vertical-align: -0.16em;
+    }
+
+    path {
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 2;
+    }
+  }
+
   del {
     a:not([class]):not(:has(.shared-link)) {
       &::after {

@@ -78,7 +78,7 @@ hexo.extend.filter.register("before_post_render", function (data) {
 
         const backrefs = Array.from({ length: refCount[id] || 0 }, (_, i) => {
           const n = i + 1;
-          return `<a href="#fnref-${id}-${n}" class="footnote-backref"></a>`;
+          return `<a href="#fnref-${id}-${n}" class="footnote-backref" aria-label="返回脚注引用" title="返回脚注引用"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 6v5a3 3 0 0 1-3 3H4m0 0 4-4m-4 4 4 4" /></svg></a>`;
         }).join(" ");
 
         return `<li id="fn-${id}">${html}${backrefs}</li>`;
