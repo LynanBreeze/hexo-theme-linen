@@ -300,6 +300,7 @@
       };
       if (/<video/.test(contentStr)) {
         setTimeout(function () {
+          resourceElement.style.opacity = "1";
           element.classList.add("loaded");
         }, 100);
       }
