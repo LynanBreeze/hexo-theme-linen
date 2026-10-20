@@ -91,6 +91,9 @@
       transform: translateY(0);
     }
   }
+  #back-to-top {
+    z-index: 998;
+  }
   .series-nav {
     display: block;
   }
