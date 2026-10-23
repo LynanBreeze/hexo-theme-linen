@@ -86,13 +86,23 @@ hexo.extend.helper.register("getTranslationPage", function () {
       : false;
     let origin =
       config?.theme_config?.siteOriginLocaleMap?.[targetLanguage] || config.url;
-    let targetLanguagePath = `${origin}${this.url_for(page.path)}`;
+    // `url_for` includes the current site's `root` (for example, the GitHub
+    // Pages repository path). The locale origin may already include its own
+    // root, so only append the page path portion to avoid duplicating it.
+    const rootPath = String(config.root || "/").replace(/^\/+|\/+$/g, "");
+    const siteRoot = rootPath ? `/${rootPath}/` : "/";
+    let pagePath = this.url_for(page.path);
+    if (siteRoot !== "/" && pagePath.startsWith(siteRoot)) {
+      pagePath = pagePath.slice(siteRoot.length - 1);
+    }
+    const originBase = String(origin || "").replace(/\/+$/, "");
+    let targetLanguagePath = `${originBase}/${String(pagePath).replace(/^\/+/, "")}`;
     if (page?.seriesInfo?.mappingName) {
-      targetLanguagePath = `${origin}/series/${page?.seriesInfo?.mappingName}/`;
+      targetLanguagePath = `${originBase}/series/${page?.seriesInfo?.mappingName}/`;
     }
     if (this.is_category()) {
       if (categoriesInfo?.[page.category]?.mappingName) {
-        targetLanguagePath = `${origin}/categories/${
+        targetLanguagePath = `${originBase}/categories/${
           categoriesInfo?.[page.category]?.mappingName
         }/`;
       } else {
@@ -101,7 +111,7 @@ hexo.extend.helper.register("getTranslationPage", function () {
     }
     if (this.is_tag()) {
       if (tagsInfo?.[page.tag]?.mappingName) {
-        targetLanguagePath = `${origin}/tags/${tagsInfo?.[page.tag]?.mappingName}/`;
+        targetLanguagePath = `${originBase}/tags/${tagsInfo?.[page.tag]?.mappingName}/`;
       } else {
         hasTranslatation = false;
       }
