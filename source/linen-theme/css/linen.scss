@@ -1564,6 +1564,119 @@ body {
       }
       .gt-comments {
         padding-top: $commonPadding;
+        .gt-comment {
+          display: grid;
+          grid-template-columns: 3.125em minmax(0, 1fr);
+          grid-template-rows: auto auto auto auto;
+          column-gap: 1em;
+          align-items: start;
+          padding: 1.5em 0;
+          border-bottom: solid 1px rgb(242, 242, 242);
+
+          &:last-child {
+            border-bottom: 0;
+          }
+        }
+        .gt-comment-avatar {
+          position: static;
+          grid-column: 1;
+          grid-row: 1 / span 2;
+          align-self: center;
+          border-radius: 50%;
+
+          img {
+            border-radius: 50%;
+          }
+        }
+        .gt-comment-content {
+          display: contents;
+        }
+        .gt-comment-header {
+          display: contents;
+        }
+        .gt-comment-block-1,
+        .gt-comment-block-2 {
+          display: none;
+        }
+        .gt-comment-username {
+          grid-column: 2;
+          grid-row: 1;
+          line-height: 1.5;
+        }
+        .gt-comment-text {
+          display: none;
+        }
+        .gt-comment-date {
+          grid-column: 2;
+          grid-row: 2;
+          position: static;
+          margin: 0.2em 0 0;
+        }
+        .gt-comment-body {
+          grid-column: 2;
+          grid-row: 3;
+          min-width: 0;
+          margin-top: 0.9em;
+        }
+        .gt-comment-like {
+          position: static;
+          display: inline-flex;
+          align-items: center;
+          align-self: center;
+          grid-column: 2;
+          grid-row: 4;
+          width: fit-content;
+          height: 1.5em;
+          line-height: 1;
+          margin-top: 1.1em;
+        }
+        .gt-comment-edit,
+        .gt-comment-reply {
+          position: static;
+          display: inline-flex;
+          align-items: center;
+          align-self: center;
+          grid-column: 2;
+          grid-row: 4;
+          width: fit-content;
+          height: 1.5em;
+          line-height: 1;
+          margin: 1.1em 0 0 1.5em;
+        }
+        .gt-comment-like .gt-ico-heart {
+          display: inline-flex;
+          align-items: center;
+          line-height: 1;
+        }
+        .gt-comment-reply {
+          color: $darkText;
+          text-decoration: none;
+
+          .gt-ico-reply {
+            display: none;
+          }
+
+          &::after {
+            content: "Reply";
+            display: block;
+            line-height: 1.5em;
+            text-decoration: underline;
+          }
+
+          html[lang="zh-CN"] &::after {
+            content: "回复";
+          }
+        }
+        @media (max-width: 479px) {
+          .gt-comment {
+            grid-template-columns: 2.75em minmax(0, 1fr);
+            column-gap: 0.875em;
+          }
+          .gt-comment-avatar {
+            width: 2.75em;
+            height: 2.75em;
+          }
+        }
         a:not([class]) {
           color: $green;
           font-weight: bold;
