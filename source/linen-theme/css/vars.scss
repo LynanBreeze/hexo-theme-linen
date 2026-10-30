@@ -87,28 +87,34 @@ $postWidth: max(min(1192px, 68vw), 960px);
   @include defaultFont;
   margin-bottom: -10px;
   .tag-item {
-    background-color: #f5f5f5;
-    padding: 4px 7px 4px 6px;
+    background-color: transparent;
+    padding: 4px 3px;
     font-size: 14px;
     color: $grayerText;
     margin-bottom: 10px;
     display: inline-block;
     margin-right: 10px;
+    transition: color 160ms ease, background-color 160ms ease;
     &:hover {
-      color: #a7a2a2;
+      color: #555;
+      background-color: #f5f5f5;
     }
     &::before {
       content: "";
-      width: 13px;
-      height: 13px;
+      width: 11px;
+      height: 11px;
       background-image: url("../img/icons/tag.svg");
       background-size: cover;
       filter: invert(1);
-      margin-right: 4px;
+      margin-right: 5px;
       margin-bottom: -1px;
       text-decoration: none;
       display: inline-block;
-      opacity: 0.4;
+      opacity: 0.32;
+      transition: opacity 160ms ease;
+    }
+    &:hover::before {
+      opacity: 0.5;
     }
   }
 }

@@ -1237,18 +1237,23 @@ body {
     margin-left: -10px;
     .tag-list-item {
       list-style: none;
-      background-color: #f5f5f5;
-      padding: 4px 6px;
+      background-color: #f8f8f8;
+      padding: 3px 5px;
       font-size: 14px;
       color: $linkColor;
       margin-right: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 14px;
+      transition: background-color 160ms ease;
       .tag-list-link {
         color: $darkText;
+        transition: color 160ms ease;
+        &:hover {
+          color: $linkColor;
+        }
         &::before {
           content: "";
-          width: 13px;
-          height: 13px;
+          width: 11px;
+          height: 11px;
           background-image: url("../img/icons/tag.svg");
           background-size: cover;
           filter: invert(1);
@@ -1256,11 +1261,8 @@ body {
           margin-bottom: -1px;
           text-decoration: none;
           display: inline-block;
-          opacity: 0.3;
+          opacity: 0.22;
         }
-      }
-      &:hover {
-        opacity: 0.7;
       }
     }
     &::after {
@@ -1565,6 +1567,7 @@ body {
       .gt-comments {
         padding-top: $commonPadding;
         .gt-comment {
+          --comment-content-indent: calc(3.125em + 1em);
           display: grid;
           grid-template-columns: 3.125em minmax(0, 1fr);
           grid-template-rows: auto auto auto auto;
@@ -1602,6 +1605,8 @@ body {
           grid-column: 2;
           grid-row: 1;
           line-height: 1.5;
+          position: relative;
+          top: 2px;
         }
         .gt-comment-text {
           display: none;
@@ -1609,7 +1614,8 @@ body {
         .gt-comment-date {
           grid-column: 2;
           grid-row: 2;
-          position: static;
+          position: relative;
+          top: 2px;
           margin: 0.2em 0 0;
         }
         .gt-comment-body {
@@ -1617,6 +1623,8 @@ body {
           grid-row: 3;
           min-width: 0;
           margin-top: 0.9em;
+          margin-left: calc(-1 * var(--comment-content-indent));
+          width: calc(100% + var(--comment-content-indent));
         }
         .gt-comment-like {
           position: static;
@@ -1629,6 +1637,7 @@ body {
           height: 1.5em;
           line-height: 1;
           margin-top: 1.1em;
+          transform: translateX(calc(-1 * var(--comment-content-indent) - 0.5em));
         }
         .gt-comment-edit,
         .gt-comment-reply {
@@ -1641,15 +1650,31 @@ body {
           width: fit-content;
           height: 1.5em;
           line-height: 1;
-          margin: 1.1em 0 0 1.5em;
+          margin: 1.1em 0 0 2em;
+          transform: translateX(calc(-1 * var(--comment-content-indent)));
         }
         .gt-comment-like .gt-ico-heart {
           display: inline-flex;
           align-items: center;
           line-height: 1;
+
+          .gt-svg {
+            width: 1.25em;
+            height: 1.25em;
+            background: url("../img/icons/medium-clap.svg") center / contain no-repeat;
+
+            svg {
+              display: none;
+            }
+          }
+
+          .gt-ico-text {
+            margin-left: 0.5em;
+            color: #6b6b6b;
+          }
         }
         .gt-comment-reply {
-          color: $darkText;
+          color: #232323;
           text-decoration: none;
 
           .gt-ico-reply {
@@ -1667,8 +1692,28 @@ body {
             content: "回复";
           }
         }
+        .gt-comment-edit {
+          color: #232323;
+          text-decoration: none;
+
+          .gt-ico-edit {
+            display: none;
+          }
+
+          &::after {
+            content: "Edit";
+            display: block;
+            line-height: 1.5em;
+            text-decoration: underline;
+          }
+
+          html[lang="zh-CN"] &::after {
+            content: "编辑";
+          }
+        }
         @media (max-width: 479px) {
           .gt-comment {
+            --comment-content-indent: calc(2.75em + 0.875em);
             grid-template-columns: 2.75em minmax(0, 1fr);
             column-gap: 0.875em;
           }
@@ -1677,7 +1722,7 @@ body {
             height: 2.75em;
           }
         }
-        a:not([class]) {
+        a:not([class]):not(blockquote a) {
           color: $green;
           font-weight: bold;
           text-decoration: none;
@@ -1711,20 +1756,30 @@ body {
       .gt-comment-username {
         color: $darkText;
       }
+      .gt-container .gt-popup .gt-action-login,
+      .gt-container .gt-popup .gt-link-project {
+        color: $darkText;
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+        border-bottom: 0;
+
+        &:hover {
+          color: $darkText;
+          opacity: 0.75;
+        }
+      }
       .gt-header-avatar,
       .gt-comment-avatar {
         background-color: #f5f5f5;
       }
-      .user-mention {
+      .user-mention,
+      .gt-comment-body blockquote a:not([class]) {
         color: $darkText;
         text-decoration: underline;
         @include defaultFont;
         text-underline-offset: 0.2rem;
         font-weight: 500;
         font-size: 14px;
-      }
-      .user-mention {
-        color: $darkText;
       }
       .gt-comments-controls {
         margin-top: 0.625em;
@@ -1744,7 +1799,6 @@ body {
           }
         }
       }
-      .gt-ico-heart,
       .gt-ico-reply {
         .gt-svg {
           svg {
@@ -2514,7 +2568,7 @@ body {
     backface-visibility: hidden;
     transform: translateZ(0);
     &:not(.active) {
-      opacity: 0.1;
+      opacity: 0.2;
     }
   }
   &:hover {
@@ -2553,7 +2607,7 @@ body {
     }
     &.active {
       .toc-sub-item-link:not(.active) {
-        opacity: 0.6;
+        opacity: 0.5;
       }
     }
     .toc-sub-item-wrap {
@@ -2670,8 +2724,15 @@ body {
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
     transform: translateZ(0);
-    &:not(.active) {
-      opacity: 0.1;
+  }
+  .series-year-divider:not(.active) {
+    opacity: 0.2;
+  }
+  .series-item-link:not(.active) {
+    opacity: 0.2;
+    color: $gray5;
+    .sub-title {
+      color: $gray5;
     }
   }
   &:hover {
