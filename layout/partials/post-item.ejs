@@ -1,5 +1,5 @@
 <div class="post-item" href="<%=url_for(post.path)%>" onclick="onclickPostItem(this)">
-  <div class="item-body">
+  <div class="item-body<% if (post.thumbnail || post.cover) { %> has-cover<% } %>">
     <% if (post.thumbnail || post.cover) { %>
     <div class="cover-img">
       <img src="<%=url_for(post.thumbnail || post.cover)%>" alt="" loading="lazy" />

@@ -1722,7 +1722,7 @@ body {
             height: 2.75em;
           }
         }
-        a:not([class]):not(blockquote a) {
+        a:not([class]) {
           color: $green;
           font-weight: bold;
           text-decoration: none;
@@ -1735,6 +1735,13 @@ body {
             background-size: cover;
             vertical-align: middle;
             margin-bottom: 0.25em;
+          }
+          &:empty::after,
+          &:has(img)::after {
+            display: none;
+          }
+          &:has(img):hover {
+            border-bottom: 0;
           }
           &:hover {
             opacity: 0.85;
@@ -1772,8 +1779,7 @@ body {
       .gt-comment-avatar {
         background-color: #f5f5f5;
       }
-      .user-mention,
-      .gt-comment-body blockquote a:not([class]) {
+      .user-mention {
         color: $darkText;
         text-decoration: underline;
         @include defaultFont;
@@ -1828,6 +1834,41 @@ body {
 #recent-posts {
   .post-item {
     @include postItem;
+    @media (min-width: 901px) {
+      .item-body.has-cover {
+        display: flex;
+        align-items: stretch;
+        gap: 15px;
+
+        &::after {
+          display: none;
+        }
+
+        .cover-img {
+          order: 2;
+          float: none;
+          flex: 0 0 25%;
+          width: 25%;
+          margin-left: 0;
+        }
+
+        .title-excerpt {
+          order: 1;
+          display: flex;
+          min-width: 0;
+          flex: 1 1 0;
+          flex-direction: column;
+        }
+
+        .title-excerpt-text {
+          flex: 1 0 auto;
+        }
+
+        .post-meta {
+          margin-top: auto;
+        }
+      }
+    }
     .tags {
       @include tags;
       margin: 0.25rem 0 -0.5em 0;
