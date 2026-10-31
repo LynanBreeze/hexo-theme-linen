@@ -2,7 +2,6 @@
   font-family: octicons-link;
   src: url(data:font/woff;charset=utf-8;base64,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) format('woff');
 }
-
 .markdown-body {
   -ms-text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
@@ -1249,3 +1248,388 @@
 }
 
 /*# sourceMappingURL=gitalk.css.map*/
+/* Comment composer follows a heading, account row, and full-width editor. */
+#gitalk-container .gt-container {
+  position: relative;
+  display: grid;
+  grid-template-columns: 3.125em minmax(0, 1fr);
+  column-gap: 0.75rem;
+  row-gap: 0;
+}
+
+#gitalk-container .gt-container .gt-meta {
+  display: contents;
+}
+
+#gitalk-container .gt-container h2.gt-meta {
+  display: contents;
+}
+
+#gitalk-container .gt-container .gt-meta::before,
+#gitalk-container .gt-container .gt-meta::after {
+  display: none;
+}
+
+#gitalk-container .gt-container .gt-counts {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  margin: 0;
+  padding: 1rem 0 0.75rem;
+  border: 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+#gitalk-container .gt-container .gt-user {
+  position: relative;
+  grid-column: 2;
+  grid-row: 2;
+  align-self: center;
+  justify-self: start;
+  float: none;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+#gitalk-container .gt-container .gt-header {
+  display: contents;
+}
+
+#gitalk-container .gt-container .gt-header-avatar {
+  position: static;
+  grid-column: 1;
+  grid-row: 2;
+  align-self: center;
+  width: 3.125em;
+  height: 3.125em;
+  margin: 0;
+  border-radius: 50%;
+}
+
+#gitalk-container .gt-container .gt-header-avatar img {
+  border-radius: 50%;
+}
+
+#gitalk-container .gt-container .gt-avatar-github {
+  display: inline-block;
+  grid-column: 1;
+  grid-row: 2;
+  align-self: center;
+  width: 3.125em;
+  height: 3.125em;
+  margin: 0;
+}
+
+#gitalk-container .gt-container .gt-header-comment {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  min-width: 0;
+  margin: 0.75rem 0 0;
+  padding: 0.75rem;
+  border-radius: 2px;
+  background: #f5f5f5;
+}
+
+#gitalk-container .gt-container .gt-header-textarea,
+#gitalk-container .gt-container .gt-header-preview {
+  min-height: 7.5rem;
+  padding: 0.25rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font: inherit;
+}
+
+#gitalk-container .gt-container .gt-header-textarea:hover {
+  background: transparent;
+}
+
+#gitalk-container .gt-container .gt-header-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin: 0.5rem 0 0;
+}
+
+#gitalk-container .gt-container .gt-header-controls-tip {
+  margin-right: auto;
+  color: #777;
+}
+
+#gitalk-container .gt-container .gt-header-controls .gt-btn {
+  float: none;
+  width: auto;
+  margin: 0;
+}
+
+#gitalk-container .gt-container .gt-comments {
+  grid-column: 1 / -1;
+  grid-row: 4;
+}
+
+@media (max-width: 479px) {
+  #gitalk-container .gt-container {
+    grid-template-columns: 2.75em minmax(0, 1fr);
+    column-gap: 0.875em;
+  }
+
+  #gitalk-container .gt-container .gt-header-avatar {
+    width: 2.75em;
+    height: 2.75em;
+  }
+
+  #gitalk-container .gt-container .gt-avatar-github {
+    width: 2.75em;
+    height: 2.75em;
+  }
+
+  #gitalk-container .gt-container .gt-header-controls {
+    flex-wrap: wrap;
+  }
+}
+
+
+/* Keep the login menu anchored to the account row and above the editor. */
+#gitalk-container .gt-container .gt-user {
+  z-index: 21;
+}
+
+#gitalk-container .gt-container .gt-popup {
+  position: absolute;
+  top: calc(1rem + 2rem + 0.75rem + 3.125rem - 0.75rem);
+  right: auto;
+  left: 3.875rem;
+  z-index: 22;
+}
+
+/* Use one consistent inset around the editor content and action row. */
+#gitalk-container .gt-container .gt-header-comment {
+  padding: 1rem;
+}
+
+#gitalk-container .gt-container .gt-header-textarea,
+#gitalk-container .gt-container .gt-header-preview {
+  padding: 0;
+}
+
+#gitalk-container .gt-container .gt-header-controls {
+  margin: 0;
+}
+
+#gitalk-container .gt-container .gt-header-controls .gt-btn {
+  margin: 0;
+}
+
+@media (max-width: 479px) {
+  #gitalk-container .gt-container .gt-popup {
+    top: calc(1rem + 2rem + 0.75rem + 2.75rem - 0.75rem);
+    left: 3.625rem;
+  }
+
+  #gitalk-container .gt-container .gt-header-comment {
+    padding: 0.875rem;
+  }
+}
+
+/* Center the loading placeholder across the full comments area. */
+#gitalk-container .gt-container .gt-initing {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  display: flex;
+  min-height: 12rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  text-align: center;
+}
+
+#gitalk-container .gt-container .gt-initing-text {
+  margin: 0.625em 0 0;
+}
+
+/* Prevent Gitalk's float-clearing pseudo elements from shifting flex actions. */
+#gitalk-container .gt-container .gt-header-controls::before,
+#gitalk-container .gt-container .gt-header-controls::after {
+  display: none;
+  content: none;
+}
+
+#gitalk-container .gt-container .gt-header-controls {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0;
+}
+
+#gitalk-container .gt-container .gt-header-controls {
+  align-items: flex-end;
+}
+
+/* Pin the Markdown hint to the panel's lower-left inset. */
+#gitalk-container .gt-container .gt-header-comment {
+  position: relative;
+}
+
+#gitalk-container .gt-container .gt-header-controls-tip {
+  position: absolute;
+  left: 0;
+  bottom: -0.25rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+@media (max-width: 479px) {
+  #gitalk-container .gt-container .gt-header-controls-tip {
+    left: 0;
+    bottom: -0.25rem;
+  }
+}
+
+#gitalk-container .gt-container .gt-popup,
+#gitalk-container .gt-container .gt-popup * {
+  font-weight: 400;
+}
+
+#gitalk-container .gt-container .gt-popup {
+  top: calc(1rem + 2rem + 0.75rem + 3.125rem - 0.75rem);
+}
+
+@media (max-width: 479px) {
+  #gitalk-container .gt-container .gt-popup {
+    top: calc(1rem + 2rem + 0.75rem + 2.75rem - 0.75rem);
+  }
+}
+
+@media (min-width: 480px) {
+  #gitalk-container .gt-container .gt-comment-body img {
+    max-width: 50% !important;
+  }
+}
+
+@media (max-width: 479px) {
+  #gitalk-container .gt-container .gt-comment-body img {
+    max-width: none !important;
+  }
+}
+
+
+#gitalk-container .gt-container .gt-comment-like .gt-ico-heart {
+  display: inline-flex;
+  align-items: center;
+}
+
+#gitalk-container .gt-container .gt-comment-like .gt-ico-heart .gt-ico-text {
+  display: inline-block;
+  margin-left: 0.25em !important;
+  color: #6b6b6b;
+}
+
+#gitalk-container .gt-container .gt-comment {
+  --comment-content-indent: calc(3.125em + 1em);
+  display: grid;
+  grid-template-columns: 3.125em minmax(0, 1fr);
+  grid-template-rows: auto auto auto auto;
+  column-gap: 1em;
+  align-items: start;
+  padding: 1.5em 0;
+  border-bottom: 1px solid #f2f2f2;
+}
+
+#gitalk-container .gt-container .gt-comment:last-child {
+  border-bottom: 0;
+}
+
+#gitalk-container .gt-container .gt-comment-avatar {
+  position: static;
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: center;
+  border-radius: 50%;
+}
+
+#gitalk-container .gt-container .gt-comment-avatar img {
+  border-radius: 50%;
+}
+
+#gitalk-container .gt-container .gt-comment-content,
+#gitalk-container .gt-container .gt-comment-header {
+  display: contents;
+}
+
+#gitalk-container .gt-container .gt-comment-block-1,
+#gitalk-container .gt-container .gt-comment-block-2,
+#gitalk-container .gt-container .gt-comment-text {
+  display: none;
+}
+
+#gitalk-container .gt-container .gt-comment-username {
+  position: relative;
+  top: 2px;
+  grid-column: 2;
+  grid-row: 1;
+  line-height: 1.5;
+}
+
+#gitalk-container .gt-container .gt-comment-date {
+  position: relative;
+  top: 2px;
+  grid-column: 2;
+  grid-row: 2;
+  margin: 0.2em 0 0;
+}
+
+#gitalk-container .gt-container .gt-comment-body {
+  grid-column: 2;
+  grid-row: 3;
+  min-width: 0;
+  width: calc(100% + var(--comment-content-indent));
+  margin: 0.9em 0 0 calc(-1 * var(--comment-content-indent));
+}
+
+#gitalk-container .gt-container .gt-comment-like,
+#gitalk-container .gt-container .gt-comment-reply,
+#gitalk-container .gt-container .gt-comment-edit {
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  grid-column: 2;
+  grid-row: 4;
+  width: max-content;
+  height: 1.5em;
+  margin-top: 1.1em;
+  line-height: 1;
+}
+
+#gitalk-container .gt-container .gt-comment-like {
+  transform: translateX(calc(-1 * var(--comment-content-indent) + 1em));
+}
+
+#gitalk-container .gt-container .gt-comment-reply,
+#gitalk-container .gt-container .gt-comment-edit {
+  margin-left: 3em;
+}
+
+#gitalk-container .gt-container .gt-comment:has(.gt-comment-like):not(:has(.gt-ico-text:not(:empty))) .gt-comment-reply {
+  margin-left: 2em !important;
+}
+
+@media (max-width: 479px) {
+  #gitalk-container .gt-container .gt-comment {
+    --comment-content-indent: calc(2.75em + 0.875em);
+    grid-template-columns: 2.75em minmax(0, 1fr);
+    column-gap: 0.875em;
+  }
+}
+
+#gitalk-container .gt-container .user-mention {
+  text-decoration: none;
+}
+
+#gitalk-container .gt-container .user-mention:hover {
+  text-decoration: underline;
+}
