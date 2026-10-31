@@ -1250,9 +1250,10 @@
 /*# sourceMappingURL=gitalk.css.map*/
 /* Comment composer follows a heading, account row, and full-width editor. */
 #gitalk-container .gt-container {
+  --gt-avatar-size: 2.25rem;
   position: relative;
   display: grid;
-  grid-template-columns: 3.125em minmax(0, 1fr);
+  grid-template-columns: var(--gt-avatar-size) minmax(0, 1fr);
   column-gap: 0.75rem;
   row-gap: 0;
 }
@@ -1303,40 +1304,67 @@
   grid-column: 1;
   grid-row: 2;
   align-self: center;
-  width: 3.125em;
-  height: 3.125em;
+  display: block;
+  width: var(--gt-avatar-size);
+  height: var(--gt-avatar-size);
   margin: 0;
   border-radius: 50%;
 }
 
 #gitalk-container .gt-container .gt-header-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   border-radius: 50%;
 }
 
 #gitalk-container .gt-container .gt-avatar-github {
-  display: inline-block;
+  display: block;
   grid-column: 1;
   grid-row: 2;
   align-self: center;
-  width: 3.125em;
-  height: 3.125em;
+  width: var(--gt-avatar-size);
+  height: var(--gt-avatar-size);
   margin: 0;
 }
 
+#gitalk-container .gt-container .gt-avatar-github svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 #gitalk-container .gt-container .gt-header-comment {
+  position: relative;
   grid-column: 1 / -1;
   grid-row: 3;
   min-width: 0;
   margin: 0.75rem 0 0;
-  padding: 0.75rem;
+  padding: 0.75rem 1rem;
   border-radius: 2px;
   background: #f5f5f5;
+  cursor: text;
 }
 
-#gitalk-container .gt-container .gt-header-textarea,
+#gitalk-container .gt-container .gt-header-textarea {
+  min-height: 1.5em;
+  max-height: 1.5em;
+  height: 1.5em;
+  line-height: 1.5;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font: inherit;
+  resize: none;
+  overflow: hidden;
+  transition: none;
+}
+
 #gitalk-container .gt-container .gt-header-preview {
   min-height: 7.5rem;
-  padding: 0.25rem;
+  padding: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -1347,16 +1375,32 @@
   background: transparent;
 }
 
+/* Hide controls by default in single-line collapsed state. */
 #gitalk-container .gt-container .gt-header-controls {
-  display: flex;
-  align-items: center;
+  display: none;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  align-items: flex-end;
   justify-content: flex-end;
   gap: 0.75rem;
-  margin: 0.5rem 0 0;
 }
 
+/* Prevent Gitalk's float-clearing pseudo elements from shifting flex actions. */
+#gitalk-container .gt-container .gt-header-controls::before,
+#gitalk-container .gt-container .gt-header-controls::after {
+  display: none;
+  content: none;
+}
+
+/* Pin the Markdown hint to the panel's lower-left inset. */
 #gitalk-container .gt-container .gt-header-controls-tip {
-  margin-right: auto;
+  position: absolute;
+  left: 0;
+  bottom: -0.25rem;
+  margin: 0;
+  line-height: 1.5;
   color: #777;
 }
 
@@ -1366,6 +1410,32 @@
   margin: 0;
 }
 
+/* Expanded state: when focused, containing content, in preview mode, or explicitly toggled. */
+#gitalk-container .gt-container .gt-header-comment:focus-within,
+#gitalk-container .gt-container .gt-header-comment:has(.gt-header-textarea:not(:placeholder-shown)),
+#gitalk-container .gt-container .gt-header-comment:has(.gt-header-preview:not(.hide)),
+#gitalk-container .gt-container .gt-header-comment.is-expanded {
+  padding: 1rem;
+}
+
+#gitalk-container .gt-container .gt-header-comment:focus-within .gt-header-textarea,
+#gitalk-container .gt-container .gt-header-comment:has(.gt-header-textarea:not(:placeholder-shown)) .gt-header-textarea,
+#gitalk-container .gt-container .gt-header-comment:has(.gt-header-preview:not(.hide)) .gt-header-textarea,
+#gitalk-container .gt-container .gt-header-comment.is-expanded .gt-header-textarea {
+  min-height: 7.5rem;
+  max-height: none;
+  height: auto;
+  resize: none;
+  overflow: auto;
+}
+
+#gitalk-container .gt-container .gt-header-comment:focus-within .gt-header-controls,
+#gitalk-container .gt-container .gt-header-comment:has(.gt-header-textarea:not(:placeholder-shown)) .gt-header-controls,
+#gitalk-container .gt-container .gt-header-comment:has(.gt-header-preview:not(.hide)) .gt-header-controls,
+#gitalk-container .gt-container .gt-header-comment.is-expanded .gt-header-controls {
+  display: flex;
+}
+
 #gitalk-container .gt-container .gt-comments {
   grid-column: 1 / -1;
   grid-row: 4;
@@ -1373,22 +1443,39 @@
 
 @media (max-width: 479px) {
   #gitalk-container .gt-container {
-    grid-template-columns: 2.75em minmax(0, 1fr);
+    --gt-avatar-size: 2rem;
+    grid-template-columns: var(--gt-avatar-size) minmax(0, 1fr);
     column-gap: 0.875em;
   }
 
   #gitalk-container .gt-container .gt-header-avatar {
-    width: 2.75em;
-    height: 2.75em;
+    width: var(--gt-avatar-size);
+    height: var(--gt-avatar-size);
   }
 
   #gitalk-container .gt-container .gt-avatar-github {
-    width: 2.75em;
-    height: 2.75em;
+    width: var(--gt-avatar-size);
+    height: var(--gt-avatar-size);
+  }
+
+  #gitalk-container .gt-container .gt-header-comment {
+    padding: 0.75rem 0.875rem;
+  }
+
+  #gitalk-container .gt-container .gt-header-comment:focus-within,
+  #gitalk-container .gt-container .gt-header-comment:has(.gt-header-textarea:not(:placeholder-shown)),
+  #gitalk-container .gt-container .gt-header-comment:has(.gt-header-preview:not(.hide)),
+  #gitalk-container .gt-container .gt-header-comment.is-expanded {
+    padding: 0.875rem;
   }
 
   #gitalk-container .gt-container .gt-header-controls {
     flex-wrap: wrap;
+  }
+
+  #gitalk-container .gt-container .gt-header-controls-tip {
+    left: 0;
+    bottom: -0.25rem;
   }
 }
 
@@ -1400,38 +1487,16 @@
 
 #gitalk-container .gt-container .gt-popup {
   position: absolute;
-  top: calc(1rem + 2rem + 0.75rem + 3.125rem - 0.75rem);
+  top: calc(1rem + 2rem + 0.75rem + var(--gt-avatar-size) - 0.75rem);
   right: auto;
-  left: 3.875rem;
+  left: calc(var(--gt-avatar-size) + 0.75rem);
   z-index: 22;
-}
-
-/* Use one consistent inset around the editor content and action row. */
-#gitalk-container .gt-container .gt-header-comment {
-  padding: 1rem;
-}
-
-#gitalk-container .gt-container .gt-header-textarea,
-#gitalk-container .gt-container .gt-header-preview {
-  padding: 0;
-}
-
-#gitalk-container .gt-container .gt-header-controls {
-  margin: 0;
-}
-
-#gitalk-container .gt-container .gt-header-controls .gt-btn {
-  margin: 0;
 }
 
 @media (max-width: 479px) {
   #gitalk-container .gt-container .gt-popup {
-    top: calc(1rem + 2rem + 0.75rem + 2.75rem - 0.75rem);
-    left: 3.625rem;
-  }
-
-  #gitalk-container .gt-container .gt-header-comment {
-    padding: 0.875rem;
+    top: calc(1rem + 2rem + 0.75rem + var(--gt-avatar-size) - 0.75rem);
+    left: calc(var(--gt-avatar-size) + 0.875rem);
   }
 }
 
@@ -1452,56 +1517,9 @@
   margin: 0.625em 0 0;
 }
 
-/* Prevent Gitalk's float-clearing pseudo elements from shifting flex actions. */
-#gitalk-container .gt-container .gt-header-controls::before,
-#gitalk-container .gt-container .gt-header-controls::after {
-  display: none;
-  content: none;
-}
-
-#gitalk-container .gt-container .gt-header-controls {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 0;
-}
-
-#gitalk-container .gt-container .gt-header-controls {
-  align-items: flex-end;
-}
-
-/* Pin the Markdown hint to the panel's lower-left inset. */
-#gitalk-container .gt-container .gt-header-comment {
-  position: relative;
-}
-
-#gitalk-container .gt-container .gt-header-controls-tip {
-  position: absolute;
-  left: 0;
-  bottom: -0.25rem;
-  margin: 0;
-  line-height: 1.5;
-}
-
-@media (max-width: 479px) {
-  #gitalk-container .gt-container .gt-header-controls-tip {
-    left: 0;
-    bottom: -0.25rem;
-  }
-}
-
 #gitalk-container .gt-container .gt-popup,
 #gitalk-container .gt-container .gt-popup * {
   font-weight: 400;
-}
-
-#gitalk-container .gt-container .gt-popup {
-  top: calc(1rem + 2rem + 0.75rem + 3.125rem - 0.75rem);
-}
-
-@media (max-width: 479px) {
-  #gitalk-container .gt-container .gt-popup {
-    top: calc(1rem + 2rem + 0.75rem + 2.75rem - 0.75rem);
-  }
 }
 
 @media (min-width: 480px) {
@@ -1529,9 +1547,9 @@
 }
 
 #gitalk-container .gt-container .gt-comment {
-  --comment-content-indent: calc(3.125em + 1em);
+  --comment-content-indent: calc(var(--gt-avatar-size) + 1em);
   display: grid;
-  grid-template-columns: 3.125em minmax(0, 1fr);
+  grid-template-columns: var(--gt-avatar-size) minmax(0, 1fr);
   grid-template-rows: auto auto auto auto;
   column-gap: 1em;
   align-items: start;
@@ -1548,10 +1566,17 @@
   grid-column: 1;
   grid-row: 1 / span 2;
   align-self: center;
+  display: block;
+  width: var(--gt-avatar-size);
+  height: var(--gt-avatar-size);
   border-radius: 50%;
 }
 
 #gitalk-container .gt-container .gt-comment-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   border-radius: 50%;
 }
 
@@ -1568,7 +1593,7 @@
 
 #gitalk-container .gt-container .gt-comment-username {
   position: relative;
-  top: 2px;
+  top: 0;
   grid-column: 2;
   grid-row: 1;
   line-height: 1.5;
@@ -1576,7 +1601,7 @@
 
 #gitalk-container .gt-container .gt-comment-date {
   position: relative;
-  top: 2px;
+  top: 0;
   grid-column: 2;
   grid-row: 2;
   margin: 0.2em 0 0;
@@ -1620,8 +1645,8 @@
 
 @media (max-width: 479px) {
   #gitalk-container .gt-container .gt-comment {
-    --comment-content-indent: calc(2.75em + 0.875em);
-    grid-template-columns: 2.75em minmax(0, 1fr);
+    --comment-content-indent: calc(var(--gt-avatar-size) + 0.875em);
+    grid-template-columns: var(--gt-avatar-size) minmax(0, 1fr);
     column-gap: 0.875em;
   }
 }

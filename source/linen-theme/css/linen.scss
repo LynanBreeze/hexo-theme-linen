@@ -1547,6 +1547,10 @@ body {
       }
     }
     #gitalk-container {
+      --gt-avatar-size: 2.25rem;
+      @media (max-width: 479px) {
+        --gt-avatar-size: 2rem;
+      }
       margin-top: $postWidgetGap;
       padding: 0 $commonPadding;
       background-color: #fff;
@@ -1567,9 +1571,9 @@ body {
       .gt-comments {
         padding-top: $commonPadding;
         .gt-comment {
-          --comment-content-indent: calc(3.125em + 1em);
+          --comment-content-indent: calc(var(--gt-avatar-size) + 1em);
           display: grid;
-          grid-template-columns: 3.125em minmax(0, 1fr);
+          grid-template-columns: var(--gt-avatar-size) minmax(0, 1fr);
           grid-template-rows: auto auto auto auto;
           column-gap: 1em;
           align-items: start;
@@ -1585,9 +1589,15 @@ body {
           grid-column: 1;
           grid-row: 1 / span 2;
           align-self: center;
+          width: var(--gt-avatar-size);
+          height: var(--gt-avatar-size);
           border-radius: 50%;
 
           img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             border-radius: 50%;
           }
         }
@@ -1606,7 +1616,7 @@ body {
           grid-row: 1;
           line-height: 1.5;
           position: relative;
-          top: 2px;
+          top: 0;
         }
         .gt-comment-text {
           display: none;
@@ -1615,7 +1625,7 @@ body {
           grid-column: 2;
           grid-row: 2;
           position: relative;
-          top: 2px;
+          top: 0;
           margin: 0.2em 0 0;
         }
         .gt-comment-body {
@@ -1720,13 +1730,13 @@ body {
         }
         @media (max-width: 479px) {
           .gt-comment {
-            --comment-content-indent: calc(2.75em + 0.875em);
-            grid-template-columns: 2.75em minmax(0, 1fr);
+            --comment-content-indent: calc(var(--gt-avatar-size) + 0.875em);
+            grid-template-columns: var(--gt-avatar-size) minmax(0, 1fr);
             column-gap: 0.875em;
           }
           .gt-comment-avatar {
-            width: 2.75em;
-            height: 2.75em;
+            width: var(--gt-avatar-size);
+            height: var(--gt-avatar-size);
           }
         }
         a:not([class]) {

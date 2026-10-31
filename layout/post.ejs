@@ -223,6 +223,41 @@ const seriesInfo = getSeriesInfo(page?.series);
       });
 
       gitalk.render("gitalk-container");
+
+      var container = document.getElementById("gitalk-container");
+      if (container) {
+        var expandComment = function() {
+          var comment = container.querySelector(".gt-header-comment");
+          if (comment && !comment.classList.contains("is-expanded")) {
+            comment.classList.add("is-expanded");
+          }
+        };
+
+        // Focus the textarea and expand when clicking on the comment box wrapper
+        container.addEventListener("click", function(e) {
+          var comment = e.target.closest(".gt-header-comment");
+          if (comment) {
+            expandComment();
+            if (e.target === comment) {
+              var textarea = comment.querySelector(".gt-header-textarea");
+              if (textarea) textarea.focus();
+            }
+          }
+        });
+
+        // Expand once interacted with and keep expanded permanently
+        container.addEventListener("focusin", function(e) {
+          if (e.target && e.target.classList.contains("gt-header-textarea")) {
+            expandComment();
+          }
+        });
+
+        container.addEventListener("input", function(e) {
+          if (e.target && e.target.classList.contains("gt-header-textarea")) {
+            expandComment();
+          }
+        });
+      }
     };
     document.body.appendChild(script);
     $gitalkInitiated = true;
