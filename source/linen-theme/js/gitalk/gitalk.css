@@ -1345,6 +1345,7 @@
   border-radius: 2px;
   background: #f5f5f5;
   cursor: text;
+  transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #gitalk-container .gt-container .gt-header-textarea {
@@ -1359,7 +1360,8 @@
   font: inherit;
   resize: none;
   overflow: hidden;
-  transition: none;
+  transition: height 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              min-height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #gitalk-container .gt-container .gt-header-preview {
@@ -1375,9 +1377,10 @@
   background: transparent;
 }
 
-/* Hide controls by default in single-line collapsed state. */
+/* Hide controls by default in single-line collapsed state; animate reveal on expansion. */
 #gitalk-container .gt-container .gt-header-controls {
-  display: none;
+  display: flex;
+  position: relative;
   box-sizing: border-box;
   width: 100%;
   margin: 0;
@@ -1385,6 +1388,15 @@
   align-items: flex-end;
   justify-content: flex-end;
   gap: 0.75rem;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+  transition: max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              margin-top 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Prevent Gitalk's float-clearing pseudo elements from shifting flex actions. */
@@ -1422,9 +1434,9 @@
 #gitalk-container .gt-container .gt-header-comment:has(.gt-header-textarea:not(:placeholder-shown)) .gt-header-textarea,
 #gitalk-container .gt-container .gt-header-comment:has(.gt-header-preview:not(.hide)) .gt-header-textarea,
 #gitalk-container .gt-container .gt-header-comment.is-expanded .gt-header-textarea {
+  height: 7.5rem;
   min-height: 7.5rem;
   max-height: none;
-  height: auto;
   resize: none;
   overflow: auto;
 }
@@ -1433,7 +1445,11 @@
 #gitalk-container .gt-container .gt-header-comment:has(.gt-header-textarea:not(:placeholder-shown)) .gt-header-controls,
 #gitalk-container .gt-container .gt-header-comment:has(.gt-header-preview:not(.hide)) .gt-header-controls,
 #gitalk-container .gt-container .gt-header-comment.is-expanded .gt-header-controls {
-  display: flex;
+  max-height: 6rem;
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  margin-top: 0.75rem;
 }
 
 #gitalk-container .gt-container .gt-comments {
@@ -1547,11 +1563,11 @@
 }
 
 #gitalk-container .gt-container .gt-comment {
-  --comment-content-indent: calc(var(--gt-avatar-size) + 1em);
+  --comment-content-indent: calc(var(--gt-avatar-size) + 1rem);
   display: grid;
   grid-template-columns: var(--gt-avatar-size) minmax(0, 1fr);
   grid-template-rows: auto auto auto auto;
-  column-gap: 1em;
+  column-gap: 1rem;
   align-items: start;
   padding: 1.5em 0;
   border-bottom: 1px solid #f2f2f2;
@@ -1631,7 +1647,7 @@
 }
 
 #gitalk-container .gt-container .gt-comment-like {
-  transform: translateX(calc(-1 * var(--comment-content-indent) + 1em));
+  transform: translateX(calc(-1 * var(--comment-content-indent)));
 }
 
 #gitalk-container .gt-container .gt-comment-reply,
@@ -1645,9 +1661,9 @@
 
 @media (max-width: 479px) {
   #gitalk-container .gt-container .gt-comment {
-    --comment-content-indent: calc(var(--gt-avatar-size) + 0.875em);
+    --comment-content-indent: calc(var(--gt-avatar-size) + 0.875rem);
     grid-template-columns: var(--gt-avatar-size) minmax(0, 1fr);
-    column-gap: 0.875em;
+    column-gap: 0.875rem;
   }
 }
 
