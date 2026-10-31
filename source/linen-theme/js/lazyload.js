@@ -224,9 +224,12 @@
       var showTransition =
         !window.$lazyload || window.$lazyload.showTransition !== false;
       var clearPlaceholder = function clearPlaceholder() {
+        // Keep the placeholder underneath by default to prevent blank frames or flashes
+        // caused by asynchronous GPU decoding and rasterization delays.
         var keepPlaceholder =
           element.getAttribute("data-hdr-active") === "true" ||
-          (window.$lazyload && window.$lazyload.keepPlaceholder === true);
+          !window.$lazyload ||
+          window.$lazyload.keepPlaceholder !== false;
         if (!keepPlaceholder) {
           element.children[0].classList.add("loaded");
         }
@@ -247,6 +250,18 @@
             return;
           }
           revealedSource = source;
+
+          // If the resource finishes loading while off-screen, skip the opacity
+          // transition to prevent deferred animations and visual flashes when
+          // the element scrolls into the viewport.
+          var rect = element.getBoundingClientRect();
+          var inViewport =
+            rect.bottom > 0 &&
+            rect.top < (window.innerHeight || document.documentElement.clientHeight);
+          if (!inViewport) {
+            resourceElement.style.transition = "none";
+          }
+
           // The inline opacity is already 0 and the inline transition is set
           // before insertion, so the next frame can reveal without forcing a
           // synchronous layout for every image.

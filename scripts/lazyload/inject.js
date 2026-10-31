@@ -14,6 +14,7 @@ module.exports = function (hexo) {
       placeholderRatio,
       showTransition,
       preloadCount,
+      keepPlaceholder: configKeepPlaceholder,
     } = {
       ...defaultConfig,
       ...(hexo?.config?.theme_config?.lazyload || {}),
@@ -154,7 +155,7 @@ module.exports = function (hexo) {
     preloadCount: ${preloadCount},
     showTransition: ${showTransition},
     keepPlaceholder: ${
-      page?.lazyload?.keepPlaceholder ?? false
+      page?.lazyload?.keepPlaceholder ?? configKeepPlaceholder ?? true
     }}</script>`;
 
     const injectExtraScript = function (filePath) {

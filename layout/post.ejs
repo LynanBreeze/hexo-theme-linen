@@ -6,7 +6,7 @@
     const coverImgStartTime = performance.now();
     setTimeout(() => {
       const postCoverImg = document.getElementById('postCoverImg');
-      if (postCoverImg && (!postCoverImg.classList.contains('loaded') || postCoverImg.classList.contains('cached'))) {
+      if (postCoverImg && !postCoverImg.classList.contains('loaded') && !postCoverImg.classList.contains('cached')) {
         postCoverImg.classList.add('loading')
       }
     }, 100);

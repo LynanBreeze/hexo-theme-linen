@@ -51,7 +51,7 @@ const travelPlacesJson = encodeURIComponent(JSON.stringify(travelPlaces));
       const coverImgStartTime = Date.now();
       setTimeout(() => {
         const seriesCoverImg = document.getElementById('seriesCoverImg');
-        if (seriesCoverImg && (!seriesCoverImg.classList.contains('loaded') || seriesCoverImg.classList.contains('cached'))) {
+        if (seriesCoverImg && !seriesCoverImg.classList.contains('loaded') && !seriesCoverImg.classList.contains('cached')) {
           seriesCoverImg.classList.add('loading')
         }
       }, 100);

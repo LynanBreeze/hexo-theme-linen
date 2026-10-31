@@ -6,5 +6,6 @@ module.exports.defaultConfig = {
     placeholderRatio: 3 / 2,
     showTransition: true,
     showAltText: true,
-    preloadCount: 5
+    preloadCount: 5,
+    keepPlaceholder: true
 }
