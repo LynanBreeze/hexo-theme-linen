@@ -164,6 +164,38 @@
       backdrop-filter: blur(10px);
       display: block;
     }
+
+    .lazyload-wrap,
+    .post-list-cover-lazy {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+
+      .placeholder {
+        width: 100%;
+        height: 100%;
+        padding-bottom: 0 !important;
+        background-size: cover;
+        background-position: center;
+      }
+
+      .inner-wrap {
+        width: 100%;
+        height: 100%;
+      }
+
+      img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        backdrop-filter: blur(10px);
+        display: block;
+      }
+    }
   }
 
   .link-content {

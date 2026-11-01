@@ -311,7 +311,7 @@ function lazyProcess(htmlContent) {
   return htmlContent
     .replace(/<img([\s\S]*?)src="(.*?)"([\s\S]*?)(>|<\/img>)/gi, function (str, p1, src, attrStr) {
       if (/no-lazy/gi.test(str)) {
-        return str.replace(/\$?no-lazy/, "");
+        return str;
       }
 
       const formatedAttributes = formatAttributes(str, src, imgs, language);
@@ -495,6 +495,7 @@ module.exports.processCovers = function (str, data) {
         }></span></span></div>`;
       }
     );
+    str = str.replace(/\s+\$?no-lazy\b/gi, "");
   } catch (error) {
     console.log(error);
     return str;
