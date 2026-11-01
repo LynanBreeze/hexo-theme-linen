@@ -3465,6 +3465,7 @@ html[lang="zh-CN"] {
     width: 100%;
     display: inline-block;
     vertical-align: middle;
+    scroll-margin-top: calc(#{$navbarMinHeight} + 16px);
   }
 }
 

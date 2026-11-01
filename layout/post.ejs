@@ -329,10 +329,10 @@ const seriesInfo = getSeriesInfo(page?.series);
       }
 
       const currentIndex = lightbox.options && lightbox.options.index;
-      if (typeof currentIndex === 'number' && currentIndex >= 0 && typeof prepareImageGridOpenPromise === 'function') {
+      if (typeof currentIndex === 'number' && currentIndex >= 0 && typeof prepareGalleryItemOpenPromise === 'function') {
         const itemData = lightbox.getItemData(currentIndex);
         const target = itemData && itemData.element;
-        return prepareImageGridOpenPromise(target);
+        return prepareGalleryItemOpenPromise(target);
       }
     },
     paddingFn: (viewportSize) => {
@@ -594,6 +594,43 @@ const seriesInfo = getSeriesInfo(page?.series);
     return Boolean(gridItem && gridItem.closest && gridItem.closest('.image-grid'));
   };
 
+  let headerWasHiddenByLightbox = false;
+
+  const isImageBlockedByFixedHeader = (element) => {
+    if (!element) return false;
+    const header = document.querySelector('.nav-header');
+    if (!header) return false;
+    const style = window.getComputedStyle(header);
+    if (style.position !== 'fixed' || header.classList.contains('hide')) {
+      return false;
+    }
+    const headerHeight = header.offsetHeight || 65;
+    const target = (typeof getScrollTarget === 'function' ? getScrollTarget(element) : null) || element;
+    const rect = target.getBoundingClientRect();
+    return rect.top < headerHeight && rect.bottom > 0;
+  };
+
+  const hideFixedHeaderOnGalleryClick = (target) => {
+    if (!isImageBlockedByFixedHeader(target)) {
+      return false;
+    }
+    const header = document.querySelector('.nav-header');
+    if (!header) return false;
+    headerWasHiddenByLightbox = true;
+    header.classList.add('hide');
+    return true;
+  };
+
+  const getFixedHeaderHeight = () => {
+    const header = document.querySelector('.nav-header');
+    if (!header) return 0;
+    const style = window.getComputedStyle(header);
+    if (style.position !== 'fixed' || header.classList.contains('hide')) {
+      return 0;
+    }
+    return header.offsetHeight || 65;
+  };
+
   const getScrollDelta = (element) => {
     if (!element) {
       return { deltaX: 0, deltaY: 0, scrollContainer: null, target: null };
@@ -619,11 +656,16 @@ const seriesInfo = getSeriesInfo(page?.series);
       }
     }
 
+    const headerHeight = getFixedHeaderHeight();
+    const topSafePadding = headerHeight > 0 ? headerHeight + 16 : 16;
     let deltaY = 0;
-    if (rect.top < 0) {
-      deltaY = rect.top;
+
+    if (rect.top < topSafePadding) {
+      deltaY = rect.top - topSafePadding;
     } else if (rect.bottom > windowHeight) {
-      deltaY = rect.bottom - windowHeight;
+      const desiredDeltaY = rect.bottom - windowHeight + 16;
+      const maxAllowedDeltaY = rect.top - topSafePadding;
+      deltaY = Math.min(desiredDeltaY, maxAllowedDeltaY);
     }
 
     return { deltaX, deltaY, scrollContainer, target };
@@ -727,31 +769,70 @@ const seriesInfo = getSeriesInfo(page?.series);
     });
   };
 
-  const prepareImageGridOpenPromise = (target) => {
-    if (!target || !isElementInImageGridItem(target)) {
+  const prepareGalleryItemOpenPromise = (target) => {
+    if (!target) {
       return null;
     }
 
-    const { deltaX, deltaY, scrollContainer, target: scrollTarget } = getScrollDelta(target);
+    const isBlocked = isImageBlockedByFixedHeader(target);
+    const inGrid = isElementInImageGridItem(target);
+
+    // Neither blocked by fixed nav-header nor inside an image-grid; open lightbox immediately
+    if (!isBlocked && !inGrid) {
+      return null;
+    }
+
+    // Hide nav-header early on click only when the item is blocked by it
+    const headerDidStartHiding = isBlocked ? hideFixedHeaderOnGalleryClick(target) : false;
+
+    let deltaX = 0;
+    let deltaY = 0;
+    let scrollContainer = null;
+
+    if (inGrid) {
+      const scrollInfo = getScrollDelta(target);
+      deltaX = scrollInfo.deltaX;
+      deltaY = scrollInfo.deltaY;
+      scrollContainer = scrollInfo.scrollContainer;
+    } else if (isBlocked) {
+      // Non-grid image blocked by header: smooth scroll down if top edge overflows above viewport (< 16px)
+      const scrollTarget = (typeof getScrollTarget === 'function' ? getScrollTarget(target) : null) || target;
+      const rect = scrollTarget.getBoundingClientRect();
+      if (rect.top < 16) {
+        deltaY = rect.top - 16;
+      }
+    }
+
     const needsScrollX = Boolean(scrollContainer && Math.abs(deltaX) > 6);
     const needsScrollY = Math.abs(deltaY) > 6;
     const needsScroll = needsScrollX || needsScrollY;
 
     if (!needsScroll) {
+      if (headerDidStartHiding) {
+        return new Promise((resolve) => {
+          setTimeout(resolve, 180);
+        });
+      }
       return null;
     }
 
     const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const behavior = prefersReducedMotion ? 'instant' : 'smooth';
 
-    if (scrollTarget && typeof scrollTarget.scrollIntoView === 'function') {
-      scrollTarget.scrollIntoView({
-        behavior,
-        block: 'nearest',
-        inline: 'center'
-      });
-    } else if (scrollTarget && typeof scrollTarget.scrollIntoViewIfNeeded === 'function') {
-      scrollTarget.scrollIntoViewIfNeeded();
+    if (needsScrollX && scrollContainer) {
+      if (typeof scrollContainer.scrollBy === 'function') {
+        scrollContainer.scrollBy({ left: deltaX, behavior });
+      } else {
+        scrollContainer.scrollLeft += deltaX;
+      }
+    }
+
+    if (needsScrollY) {
+      if (typeof window.scrollBy === 'function') {
+        window.scrollBy({ top: deltaY, behavior });
+      } else {
+        window.scroll(0, window.pageYOffset + deltaY);
+      }
     }
 
     if (behavior === 'instant') {
@@ -769,7 +850,7 @@ const seriesInfo = getSeriesInfo(page?.series);
     if (index >= 0) {
       const clickedEl = event && event.target && (event.target.closest ? event.target : event.target.parentElement);
       const target = clickedEl && clickedEl.closest && (clickedEl.closest('a.gallery-item') || clickedEl.closest('.gallery-item'));
-      pendingOpenPromise = prepareImageGridOpenPromise(target);
+      pendingOpenPromise = prepareGalleryItemOpenPromise(target);
     }
     return index;
   });
@@ -858,6 +939,23 @@ const seriesInfo = getSeriesInfo(page?.series);
   lightbox.on('closingAnimationEnd', () => {
     setPswpLivePhotoClosing(false);
     window.requestAnimationFrame(restorePageLivePhotoTriggers);
+    if (headerWasHiddenByLightbox) {
+      const header = document.querySelector('.nav-header');
+      if (header) {
+        header.classList.remove('hide');
+      }
+      headerWasHiddenByLightbox = false;
+    }
+  });
+
+  lightbox.on('destroy', () => {
+    if (headerWasHiddenByLightbox) {
+      const header = document.querySelector('.nav-header');
+      if (header) {
+        header.classList.remove('hide');
+      }
+      headerWasHiddenByLightbox = false;
+    }
   });
 
   lightbox.on('change', (e) => {
