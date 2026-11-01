@@ -315,11 +315,26 @@ const seriesInfo = getSeriesInfo(page?.series);
   };
   const isHDRScreen = typeof window.matchMedia === 'function' &&
     window.matchMedia('(dynamic-range: high)').matches;
+  let pendingOpenPromise = null;
   const lightbox = new PhotoSwipeLightbox({
     gallery: '#post',
     children: 'a.gallery-item',
     bgOpacity: 1,
     pswpModule: PhotoSwipe,
+    openPromise: () => {
+      if (pendingOpenPromise) {
+        const promise = pendingOpenPromise;
+        pendingOpenPromise = null;
+        return promise;
+      }
+
+      const currentIndex = lightbox.options && lightbox.options.index;
+      if (typeof currentIndex === 'number' && currentIndex >= 0 && typeof prepareImageGridOpenPromise === 'function') {
+        const itemData = lightbox.getItemData(currentIndex);
+        const target = itemData && itemData.element;
+        return prepareImageGridOpenPromise(target);
+      }
+    },
     paddingFn: (viewportSize) => {
       return viewportSize.x < 700 ? smallScreenPadding : largeScreenPadding
     },
@@ -573,6 +588,191 @@ const seriesInfo = getSeriesInfo(page?.series);
       </button>
     </div>`;
   }
+
+  const isElementInImageGridItem = (element) => {
+    const gridItem = element && element.closest && element.closest('.grid-item');
+    return Boolean(gridItem && gridItem.closest && gridItem.closest('.image-grid'));
+  };
+
+  const getScrollDelta = (element) => {
+    if (!element) {
+      return { deltaX: 0, deltaY: 0, scrollContainer: null, target: null };
+    }
+    const target = (typeof getScrollTarget === 'function' ? getScrollTarget(element) : null) || element;
+    const rect = target.getBoundingClientRect();
+    const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    const windowWidth = window.innerWidth || document.documentElement.clientWidth;
+
+    const scrollContainer = target.closest && target.closest('.image-grid.scroll, .image-grid.slider');
+    let deltaX = 0;
+
+    if (scrollContainer) {
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const targetCenter = rect.left + rect.width / 2;
+      const containerCenter = containerRect.left + containerRect.width / 2;
+      deltaX = targetCenter - containerCenter;
+    } else {
+      if (rect.left < 0) {
+        deltaX = rect.left;
+      } else if (rect.right > windowWidth) {
+        deltaX = rect.right - windowWidth;
+      }
+    }
+
+    let deltaY = 0;
+    if (rect.top < 0) {
+      deltaY = rect.top;
+    } else if (rect.bottom > windowHeight) {
+      deltaY = rect.bottom - windowHeight;
+    }
+
+    return { deltaX, deltaY, scrollContainer, target };
+  };
+
+  const waitForScrollEnd = (scrollContainer, needsScrollX, needsScrollY) => {
+    return new Promise((resolve) => {
+      let resolved = false;
+      let rafId = null;
+      let startTimer = null;
+      let maxTimer = null;
+
+      let hasMoved = false;
+      let hasMovedX = false;
+      let hasMovedY = false;
+      let idleFrames = 0;
+      let lastX = scrollContainer ? scrollContainer.scrollLeft : 0;
+      let lastY = window.pageYOffset;
+
+      const finish = () => {
+        if (resolved) return;
+        resolved = true;
+        if (rafId) cancelAnimationFrame(rafId);
+        clearTimeout(startTimer);
+        clearTimeout(maxTimer);
+        if (scrollContainer) {
+          scrollContainer.removeEventListener('scrollend', onContainerScrollEnd);
+        }
+        window.removeEventListener('scrollend', onWindowScrollEnd);
+
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(resolve);
+        });
+      };
+
+      const onContainerScrollEnd = () => {
+        if (!needsScrollY || !hasMovedY) {
+          finish();
+        }
+      };
+
+      const onWindowScrollEnd = () => {
+        if (!needsScrollX || !hasMovedX) {
+          finish();
+        }
+      };
+
+      maxTimer = setTimeout(finish, 800);
+
+      startTimer = setTimeout(() => {
+        if (!hasMoved) {
+          finish();
+        }
+      }, 160);
+
+      const check = () => {
+        if (resolved) return;
+
+        const currX = scrollContainer ? scrollContainer.scrollLeft : 0;
+        const currY = window.pageYOffset;
+
+        const diffX = Math.abs(currX - lastX);
+        const diffY = Math.abs(currY - lastY);
+
+        if (needsScrollX && diffX > 0.5) {
+          hasMoved = true;
+          hasMovedX = true;
+        }
+        if (needsScrollY && diffY > 0.5) {
+          hasMoved = true;
+          hasMovedY = true;
+        }
+
+        if (hasMoved) {
+          const isIdleX = !needsScrollX || diffX <= 0.5;
+          const isIdleY = !needsScrollY || diffY <= 0.5;
+
+          if (isIdleX && isIdleY) {
+            idleFrames++;
+            if (idleFrames >= 6) {
+              finish();
+              return;
+            }
+          } else {
+            idleFrames = 0;
+          }
+        }
+
+        lastX = currX;
+        lastY = currY;
+
+        rafId = requestAnimationFrame(check);
+      };
+
+      if (scrollContainer) {
+        scrollContainer.addEventListener('scrollend', onContainerScrollEnd, { once: true, passive: true });
+      }
+      window.addEventListener('scrollend', onWindowScrollEnd, { once: true, passive: true });
+
+      rafId = requestAnimationFrame(check);
+    });
+  };
+
+  const prepareImageGridOpenPromise = (target) => {
+    if (!target || !isElementInImageGridItem(target)) {
+      return null;
+    }
+
+    const { deltaX, deltaY, scrollContainer, target: scrollTarget } = getScrollDelta(target);
+    const needsScrollX = Boolean(scrollContainer && Math.abs(deltaX) > 6);
+    const needsScrollY = Math.abs(deltaY) > 6;
+    const needsScroll = needsScrollX || needsScrollY;
+
+    if (!needsScroll) {
+      return null;
+    }
+
+    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const behavior = prefersReducedMotion ? 'instant' : 'smooth';
+
+    if (scrollTarget && typeof scrollTarget.scrollIntoView === 'function') {
+      scrollTarget.scrollIntoView({
+        behavior,
+        block: 'nearest',
+        inline: 'center'
+      });
+    } else if (scrollTarget && typeof scrollTarget.scrollIntoViewIfNeeded === 'function') {
+      scrollTarget.scrollIntoViewIfNeeded();
+    }
+
+    if (behavior === 'instant') {
+      return new Promise((resolve) => {
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(resolve);
+        });
+      });
+    }
+
+    return waitForScrollEnd(scrollContainer, needsScrollX, needsScrollY);
+  };
+
+  lightbox.addFilter('clickedIndex', (index, event) => {
+    if (index >= 0) {
+      const clickedEl = event && event.target && (event.target.closest ? event.target : event.target.parentElement);
+      const target = clickedEl && clickedEl.closest && (clickedEl.closest('a.gallery-item') || clickedEl.closest('.gallery-item'));
+      pendingOpenPromise = prepareImageGridOpenPromise(target);
+    }
+    return index;
+  });
 
   lightbox.addFilter('itemData', (itemData) => {
     const livePhotoSrc = itemData && itemData.element && itemData.element.dataset && itemData.element.dataset.livePhotoSrc;
