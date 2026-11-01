@@ -100,30 +100,14 @@ function switchHDR() {
       } else {
         lazyloadItem.removeAttribute("data-hdr-active");
       }
-      var innerWrap = lazyloadItem.querySelector(".inner-wrap");
-      var placeholder = lazyloadItem.querySelector(".placeholder");
       var InnerImgs = lazyloadItem.querySelectorAll("img");
       InnerImgs.forEach((img) => {
         if (targetState) {
           if (img.src && img.src.includes(SDRPath)) {
-            // Re-enter the lazyload visual state while the replacement image
-            // is loading. The placeholder remains underneath the image.
-            lazyloadItem.classList.remove("loaded");
-            if (innerWrap) {
-              innerWrap.classList.remove("loaded");
-              innerWrap.style.opacity = "0";
-            }
-            if (placeholder) placeholder.classList.remove("loaded");
             img.src = img.src.replace(SDRPath, HDRPath);
           }
         } else {
           if (img.src && img.src.includes(HDRPath)) {
-            lazyloadItem.classList.remove("loaded");
-            if (innerWrap) {
-              innerWrap.classList.remove("loaded");
-              innerWrap.style.opacity = "0";
-            }
-            if (placeholder) placeholder.classList.remove("loaded");
             img.src = img.src.replace(HDRPath, SDRPath);
           }
         }
