@@ -8,12 +8,36 @@
 @font-face {
   font-family: "source han serif cn";
   src:
-    local("Source Han Serif CN"),
+    local("STSongti-SC-Regular"),
+    local("Songti SC Regular"),
+    local("STSong"),
+    local("SimSun"),
+    local("宋体"),
+    local("NSimSun"),
     local("Source Han Serif SC"),
-    local("Songti SC"),
+    local("Source Han Serif CN"),
     url("../fonts/SourceHanSerifSC-Regular.woff2?v=#{$font-version}") format("woff2");
+  
+  font-weight: 400;
+  font-style: normal;
   font-display: swap;
-  unicode-range: U+4E00-9FFF;
+  unicode-range: U+4E00-9FFF, U+3000-303F, U+FF00-FFEF;
+}
+
+@font-face {
+  font-family: "source han serif cn";
+  src:
+    local("STSongti-SC-Bold"),
+    local("Songti SC Bold"),
+    local("STSong"),
+    local("SimSun"),
+    local("Source Han Serif SC Bold"),
+    url("../fonts/SourceHanSerifSC-Regular.woff2?v=#{$font-version}") format("woff2");
+  
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+4E00-9FFF, U+3000-303F, U+FF00-FFEF;
 }
 @font-face {
   font-family: "LXGWWenKai";
@@ -599,9 +623,21 @@ body {
     @include defaultFont();
   }
   #page-content {
+    @include sourceSerifFont;
+    font-size: 17px;
+    line-height: 1.8;
+    color: $darkText;
+    -webkit-font-smoothing: subpixel-antialiased;
     text-autospace: normal;
+
     > :last-child {
       margin-bottom: 0;
+    }
+
+    strong {
+      font-family: inherit;
+      font-weight: 700;
+      color: #000;
     }
   }
   .post-meta {

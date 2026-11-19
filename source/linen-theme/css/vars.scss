@@ -74,7 +74,16 @@ $postWidth: max(min(1192px, 68vw), 960px);
 }
 
 @mixin sourceSerifFont {
-  font-family: "source han serif cn", "source-serif", serif;
+  font-family:
+    "source han serif cn",
+    "STSongti-SC-Regular",
+    "Songti SC",
+    "SimSun",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
 }
 
 @mixin subTitle {
