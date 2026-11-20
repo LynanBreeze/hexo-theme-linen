@@ -29,10 +29,10 @@
   src:
     local("STSongti-SC-Bold"),
     local("Songti SC Bold"),
-    local("STSong"),
-    local("SimSun"),
+    local("SongtiSC-Bold"),
     local("Source Han Serif SC Bold"),
-    url("../fonts/SourceHanSerifSC-Regular.woff2?v=#{$font-version}") format("woff2");
+    local("Source Han Serif CN Bold"),
+    url("../fonts/SourceHanSerifSC-Bold.woff2?v=#{$font-version}") format("woff2");
   
   font-weight: 700;
   font-style: normal;
