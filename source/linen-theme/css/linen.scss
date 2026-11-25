@@ -300,6 +300,10 @@ a {
 
 body {
   margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   text-rendering: optimizeLegibility;
   line-height: 1.5;
   @include defaultFont;
@@ -331,6 +335,7 @@ body {
 .nav-header-pleaceholder {
   width: 100%;
   height: $navbarMinHeight;
+  flex-shrink: 0;
   display: none;
   background-color: #fff;
 }
@@ -345,6 +350,7 @@ body {
   left: 0;
   right: 0;
   height: $navbarMinHeight;
+  flex-shrink: 0;
   .header-inner {
     height: 100%;
     max-width: $siteMaxWidth;
@@ -448,13 +454,30 @@ body {
               content: "";
               position: absolute;
               inset: 0;
-              background: linear-gradient(135deg, #c97a63 0%, #a8452e 52%, #c8914b 100%);
+              background: linear-gradient(
+                135deg,
+                #ff2d55 0%,
+                #ff8a00 34%,
+                #00c7be 70%,
+                #2979ff 100%
+              );
+              @supports (color: color(display-p3 1 0 0)) {
+                background: linear-gradient(
+                  135deg,
+                  color(display-p3 1 0.16 0.36) 0%,
+                  color(display-p3 1 0.56 0) 34%,
+                  color(display-p3 0 0.84 0.78) 70%,
+                  color(display-p3 0.12 0.48 1) 100%
+                );
+              }
               -webkit-mask: url("../img/icons/hdr.svg") no-repeat center;
               mask: url("../img/icons/hdr.svg") no-repeat center;
               -webkit-mask-size: contain;
               mask-size: contain;
               opacity: 0;
-              transition: opacity 0.3s $easeOut;
+              transition:
+                opacity 0.3s $easeOut,
+                filter 0.3s $easeOut;
               pointer-events: none;
             }
 
@@ -481,6 +504,7 @@ body {
             &.hdr_on {
               &::before {
                 opacity: 1;
+                filter: drop-shadow(0 0 3px rgba(255, 94, 58, 0.28));
               }
               &::after {
                 opacity: 0;
@@ -2622,17 +2646,23 @@ body {
 
 .page-body {
   width: 100%;
+  flex: 1 0 auto;
   display: flex;
   flex-wrap: nowrap;
   .side-content {
     width: 0;
     flex: 1 1 auto;
-    height: 100vh;
+    height: auto;
     position: sticky;
     top: 0;
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    @media (min-width: 1281px) {
+      &:has(> *) {
+        height: 100vh;
+      }
+    }
     &:first-child {
       order: 1;
     }
@@ -2645,7 +2675,6 @@ body {
   order: 2;
   width: 100%;
   flex: 0 0 auto;
-  min-height: calc(100vh - 65px - 80px - 32 * 0.67px - 10px);
   max-width: $siteMaxWidth;
   min-width: 50%;
   margin: 0 auto;
@@ -3398,6 +3427,7 @@ body {
 }
 
 #footer {
+  flex-shrink: 0;
   background-color: $bg;
   border-top: 1px solid $borderSubtle;
   padding: 40px 0;

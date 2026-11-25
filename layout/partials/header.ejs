@@ -20,8 +20,13 @@ const rssPath = config?.feed?.path || theme?.feed?.path;
       </div>
       <div class="buttonSet">
         <% if (page.hdrSwitch) { %>
-        <span class="button hdr-switch" title="Switch HDR/SDR content">
-        </span>
+        <span class="button hdr-switch" title="Switch HDR/SDR content"></span>
+        <script>
+          if (window.innerWidth >= 500 && window.matchMedia && window.matchMedia("(dynamic-range: high)").matches && typeof CSS !== "undefined" && CSS.supports && CSS.supports("dynamic-range-limit: no-limit")) {
+            var hdrBtn = document.currentScript && document.currentScript.previousElementSibling;
+            if (hdrBtn) hdrBtn.classList.add("hdr_on");
+          }
+        </script>
         <% } %>
         <% if (hasTranslatation) { %>
         <a class="button language <%=targetLanguage%>" href="<%=targetLanguagePath%>" target="_self" title="switch language"></a>
