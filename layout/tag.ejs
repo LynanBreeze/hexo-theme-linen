@@ -1,8 +1,46 @@
-<h1 id="archieve-h1"><%='#'+page.tag%></h1>
+<%
+const currentTag = site.tags.findOne({ name: page.tag });
+const allPosts = currentTag ? currentTag.posts.toArray() : (page.posts ? page.posts.toArray() : []);
+const totalCount = allPosts.length;
+const years = allPosts
+  .map(p => (p.date && p.date.year ? p.date.year() : null))
+  .filter(y => y && y > 1970);
+const minYear = years.length ? Math.min(...years) : null;
+const maxYear = years.length ? Math.max(...years) : null;
+const yearRange = minYear && maxYear ? (minYear === maxYear ? `${minYear}` : `${minYear} — ${maxYear}`) : '';
+const tagInfo = getTagInfo(page.tag);
+const relatedMap = new Map();
+allPosts.forEach(post => {
+  (post.tags ? post.tags.toArray() : []).forEach(t => {
+    if (t.name === page.tag) return;
+    const existing = relatedMap.get(t.name);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      relatedMap.set(t.name, { name: t.name, path: t.path, count: 1 });
+    }
+  });
+});
+const relatedTags = Array.from(relatedMap.values())
+  .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+  .slice(0, 10);
+%>
+<%-partial('partials/taxonomy-header', {
+  type: 'tag',
+  title: page.tag,
+  count: totalCount,
+  yearRange,
+  description: tagInfo?.description || '',
+  kindLabel: __('common.tag'),
+  kindUrl: url_for('/archives/#tags')
+})%>
 <div class="posts-info-layout">
   <div class="posts-wrap">
     <%-partial('partials/recent-posts', { showHidden: true })%>
     <%-partial('partials/paginator')%>
   </div>
-  <div class="info-wrap"><%-partial('partials/site-info')%></div>
+  <div class="info-wrap">
+    <%-partial('partials/site-info')%>
+    <%-partial('partials/taxonomy-sidebar', { type: 'tag', items: relatedTags, current: page.tag })%>
+  </div>
 </div>

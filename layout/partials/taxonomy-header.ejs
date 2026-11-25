@@ -1,0 +1,31 @@
+<%
+const isTagType = type === 'tag';
+const pageProgress = page.total > 1 ? __('common.pageProgress', page.current, page.total) : '';
+%>
+<header class="taxonomy-header taxonomy-<%=type%>">
+  <div class="taxonomy-header-inner">
+    <span class="taxonomy-accent-bar" aria-hidden="true"></span>
+    <div class="taxonomy-header-main">
+      <div class="taxonomy-title-row">
+        <div class="taxonomy-title-group">
+          <h1 class="taxonomy-title"><% if (isTagType) { %><span class="taxonomy-hash" aria-hidden="true">#</span><% } %><%=title%></h1>
+          <a class="taxonomy-kind" href="<%=kindUrl%>">/ <%=kindLabel%></a>
+        </div>
+        <div class="taxonomy-meta">
+          <span><%=count%> <%=__('common.seriesPostCountShort')%></span>
+          <% if (yearRange) { %>
+          <span class="meta-sep" aria-hidden="true">·</span>
+          <span><%=yearRange%></span>
+          <% } %>
+          <% if (pageProgress) { %>
+          <span class="meta-sep" aria-hidden="true">·</span>
+          <span class="meta-page"><%=pageProgress%></span>
+          <% } %>
+        </div>
+      </div>
+      <% if (description) { %>
+      <p class="taxonomy-desc"><%=description%></p>
+      <% } %>
+    </div>
+  </div>
+</header>

@@ -54,8 +54,7 @@ $linkFontFamily:
 $navbarMinHeight: 65px;
 $commonPadding: min(3vw, 15px);
 $postWidgetGap: 20px;
-$siteMaxWidth: max(1032px, min(1192px, 68vw));
-$postWidth: max(min(1192px, 68vw), 960px);
+$siteMaxWidth: max(1000px, min(1192px, 68vw));
 
 @mixin defaultFont {
   font-family:

@@ -2215,8 +2215,234 @@ body {
   }
 }
 
-#archieve-h1 {
-  margin-bottom: 0;
+.taxonomy-header {
+  padding: 26px 0 18px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(34, 33, 31, 0.14);
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -4px;
+    height: 1px;
+    background-color: $borderSubtle;
+  }
+  .taxonomy-header-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .taxonomy-accent-bar {
+    width: 3px;
+    height: 2.15em;
+    margin-top: 4px;
+    border-radius: 999px;
+    background-color: $accent;
+    flex: 0 0 auto;
+  }
+  .taxonomy-header-main {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .taxonomy-title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 16px;
+  }
+  .taxonomy-title-group {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    min-width: 0;
+  }
+  .taxonomy-title {
+    @include sourceSerifFont;
+    margin: 0;
+    font-size: clamp(24px, 2.6vw, 30px);
+    font-weight: bold;
+    line-height: 1.25;
+    color: $darkText;
+    .taxonomy-hash {
+      color: $accent;
+      font-weight: normal;
+      margin-right: 3px;
+      opacity: 0.85;
+    }
+  }
+  .taxonomy-kind {
+    @include defaultFont;
+    font-size: 12.5px;
+    color: $moreGrayText;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: color 180ms $easeOut;
+    &:hover {
+      color: $accent;
+    }
+  }
+  .taxonomy-meta {
+    @include defaultFont;
+    font-size: 13px;
+    color: $metaText;
+    font-variant-numeric: tabular-nums;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+    .meta-sep {
+      color: $grayc;
+    }
+    .meta-page {
+      color: $accent;
+    }
+  }
+  .taxonomy-desc {
+    margin: 8px 0 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: $grayerText;
+    max-width: 68ch;
+  }
+}
+
+.taxonomy-sidebar {
+  padding: 20px 0 0 28px;
+  .taxonomy-sidebar-block {
+    padding-top: 18px;
+    border-top: 1px solid $borderSubtle;
+  }
+  .taxonomy-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .taxonomy-sidebar-title {
+    @include defaultFont;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $metaText;
+  }
+  .taxonomy-sidebar-all {
+    @include defaultFont;
+    font-size: 12px;
+    color: $accent;
+    text-decoration: none;
+    transition: opacity 160ms $easeOut;
+    &:hover {
+      opacity: 0.78;
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+  }
+  .taxonomy-category-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .taxonomy-category-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 8px;
+    margin: 0 -8px;
+    border-radius: $radiusMd;
+    text-decoration: none;
+    color: $grayerText;
+    font-size: 14px;
+    transition:
+      background-color 180ms $easeOut,
+      color 180ms $easeOut;
+    .name {
+      @include sourceSerifFont;
+      @include ellipsis(1);
+    }
+    .count {
+      @include defaultFont;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      color: $moreGrayText;
+      flex-shrink: 0;
+    }
+    &:hover {
+      background-color: $surface;
+      color: $darkText;
+    }
+    &.active {
+      background-color: $accentSoft;
+      color: $accent;
+      font-weight: 600;
+      .count {
+        color: $accent;
+        opacity: 0.85;
+      }
+    }
+  }
+  .taxonomy-related-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .taxonomy-tag-chip {
+    @include defaultFont;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: $radiusMd;
+    font-size: 12.5px;
+    color: $grayerText;
+    background-color: $surface;
+    border: 1px solid $borderSubtle;
+    text-decoration: none;
+    transition:
+      color 180ms $easeOut,
+      background-color 180ms $easeOut,
+      border-color 180ms $easeOut;
+    &::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      background-color: currentColor;
+      -webkit-mask: url("../img/icons/tag.svg") no-repeat center / contain;
+      mask: url("../img/icons/tag.svg") no-repeat center / contain;
+      display: inline-block;
+      opacity: 0.4;
+      flex-shrink: 0;
+      transition: opacity 180ms $easeOut;
+    }
+    .count {
+      font-size: 11px;
+      color: $moreGrayText;
+      font-variant-numeric: tabular-nums;
+      transition: color 180ms $easeOut;
+    }
+    &:hover {
+      color: $accent;
+      background-color: $accentSoft;
+      border-color: $accentBorder;
+      &::before {
+        opacity: 0.78;
+      }
+      .count {
+        color: $accent;
+      }
+    }
+  }
 }
 
 .posts-info-layout {
@@ -2425,15 +2651,11 @@ body {
   margin: 0 auto;
   @include pageXPadding;
   &.series-outer {
-    max-width: $postWidth;
-    padding: 0;
     .info-wrap .site-info {
       padding-right: 0;
     }
   }
   &.post-outer {
-    max-width: $postWidth;
-    padding: 0;
     .content-inner {
       background-color: $bg;
     }
@@ -2841,6 +3063,18 @@ body {
         }
         &:hover {
           color: $grayerText;
+        }
+        &.is-current {
+          background-color: $accentSoft;
+          color: $accent;
+          font-weight: 500;
+          &::before {
+            opacity: 0.82;
+          }
+          &:hover {
+            color: $accent;
+            background-color: $accentSoft;
+          }
         }
       }
     }
@@ -3420,31 +3654,6 @@ body {
   }
 }
 
-// Align Header and Footer strictly with Post & Series outer cover rails on desktop
-body.is-post {
-  .nav-header .header-inner,
-  #footer .footerInner {
-    max-width: $postWidth;
-    padding-left: $commonPadding;
-    padding-right: $commonPadding;
-    @media (min-width: 1001px) {
-      padding-left: 0;
-      padding-right: 0;
-    }
-  }
-}
-
-body:has(#content-outer.series-outer) {
-  .nav-header .header-inner,
-  #footer .footerInner {
-    max-width: $postWidth;
-    @media (min-width: 1001px) {
-      padding-left: 0;
-      padding-right: 0;
-    }
-  }
-}
-
 @media (max-width: 768px) {
   #footer {
     padding-top: 24px;
@@ -3606,7 +3815,7 @@ body:has(#content-outer.series-outer) {
 }
 
 #toc {
-  max-width: calc((100vw - $postWidth) / 2);
+  max-width: calc((100vw - $siteMaxWidth) / 2);
   text-align: right;
   max-height: 100vh;
   padding: 24px 0;
@@ -4146,6 +4355,7 @@ html[lang="zh-CN"] {
   }
 
   .travel-leaflet-marker {
+    cursor: pointer;
     span {
       position: relative;
       display: block;
@@ -4328,6 +4538,80 @@ html[lang="zh-CN"] {
     margin: 12px 14px;
   }
 
+  .maplibregl-map {
+    font-family: inherit;
+    width: 100%;
+    height: 100%;
+  }
+
+  .maplibregl-ctrl-group {
+    border: 1px solid rgba(34, 33, 31, 0.06) !important;
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.92) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow:
+      0 6px 18px rgba(34, 33, 31, 0.1),
+      0 1px 3px rgba(34, 33, 31, 0.04) !important;
+    overflow: hidden;
+
+    button {
+      width: 32px !important;
+      height: 32px !important;
+      transition: background-color 180ms $easeOut !important;
+
+      & + button {
+        border-top: 1px solid rgba(34, 33, 31, 0.06) !important;
+      }
+
+      &:hover,
+      &:focus-visible {
+        background-color: $accentSoft !important;
+      }
+    }
+  }
+
+  .maplibregl-ctrl-attrib {
+    @include defaultFont;
+    background: rgba(255, 255, 255, 0.78) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: $moreGrayText !important;
+    font-size: 10px !important;
+
+    a {
+      color: $moreGrayText !important;
+      text-decoration: none !important;
+      &:hover {
+        color: $accent !important;
+        text-decoration: underline !important;
+      }
+    }
+  }
+
+  .maplibregl-popup-content {
+    border-radius: $radiusLg !important;
+    padding: 12px 14px !important;
+    box-shadow:
+      0 10px 30px rgba(34, 33, 31, 0.1),
+      0 1px 8px rgba(34, 33, 31, 0.04) !important;
+    border: 1px solid rgba(34, 33, 31, 0.06) !important;
+    background: $bg !important;
+  }
+
+  .maplibregl-popup-close-button {
+    top: 4px;
+    right: 6px;
+    color: $moreGrayText;
+    font-size: 16px;
+    line-height: 1;
+    padding: 4px;
+    &:hover {
+      background: transparent;
+      color: $accent;
+    }
+  }
+
   .travel-place-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4343,6 +4627,7 @@ html[lang="zh-CN"] {
     border-radius: $radiusMd;
     border: 1px solid $borderColor;
     background-color: $bg;
+    cursor: pointer;
     transition:
       border-color 0.22s $easeOut,
       box-shadow 0.22s $easeOut,

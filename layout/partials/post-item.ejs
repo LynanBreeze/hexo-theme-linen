@@ -11,7 +11,7 @@
         <% if(post?.tags?.length) { %>
           <div class="tags">
             <% (post.tags || []).forEach(tag => { %>
-              <a class="tag-item" href="<%=url_for(`/${tag.path}`)%>" onclick="event.stopPropagation()"><%=tag.name%></a>
+              <a class="tag-item<%= is_tag() && page.tag === tag.name ? ' is-current' : '' %>" href="<%=url_for(`/${tag.path}`)%>" onclick="event.stopPropagation()"><%=tag.name%></a>
             <% }) %>
           </div>
         <% } %>

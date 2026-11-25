@@ -40,3 +40,8 @@ common:
   seriesPostCountShort: "articles"
   navigation: "Navigation"
   subscribe: "Subscribe"
+  allCategories: "Categories"
+  allYears: "Years"
+  relatedTags: "Related Tags"
+  viewAll: "All"
+  pageProgress: "Page %d of %d"

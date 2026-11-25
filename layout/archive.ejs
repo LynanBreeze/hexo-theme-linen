@@ -81,12 +81,32 @@ const archivesList = Object.entries(site.posts.filter(post=>!post?.hide?.archive
 
 </div>
 <% } else { %>
-<h1 id="archieve-h1"><%=page.year.toString().startsWith('1970') ? '__' : (page.month ? page.month + '/'  : '') + page.year%></h1>
+<%
+const archiveTitle = page.year.toString().startsWith('1970') ? '__' : (page.month ? page.month + '/' : '') + page.year;
+const archivePosts = site.posts.filter(post => {
+  if (post?.hide?.archive || !post?.date) return false;
+  if (post.date.year() !== Number(page.year)) return false;
+  if (page.month && post.date.month() + 1 !== Number(page.month)) return false;
+  return true;
+});
+%>
+<%-partial('partials/taxonomy-header', {
+  type: 'archive',
+  title: archiveTitle,
+  count: archivePosts.length,
+  yearRange: '',
+  description: '',
+  kindLabel: __('common.archives'),
+  kindUrl: url_for('/archives/#archives')
+})%>
 <div class="posts-info-layout">
   <div class="posts-wrap">
     <%-partial('partials/recent-posts', { showHidden: true })%>
     <%-partial('partials/paginator')%>
   </div>
-  <div class="info-wrap"><%-partial('partials/site-info')%></div>
+  <div class="info-wrap">
+    <%-partial('partials/site-info')%>
+    <%-partial('partials/taxonomy-sidebar', { type: 'archive', items: archivesList, current: page.year })%>
+  </div>
 </div>
 <% } %>

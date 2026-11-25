@@ -40,3 +40,8 @@ common:
   seriesPostCountShort: "篇"
   navigation: "导航"
   subscribe: "订阅"
+  allCategories: "全部分类"
+  allYears: "所有年份"
+  relatedTags: "关联标签"
+  viewAll: "全部"
+  pageProgress: "第 %d / %d 页"

@@ -1,0 +1,56 @@
+<% if (type === 'category' && items && items.length) { %>
+<aside class="taxonomy-sidebar" aria-label="<%=__('common.allCategories')%>">
+  <div class="taxonomy-sidebar-block">
+    <div class="taxonomy-sidebar-header">
+      <span class="taxonomy-sidebar-title"><%=__('common.allCategories')%></span>
+      <a class="taxonomy-sidebar-all" href="<%=url_for('/archives/#categories')%>"><%=__('common.archives')%> →</a>
+    </div>
+    <ul class="taxonomy-category-list">
+      <% items.forEach(item => { %>
+      <li>
+        <a class="taxonomy-category-link<%= item.name === current ? ' active' : '' %>" href="<%=url_for(`/${item.path}`)%>">
+          <span class="name"><%=item.name%></span>
+          <span class="count"><%=item.count%></span>
+        </a>
+      </li>
+      <% }) %>
+    </ul>
+  </div>
+</aside>
+<% } else if (type === 'tag' && items && items.length) { %>
+<aside class="taxonomy-sidebar" aria-label="<%=__('common.relatedTags')%>">
+  <div class="taxonomy-sidebar-block">
+    <div class="taxonomy-sidebar-header">
+      <span class="taxonomy-sidebar-title"><%=__('common.relatedTags')%></span>
+      <a class="taxonomy-sidebar-all" href="<%=url_for('/archives/#tags')%>"><%=__('common.viewAll')%> →</a>
+    </div>
+    <div class="taxonomy-related-tags">
+      <% items.forEach(item => { %>
+      <a class="taxonomy-tag-chip" href="<%=url_for(`/${item.path}`)%>">
+        <span class="name"><%=item.name%></span>
+        <span class="count"><%=item.count%></span>
+      </a>
+      <% }) %>
+    </div>
+  </div>
+</aside>
+<% } else if (type === 'archive' && items && items.length) { %>
+<aside class="taxonomy-sidebar" aria-label="<%=__('common.allYears')%>">
+  <div class="taxonomy-sidebar-block">
+    <div class="taxonomy-sidebar-header">
+      <span class="taxonomy-sidebar-title"><%=__('common.allYears')%></span>
+      <a class="taxonomy-sidebar-all" href="<%=url_for('/archives/#archives')%>"><%=__('common.archives')%> →</a>
+    </div>
+    <ul class="taxonomy-category-list">
+      <% items.forEach(item => { %>
+      <li>
+        <a class="taxonomy-category-link<%= String(item.year) === String(current) ? ' active' : '' %>" href="<%=url_for(`/archives/${item.year}/`)%>">
+          <span class="name"><%=item.name%></span>
+          <span class="count"><%=item.count%></span>
+        </a>
+      </li>
+      <% }) %>
+    </ul>
+  </div>
+</aside>
+<% } %>

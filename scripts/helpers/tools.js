@@ -57,6 +57,22 @@ hexo.extend.helper.register("getSeriesInfo", function (seriesName) {
   return seriesInfo?.[seriesName] || {};
 });
 
+hexo.extend.helper.register("getCategoryInfo", function (categoryName) {
+  const categoriesInfo = getFile(
+    path.join(hexo.base_dir, "assets-db/categories.json"),
+    {},
+  );
+  return categoriesInfo?.[categoryName] || {};
+});
+
+hexo.extend.helper.register("getTagInfo", function (tagName) {
+  const tagsInfo = getFile(
+    path.join(hexo.base_dir, "assets-db/tags.json"),
+    {},
+  );
+  return tagsInfo?.[tagName] || {};
+});
+
 hexo.extend.helper.register("getTranslationPage", function () {
   try {
     const page = this.page;

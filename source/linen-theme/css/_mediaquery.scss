@@ -152,6 +152,10 @@
 }
 
 @media (max-width: 1000px) {
+  #content-outer.series-outer,
+  #content-outer.post-outer {
+    padding: 0;
+  }
   #content-outer.series-outer {
     .posts-info-layout {
       @include pageXPadding;
@@ -276,6 +280,12 @@
       width: 100%;
     }
     .info-wrap {
+      .taxonomy-sidebar {
+        padding: 16px 0 0 0;
+        .taxonomy-category-link {
+          margin: 0;
+        }
+      }
       .site {
         display: none;
       }
@@ -558,6 +568,17 @@
   }
   #archive .tag-list {
     justify-content: flex-start;
+  }
+  .taxonomy-header {
+    padding: 16px 0 13px;
+    margin-bottom: 8px;
+    .taxonomy-accent-bar {
+      height: 1.85em;
+      margin-top: 3px;
+    }
+    .taxonomy-desc {
+      font-size: 13.5px;
+    }
   }
   .image-grid {
     margin-bottom: 1em;

@@ -1,8 +1,35 @@
-<h1 id="archieve-h1"><%=__('common.category') + ': ' + page.category%></h1>
+<%
+const currentCategory = site.categories.findOne({ name: page.category });
+const allPosts = currentCategory ? currentCategory.posts.toArray() : (page.posts ? page.posts.toArray() : []);
+const totalCount = allPosts.length;
+const years = allPosts
+  .map(p => (p.date && p.date.year ? p.date.year() : null))
+  .filter(y => y && y > 1970);
+const minYear = years.length ? Math.min(...years) : null;
+const maxYear = years.length ? Math.max(...years) : null;
+const yearRange = minYear && maxYear ? (minYear === maxYear ? `${minYear}` : `${minYear} — ${maxYear}`) : '';
+const categoryInfo = getCategoryInfo(page.category);
+const categoriesList = site.categories.toArray()
+  .map(cat => ({ name: cat.name, path: cat.path, count: cat.length }))
+  .filter(cat => cat.count > 0)
+  .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+%>
+<%-partial('partials/taxonomy-header', {
+  type: 'category',
+  title: page.category,
+  count: totalCount,
+  yearRange,
+  description: categoryInfo?.description || '',
+  kindLabel: __('common.category'),
+  kindUrl: url_for('/archives/#categories')
+})%>
 <div class="posts-info-layout">
   <div class="posts-wrap">
     <%-partial('partials/recent-posts', { showHidden: true })%>
     <%-partial('partials/paginator')%>
   </div>
-  <div class="info-wrap"><%-partial('partials/site-info')%></div>
+  <div class="info-wrap">
+    <%-partial('partials/site-info')%>
+    <%-partial('partials/taxonomy-sidebar', { type: 'category', items: categoriesList, current: page.category })%>
+  </div>
 </div>
