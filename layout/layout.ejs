@@ -21,7 +21,12 @@ const version = theme.version;
   <meta name="robots" content="noindex, nofollow">
   <% } %>
   <meta name="description" content="<%=page?.excerpt||config?.description||''%>" />
-  <%-partial('partials/share-meta')%> <% if (theme.stylesheets !== undefined
+  <%-partial('partials/share-meta')%>
+  <% const latexCssUrl = getLatexCssUrl(body); %>
+  <% if (latexCssUrl) { %>
+  <link rel="stylesheet" href="<%=latexCssUrl%>" />
+  <% } %>
+  <% if (theme.stylesheets !== undefined
     && theme.stylesheets.length > 0) { %>
   <% if (is_post()) { %>
   <link rel="stylesheet" href="<%=url_for(`/linen-theme/css/linkcard.css?v=${version}`)%>" />

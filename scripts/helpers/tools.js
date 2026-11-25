@@ -208,6 +208,9 @@ hexo.extend.helper.register("extractTocFromHtml", function (htmlString) {
     let id = match[2]; // 已存在的 id
     let content = match[3].trim(); // 提取标签内容
 
+    // 移除 KaTeX 隐藏的 MathML，避免纯文本提取出现重复公式内容
+    content = content.replace(/<span class="katex-mathml">[\s\S]*?<\/span>/g, "");
+
     // 去除所有 HTML 标签，提取纯文本内容
     content = content.replace(/<[^>]*>/g, "");
 

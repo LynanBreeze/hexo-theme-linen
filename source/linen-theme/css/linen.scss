@@ -3985,6 +3985,22 @@ ul {
   }
 }
 
+.katex {
+  font-size: 1.08em;
+}
+
+.katex-display {
+  margin: 1.1em 0;
+  padding: 0.35em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.post-item .excerpt .katex-display {
+  margin: 0.5em 0;
+}
+
 @include mq.rules;
 
 @media (max-width: 900px) {
