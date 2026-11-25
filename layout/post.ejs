@@ -39,7 +39,8 @@
 </div>
 <% } %>
 
-<article id="post" class="article">
+<% const isTravelSeries = ['旅行', 'Travel'].includes(page.series); %>
+<article id="post" class="article<%= isTravelSeries ? ' travel-post' : '' %>">
   <h1 class="post-title"><%=page.title%><% if (page.subTitle) { %><span class="sub-title"><%=page.subTitle%></span><% } %></h1>
   <div class="post-meta">
     <% if (page.date && !date(page.date).startsWith('1970')) { %>

@@ -1,3 +1,335 @@
+const TRAVEL_SERIES_NAMES = ["旅行", "Travel"];
+const TRAVEL_ROUTE_HEADING_REGEX = /^(?:路线|路线规划|Route|Route Planning)$/i;
+const TRAVEL_ROUTE_PALETTE = [
+  "#c97a63",
+  "#a8452e",
+  "#8a9a86",
+  "#c4b7a6",
+  "#b87d56",
+  "#6d8b74",
+  "#d49a79",
+  "#9c8f84",
+];
+
+function stripHtmlTags(str) {
+  return String(str || "")
+    .replace(/<[^>]*>/g, "")
+    .trim();
+}
+
+function stripHeadingText(str) {
+  return stripHtmlTags(
+    String(str || "").replace(
+      /<a[^>]*class="[^"]*(?:headerlink|header-anchor)[^"]*"[^>]*>[\s\S]*?<\/a>/gi,
+      "",
+    ),
+  )
+    .replace(/^[#¶\s]+|[#¶\s]+$/g, "")
+    .trim();
+}
+
+function escapeAttr(str) {
+  return String(str || "").replace(/[&<>"']/g, (ch) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  })[ch]);
+}
+
+function parseChineseNumeral(str) {
+  const map = {
+    半: 0.5,
+    一: 1,
+    二: 2,
+    两: 2,
+    三: 3,
+    四: 4,
+    五: 5,
+    六: 6,
+    七: 7,
+    八: 8,
+    九: 9,
+    十: 10,
+  };
+  if (str in map) return map[str];
+  if (/^十[一二三四五六七八九]$/.test(str)) {
+    return 10 + map[str[1]];
+  }
+  return null;
+}
+
+function parseDurationFragment(text) {
+  const trimmed = String(text || "").trim();
+  if (!trimmed) return null;
+
+  // Compound: e.g. "2天1晚", "3 日 2 晚"
+  const compoundMatch = trimmed.match(
+    /^(\d+(?:\.\d+)?)\s*(日|天)\s*\d+(?:\.\d+)?\s*(?:晚|夜)$/,
+  );
+  if (compoundMatch) {
+    const value = Number(compoundMatch[1]);
+    if (Number.isFinite(value) && value > 0) {
+      return {
+        label: trimmed,
+        weight: value,
+        unitKind: "day",
+        unitText: compoundMatch[2],
+      };
+    }
+  }
+
+  // Half-day forms: "半日", "半天", "half day"
+  if (/^(半日|半天|half\s+day)$/i.test(trimmed)) {
+    const isEn = /day/i.test(trimmed);
+    return {
+      label: trimmed,
+      weight: 0.5,
+      unitKind: "day",
+      unitText: isEn ? "days" : trimmed.endsWith("日") ? "日" : "天",
+    };
+  }
+
+  // Chinese numeral forms: "一日", "两天", "一天半", "三日半"
+  const zhNumMatch = trimmed.match(
+    /^(十?[一二两三四五六七八九]|十)\s*(日|天|晚|夜)(半)?$/,
+  );
+  if (zhNumMatch) {
+    const base = parseChineseNumeral(zhNumMatch[1]);
+    if (base) {
+      const value = base + (zhNumMatch[3] ? 0.5 : 0);
+      const unitChar = zhNumMatch[2];
+      return {
+        label: trimmed,
+        weight: value,
+        unitKind: unitChar === "晚" || unitChar === "夜" ? "night" : "day",
+        unitText: unitChar,
+      };
+    }
+  }
+
+  // Numeric forms: "2 日", "0.5 天", "5 days", "2d", "3 nights", "4 小时", "3h"
+  const numMatch = trimmed.match(
+    /^(\d+(?:\.\d+)?)\s*(日|天|晚|夜|小时|days?|nights?|hours?|hrs?|d|h)$/i,
+  );
+  if (numMatch) {
+    const value = Number(numMatch[1]);
+    const unitRaw = numMatch[2];
+    if (Number.isFinite(value) && value > 0) {
+      const lower = unitRaw.toLowerCase();
+      let unitKind = "day";
+      let unitText = unitRaw;
+      if (lower === "晚" || lower === "夜" || lower.startsWith("night")) {
+        unitKind = "night";
+        unitText = lower.startsWith("night") ? "nights" : unitRaw;
+      } else if (
+        lower === "小时" ||
+        lower.startsWith("hour") ||
+        lower.startsWith("hr") ||
+        lower === "h"
+      ) {
+        unitKind = "hour";
+        unitText = lower === "小时" ? "小时" : "hours";
+      } else if (lower.startsWith("day") || lower === "d") {
+        unitKind = "day";
+        unitText = "days";
+      }
+      return {
+        label: trimmed,
+        weight: value,
+        unitKind,
+        unitText,
+      };
+    }
+  }
+
+  return null;
+}
+
+function parseTravelRouteItem(rawHtml) {
+  let content = String(rawHtml || "").trim();
+  if (/^<p>[\s\S]*<\/p>$/i.test(content) && !/<\/p>\s*<p>/i.test(content)) {
+    content = content.replace(/^<p>|<\/p>$/gi, "").trim();
+  }
+
+  let note = "";
+  let duration = null;
+
+  // Check for trailing parenthetical: either a pure duration like "大阪（2日）" or a note like "大阪 2 日（心斋桥）"
+  const trailingParenMatch = content.match(
+    /^(.*?)[\s]*(?:（([^（）]+)）|\(([^()]+)\))\s*$/,
+  );
+  if (trailingParenMatch && trailingParenMatch[1].trim()) {
+    const parenInner = (
+      trailingParenMatch[2] ||
+      trailingParenMatch[3] ||
+      ""
+    ).trim();
+    const parenDuration = parseDurationFragment(parenInner);
+    if (parenDuration) {
+      duration = parenDuration;
+      content = trailingParenMatch[1].trim();
+    } else {
+      note = parenInner;
+      content = trailingParenMatch[1].trim();
+    }
+  }
+
+  // Extract trailing duration from the remaining content if not yet parsed
+  if (!duration) {
+    const tailMatch = content.match(
+      /^(.*?)(?:[\s·•\-—:：,，/]+)(\d+(?:\.\d+)?\s*(?:日|天)\s*\d+(?:\.\d+)?\s*(?:晚|夜)|\d+(?:\.\d+)?\s*(?:日|天|晚|夜|小时|days?|nights?|hours?|hrs?|d|h)|(?:半日|半天|half\s+day)|(?:十?[一二两三四五六七八九]|十)\s*(?:日|天|晚|夜)(?:半)?)\s*$/i,
+    );
+    if (tailMatch && tailMatch[1].trim()) {
+      const parsed = parseDurationFragment(tailMatch[2]);
+      if (parsed) {
+        duration = parsed;
+        content = tailMatch[1].trim();
+      }
+    }
+  }
+
+  // Fallback for no-space CJK place + duration, e.g. "大阪2日", "京都5天", "宇治半日"
+  if (!duration) {
+    const compactMatch = content.match(
+      /^(.*?)(\d+(?:\.\d+)?\s*(?:日|天)\s*\d+(?:\.\d+)?\s*(?:晚|夜)|\d+(?:\.\d+)?\s*(?:日|天|晚|夜|小时)|半日|半天)$/,
+    );
+    if (compactMatch && compactMatch[1].trim()) {
+      const parsed = parseDurationFragment(compactMatch[2]);
+      if (parsed) {
+        duration = parsed;
+        content = compactMatch[1].trim();
+      }
+    }
+  }
+
+  const place = content.replace(/[\s·•\-—:：,，/]+$/, "").trim();
+  if (!place) {
+    return {
+      place: rawHtml.trim(),
+      duration: null,
+      note: "",
+    };
+  }
+
+  return { place, duration, note };
+}
+
+function getRouteGridCols(count) {
+  if (count <= 2) return 2;
+  if (count === 3 || count === 5 || count === 6 || count === 9) return 3;
+  return 4;
+}
+
+function buildTravelRouteBlock(listHtml, isEnglishPost) {
+  const innerListHtml = listHtml
+    .replace(/^<(?:ul|ol)[^>]*>/i, "")
+    .replace(/<\/(?:ul|ol)>\s*$/i, "");
+
+  // Skip lists containing nested lists or block-level media/containers
+  if (
+    /<(?:ul|ol|img|iframe|table|pre|blockquote|figure)\b/i.test(innerListHtml)
+  ) {
+    return null;
+  }
+
+  const liMatches = [...innerListHtml.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)];
+  if (liMatches.length < 2) {
+    return null;
+  }
+
+  const stops = liMatches.map((m) => parseTravelRouteItem(m[1]));
+  const stopsWithDuration = stops.filter((s) => s.duration);
+  const showBar = stopsWithDuration.length >= 2;
+  const cols = getRouteGridCols(stops.length);
+
+  // Build proportion bar (only segments with parsed durations)
+  let barHtml = "";
+  let summaryHtml = "";
+
+  if (showBar) {
+    const unitKinds = new Set(stopsWithDuration.map((s) => s.duration.unitKind));
+    const segmentsHtml = stops
+      .map((stop, idx) => {
+        if (!stop.duration) return "";
+        const color = TRAVEL_ROUTE_PALETTE[idx % TRAVEL_ROUTE_PALETTE.length];
+        let flexWeight = stop.duration.weight;
+        if (unitKinds.size > 1 && stop.duration.unitKind === "hour") {
+          flexWeight = Math.max(stop.duration.weight / 24, 0.25);
+        }
+        const tip = escapeAttr(
+          `${stripHtmlTags(stop.place)} · ${stop.duration.label}`,
+        );
+        return `<span class="travel-route-seg" style="flex:${flexWeight};--stop-color:${color};" title="${tip}"></span>`;
+      })
+      .join("");
+
+    barHtml = `<div class="travel-route-bar" aria-hidden="true">${segmentsHtml}</div>`;
+
+    // Build subtle summary when all durations share the same unit kind (day or night)
+    if (
+      stopsWithDuration.length === stops.length &&
+      unitKinds.size === 1 &&
+      (unitKinds.has("day") || unitKinds.has("night"))
+    ) {
+      const total = Number(
+        stopsWithDuration
+          .reduce((sum, s) => sum + s.duration.weight, 0)
+          .toFixed(2),
+      );
+      const firstUnit = stopsWithDuration[0].duration.unitText;
+      const useEnglish = isEnglishPost || /^[a-z]+$/i.test(firstUnit);
+      const summaryText = useEnglish
+        ? `${stops.length} STOPS · ${total} ${firstUnit.toUpperCase()}`
+        : `${stops.length} 站 · 共 ${total} ${firstUnit}`;
+      summaryHtml = `<div class="travel-route-summary">${summaryText}</div>`;
+    }
+  }
+
+  const itemsHtml = stops
+    .map((stop, idx) => {
+      const color = TRAVEL_ROUTE_PALETTE[idx % TRAVEL_ROUTE_PALETTE.length];
+      const num = String(idx + 1).padStart(2, "0");
+      const durationHtml = stop.duration
+        ? `<span class="travel-route-days">${stop.duration.label}</span>`
+        : "";
+      const noteHtml = stop.note
+        ? `<span class="travel-route-note">${stop.note}</span>`
+        : "";
+
+      return `<li class="travel-route-item" style="--stop-color:${color};"><div class="travel-route-item-top"><span class="travel-route-index">${num}</span><span class="travel-route-dot" aria-hidden="true"></span></div><div class="travel-route-place">${stop.place}</div>${durationHtml}${noteHtml}</li>`;
+    })
+    .join("");
+
+  return `<div class="travel-route-block${showBar ? " has-bar" : ""}" style="--route-cols:${cols};">${summaryHtml}${barHtml}<ul class="travel-route-grid">${itemsHtml}</ul></div>`;
+}
+
+function processTravelRoute(content, data) {
+  if (!content || !TRAVEL_SERIES_NAMES.includes(data?.series)) {
+    return content;
+  }
+
+  const isEnglishPost =
+    data?.series === "Travel" ||
+    String(data?.language || data?.lang || "").startsWith("en");
+
+  return content.replace(
+    /(<h([23])[^>]*>([\s\S]*?)<\/h\2>)((?:\s|<!--[\s\S]*?-->|<div\s+id="gitalk-initiator"[^>]*><\/div>)*)(<(ul|ol)[^>]*>[\s\S]*?<\/\6>)/gi,
+    (fullMatch, headingHtml, _level, headingInner, betweenHtml, listHtml) => {
+      const headingText = stripHeadingText(headingInner);
+      if (!TRAVEL_ROUTE_HEADING_REGEX.test(headingText)) {
+        return fullMatch;
+      }
+      const routeBlock = buildTravelRouteBlock(listHtml, isEnglishPost);
+      if (!routeBlock) {
+        return fullMatch;
+      }
+      return `${headingHtml}${betweenHtml}${routeBlock}`;
+    },
+  );
+}
+
 function processCodeBlock(content) {
   return content.replace(
     /<\/figure>/g,
@@ -32,6 +364,7 @@ hexo.extend.filter.register(
   "after_post_render",
   function (data) {
     data.content = processCodeBlock(data.content);
+    data.content = processTravelRoute(data.content, data);
     data.content = process.call(this, data.content);
     return data;
   },

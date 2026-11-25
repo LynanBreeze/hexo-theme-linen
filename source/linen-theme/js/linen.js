@@ -643,8 +643,328 @@ function initMaskScrollLock() {
   );
 }
 
+function initTravelRoutes() {
+  var contentEl = document.querySelector("#post.travel-post #page-content");
+  if (!contentEl) return;
+
+  var ROUTE_HEADING_RE = /^(?:路线|路线规划|Route|Route Planning)$/i;
+  var PALETTE = [
+    "#c97a63",
+    "#a8452e",
+    "#8a9a86",
+    "#c4b7a6",
+    "#b87d56",
+    "#6d8b74",
+    "#d49a79",
+    "#9c8f84",
+  ];
+  var isEnglish = /^en/i.test(document.documentElement.lang || "");
+
+  function getHeadingText(heading) {
+    var clone = heading.cloneNode(true);
+    clone
+      .querySelectorAll(".headerlink, .header-anchor")
+      .forEach(function (el) {
+        el.remove();
+      });
+    return (clone.textContent || "")
+      .replace(/^[#¶\s]+|[#¶\s]+$/g, "")
+      .trim();
+  }
+
+  function parseZhNum(str) {
+    var map = {
+      半: 0.5,
+      一: 1,
+      二: 2,
+      两: 2,
+      三: 3,
+      四: 4,
+      五: 5,
+      六: 6,
+      七: 7,
+      八: 8,
+      九: 9,
+      十: 10,
+    };
+    if (Object.prototype.hasOwnProperty.call(map, str)) return map[str];
+    if (/^十[一二三四五六七八九]$/.test(str)) return 10 + map[str[1]];
+    return null;
+  }
+
+  function parseDuration(text) {
+    var trimmed = String(text || "").trim();
+    if (!trimmed) return null;
+
+    var compound = trimmed.match(
+      /^(\d+(?:\.\d+)?)\s*(日|天)\s*\d+(?:\.\d+)?\s*(?:晚|夜)$/
+    );
+    if (compound) {
+      var val = Number(compound[1]);
+      if (isFinite(val) && val > 0) {
+        return {
+          label: trimmed,
+          weight: val,
+          unitKind: "day",
+          unitText: compound[2],
+        };
+      }
+    }
+
+    if (/^(半日|半天|half\s+day)$/i.test(trimmed)) {
+      var isEn = /day/i.test(trimmed);
+      return {
+        label: trimmed,
+        weight: 0.5,
+        unitKind: "day",
+        unitText: isEn ? "days" : trimmed.slice(-1) === "日" ? "日" : "天",
+      };
+    }
+
+    var zhNum = trimmed.match(
+      /^(十?[一二两三四五六七八九]|十)\s*(日|天|晚|夜)(半)?$/
+    );
+    if (zhNum) {
+      var base = parseZhNum(zhNum[1]);
+      if (base) {
+        var unitChar = zhNum[2];
+        return {
+          label: trimmed,
+          weight: base + (zhNum[3] ? 0.5 : 0),
+          unitKind: unitChar === "晚" || unitChar === "夜" ? "night" : "day",
+          unitText: unitChar,
+        };
+      }
+    }
+
+    var num = trimmed.match(
+      /^(\d+(?:\.\d+)?)\s*(日|天|晚|夜|小时|days?|nights?|hours?|hrs?|d|h)$/i
+    );
+    if (num) {
+      var n = Number(num[1]);
+      if (isFinite(n) && n > 0) {
+        var lower = num[2].toLowerCase();
+        var unitKind = "day";
+        var unitText = num[2];
+        if (lower === "晚" || lower === "夜" || lower.indexOf("night") === 0) {
+          unitKind = "night";
+          unitText = lower.indexOf("night") === 0 ? "nights" : num[2];
+        } else if (
+          lower === "小时" ||
+          lower.indexOf("hour") === 0 ||
+          lower.indexOf("hr") === 0 ||
+          lower === "h"
+        ) {
+          unitKind = "hour";
+          unitText = lower === "小时" ? "小时" : "hours";
+        } else if (lower.indexOf("day") === 0 || lower === "d") {
+          unitKind = "day";
+          unitText = "days";
+        }
+        return { label: trimmed, weight: n, unitKind: unitKind, unitText: unitText };
+      }
+    }
+
+    return null;
+  }
+
+  function parseItem(rawHtml) {
+    var content = String(rawHtml || "").trim();
+    if (/^<p>[\s\S]*<\/p>$/i.test(content) && !/<\/p>\s*<p>/i.test(content)) {
+      content = content.replace(/^<p>|<\/p>$/gi, "").trim();
+    }
+
+    var note = "";
+    var duration = null;
+
+    var paren = content.match(
+      /^(.*?)[\s]*(?:（([^（）]+)）|\(([^()]+)\))\s*$/
+    );
+    if (paren && paren[1].trim()) {
+      var inner = (paren[2] || paren[3] || "").trim();
+      var pd = parseDuration(inner);
+      if (pd) {
+        duration = pd;
+      } else {
+        note = inner;
+      }
+      content = paren[1].trim();
+    }
+
+    if (!duration) {
+      var tail = content.match(
+        /^(.*?)(?:[\s·•\-—:：,，/]+)(\d+(?:\.\d+)?\s*(?:日|天)\s*\d+(?:\.\d+)?\s*(?:晚|夜)|\d+(?:\.\d+)?\s*(?:日|天|晚|夜|小时|days?|nights?|hours?|hrs?|d|h)|(?:半日|半天|half\s+day)|(?:十?[一二两三四五六七八九]|十)\s*(?:日|天|晚|夜)(?:半)?)\s*$/i
+      );
+      if (tail && tail[1].trim()) {
+        var td = parseDuration(tail[2]);
+        if (td) {
+          duration = td;
+          content = tail[1].trim();
+        }
+      }
+    }
+
+    if (!duration) {
+      var compact = content.match(
+        /^(.*?)(\d+(?:\.\d+)?\s*(?:日|天)\s*\d+(?:\.\d+)?\s*(?:晚|夜)|\d+(?:\.\d+)?\s*(?:日|天|晚|夜|小时)|半日|半天)$/
+      );
+      if (compact && compact[1].trim()) {
+        var cd = parseDuration(compact[2]);
+        if (cd) {
+          duration = cd;
+          content = compact[1].trim();
+        }
+      }
+    }
+
+    var place = content.replace(/[\s·•\-—:：,，/]+$/, "").trim();
+    if (!place) {
+      return { place: rawHtml.trim(), duration: null, note: "" };
+    }
+    return { place: place, duration: duration, note: note };
+  }
+
+  function getCols(count) {
+    if (count <= 2) return 2;
+    if (count === 3 || count === 5 || count === 6 || count === 9) return 3;
+    return 4;
+  }
+
+  contentEl.querySelectorAll("h2, h3").forEach(function (heading) {
+    if (!ROUTE_HEADING_RE.test(getHeadingText(heading))) return;
+
+    var next = heading.nextElementSibling;
+    while (next && next.id === "gitalk-initiator") {
+      next = next.nextElementSibling;
+    }
+    if (!next || (next.tagName !== "UL" && next.tagName !== "OL")) return;
+    if (next.classList.contains("travel-route-grid")) return;
+    if (next.querySelector("ul, ol, img, iframe, table, pre, blockquote, figure")) {
+      return;
+    }
+
+    var lis = Array.prototype.slice.call(next.children).filter(function (el) {
+      return el.tagName === "LI";
+    });
+    if (lis.length < 2) return;
+
+    var stops = lis.map(function (li) {
+      return parseItem(li.innerHTML);
+    });
+    var withDuration = stops.filter(function (s) {
+      return !!s.duration;
+    });
+    var showBar = withDuration.length >= 2;
+    var cols = getCols(stops.length);
+
+    var block = document.createElement("div");
+    block.className = "travel-route-block" + (showBar ? " has-bar" : "");
+    block.style.setProperty("--route-cols", String(cols));
+
+    if (showBar) {
+      var unitKinds = new Set(
+        withDuration.map(function (s) {
+          return s.duration.unitKind;
+        })
+      );
+
+      if (
+        withDuration.length === stops.length &&
+        unitKinds.size === 1 &&
+        (unitKinds.has("day") || unitKinds.has("night"))
+      ) {
+        var total = Number(
+          withDuration
+            .reduce(function (sum, s) {
+              return sum + s.duration.weight;
+            }, 0)
+            .toFixed(2)
+        );
+        var firstUnit = withDuration[0].duration.unitText;
+        var useEn = isEnglish || /^[a-z]+$/i.test(firstUnit);
+        var summary = document.createElement("div");
+        summary.className = "travel-route-summary";
+        summary.textContent = useEn
+          ? stops.length + " STOPS · " + total + " " + firstUnit.toUpperCase()
+          : stops.length + " 站 · 共 " + total + " " + firstUnit;
+        block.appendChild(summary);
+      }
+
+      var bar = document.createElement("div");
+      bar.className = "travel-route-bar";
+      bar.setAttribute("aria-hidden", "true");
+      stops.forEach(function (stop, idx) {
+        if (!stop.duration) return;
+        var seg = document.createElement("span");
+        var color = PALETTE[idx % PALETTE.length];
+        var flexWeight = stop.duration.weight;
+        if (unitKinds.size > 1 && stop.duration.unitKind === "hour") {
+          flexWeight = Math.max(stop.duration.weight / 24, 0.25);
+        }
+        seg.className = "travel-route-seg";
+        seg.style.flex = String(flexWeight);
+        seg.style.setProperty("--stop-color", color);
+        var plainPlace = stop.place.replace(/<[^>]*>/g, "").trim();
+        seg.title = plainPlace + " · " + stop.duration.label;
+        bar.appendChild(seg);
+      });
+      block.appendChild(bar);
+    }
+
+    var grid = document.createElement("ul");
+    grid.className = "travel-route-grid";
+    stops.forEach(function (stop, idx) {
+      var color = PALETTE[idx % PALETTE.length];
+      var li = document.createElement("li");
+      li.className = "travel-route-item";
+      li.style.setProperty("--stop-color", color);
+
+      var top = document.createElement("div");
+      top.className = "travel-route-item-top";
+      var idxSpan = document.createElement("span");
+      idxSpan.className = "travel-route-index";
+      idxSpan.textContent = String(idx + 1).padStart(2, "0");
+      var dot = document.createElement("span");
+      dot.className = "travel-route-dot";
+      dot.setAttribute("aria-hidden", "true");
+      top.appendChild(idxSpan);
+      top.appendChild(dot);
+
+      var placeDiv = document.createElement("div");
+      placeDiv.className = "travel-route-place";
+      placeDiv.innerHTML = stop.place;
+
+      li.appendChild(top);
+      li.appendChild(placeDiv);
+
+      if (stop.duration) {
+        var daysSpan = document.createElement("span");
+        daysSpan.className = "travel-route-days";
+        daysSpan.textContent = stop.duration.label;
+        li.appendChild(daysSpan);
+      }
+
+      if (stop.note) {
+        var noteSpan = document.createElement("span");
+        noteSpan.className = "travel-route-note";
+        noteSpan.textContent = stop.note;
+        li.appendChild(noteSpan);
+      }
+
+      grid.appendChild(li);
+    });
+
+    block.appendChild(grid);
+    next.parentNode.replaceChild(block, next);
+  });
+}
+
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initMaskScrollLock);
+  document.addEventListener("DOMContentLoaded", function () {
+    initMaskScrollLock();
+    initTravelRoutes();
+  });
 } else {
   initMaskScrollLock();
+  initTravelRoutes();
 }
