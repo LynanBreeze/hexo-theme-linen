@@ -332,6 +332,22 @@ body {
   box-sizing: border-box;
 }
 
+img.linen-emoji {
+  display: inline-block !important;
+  width: 1.15em !important;
+  height: 1.15em !important;
+  margin: 0 0.08em !important;
+  padding: 0 !important;
+  vertical-align: -0.2em !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  object-fit: contain;
+  cursor: inherit !important;
+  pointer-events: none;
+}
+
 .nav-header-pleaceholder {
   width: 100%;
   height: $navbarMinHeight;

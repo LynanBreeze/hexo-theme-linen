@@ -11,5 +11,6 @@ require("./addCopyButtonToCodeBlocks")(hexo);
 require('./folded-code-block')(hexo);
 require('./series-generator')(hexo);
 require("./lazyload/index")(hexo);
+require("./emoji")(hexo);
 require("./rss")(hexo);
 }
