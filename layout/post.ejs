@@ -77,10 +77,10 @@
 <div class="post-nav-wrap">
   <div class="post-nav">
     <% if (page.prev) { %>
-    <a class="post-nav-item prev" target="_self" href="<%= url_for(page.prev.path) %>"><span class="item-link"><%= page.prev.title %></span><% if (page.prev.subTitle) { %><span class="sub-title"><%=page.prev.subTitle%></span><% } %><span class="nav-indicator-text"><%=__('common.prevPost')%></span></a>
+    <a class="post-nav-item prev" target="_self" href="<%= url_for(page.prev.path) %>"><span class="nav-indicator-text"><%=__('common.prevPost')%></span><span class="post-nav-title"><span class="item-link"><%= page.prev.title %></span><% if (page.prev.subTitle) { %><span class="sub-title"><%=page.prev.subTitle%></span><% } %></span></a>
     <% } %>
     <% if (page.next) { %>
-    <a class="post-nav-item next" target="_self" href="<%= url_for(page.next.path) %>"><span class="item-link"><%= page.next.title %></span><% if (page.next.subTitle) { %><span class="sub-title"><%=page.next.subTitle%></span><% } %><span class="nav-indicator-text"><%=__('common.nextPost')%></a>
+    <a class="post-nav-item next" target="_self" href="<%= url_for(page.next.path) %>"><span class="nav-indicator-text"><%=__('common.nextPost')%></span><span class="post-nav-title"><span class="item-link"><%= page.next.title %></span><% if (page.next.subTitle) { %><span class="sub-title"><%=page.next.subTitle%></span><% } %></span></a>
     <% } %>
   </div>
 </div>
@@ -131,10 +131,10 @@ const seriesInfo = getSeriesInfo(page?.series);
   <div class="post-nav-wrap">
     <div class="post-nav">
       <% if (previousPost) { %>
-      <a class="post-nav-item prev" target="_self" href="<%=url_for(previousPost.path)%>"><span class="item-link"><%=previousPost.title %></span><% if (previousPost.subTitle) { %><span class="sub-title"><%=previousPost.subTitle%></span><% } %><span class="nav-indicator-text"><%=__('common.prevPost')%></span></a>
+      <a class="post-nav-item prev" target="_self" href="<%=url_for(previousPost.path)%>"><span class="nav-indicator-text"><%=__('common.prevPost')%></span><span class="post-nav-title"><span class="item-link"><%=previousPost.title %></span><% if (previousPost.subTitle) { %><span class="sub-title"><%=previousPost.subTitle%></span><% } %></span></a>
       <% } %>
       <% if (nextPost) { %>
-      <a class="post-nav-item next" target="_self" href="<%=url_for(nextPost.path)%>"><span class="item-link"><%=nextPost.title %></span><% if (nextPost.subTitle) { %><span class="sub-title"><%=nextPost.subTitle%></span><% } %><span class="nav-indicator-text"><%=__('common.nextPost')%></a>
+      <a class="post-nav-item next" target="_self" href="<%=url_for(nextPost.path)%>"><span class="nav-indicator-text"><%=__('common.nextPost')%></span><span class="post-nav-title"><span class="item-link"><%=nextPost.title %></span><% if (nextPost.subTitle) { %><span class="sub-title"><%=nextPost.subTitle%></span><% } %></span></a>
       <% } %>
     </div>
   </div>

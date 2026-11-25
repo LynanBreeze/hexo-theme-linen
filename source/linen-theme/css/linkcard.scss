@@ -5,24 +5,22 @@
   background-color: #fff;
   background-size: cover;
   background-position: center;
+  border: 1px solid rgba(34, 33, 31, 0.1);
   border-radius: 4px;
   overflow: hidden;
   font-family:
-    system-ui,
     -apple-system,
     BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    "Open Sans",
+    "SF Pro Text",
     "Helvetica Neue",
     sans-serif;
   margin-bottom: 1.2rem;
   cursor: pointer;
-  box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
-  transition: box-shadow ease 0.3s;
+  box-shadow: 0 1px 2px rgba(34, 33, 31, 0.04);
+  transition:
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
   text-decoration: none;
   .cover-img {
     width: 6rem;
@@ -44,21 +42,21 @@
     background-image: linear-gradient(
       to right,
       rgba(255, 255, 255, 1),
-      rgba(255, 255, 255, 0.9),
-      rgba(255, 255, 255, 0.85),
-      rgba(255, 255, 255, 0.15)
+      rgba(255, 255, 255, 0.92),
+      rgba(255, 255, 255, 0.86),
+      rgba(255, 255, 255, 0.2)
     );
     backdrop-filter: blur(0.1rem);
-    padding: 0 0.8rem;
+    padding: 0 0.85rem;
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
     font-family: inherit;
     .link-title {
       font-family: inherit;
-      font-weight: bold;
-      font-size: max(min(4.5vw, 1.15em), 15px);
-      color: #232323;
+      font-weight: 600;
+      font-size: max(min(4.5vw, 1.05em), 14.5px);
+      color: #22211f;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -66,19 +64,23 @@
   }
 
   &:hover {
-    box-shadow: rgba(149, 157, 165, 0.4) 0px 8px 24px;
+    border-color: rgba(168, 69, 46, 0.28);
+    box-shadow: 0 6px 18px rgba(34, 33, 31, 0.08);
+    transform: translateY(-1px);
   }
 }
 
 .xhs-link:hover {
-  box-shadow: rgba(149, 157, 165, 0.4) 0px 8px 24px;
+  border-color: rgba(168, 69, 46, 0.28);
+  box-shadow: 0 6px 18px rgba(34, 33, 31, 0.08);
+  transform: translateY(-1px);
 }
 
 .shared-link {
   .link-content .link-desc {
-    color: #666;
-    font-size: max(min(2.5vw, 0.9rem), 13px);
-    line-height: 1.1;
+    color: #6f6b64;
+    font-size: max(min(2.5vw, 0.85rem), 12.5px);
+    line-height: 1.2;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -115,25 +117,23 @@
   width: calc((100% - 24px) / 4);
   margin-right: 8px;
   background-color: #fff;
+  border: 1px solid rgba(34, 33, 31, 0.1);
   border-radius: 4px;
-  box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+  box-shadow: 0 1px 2px rgba(34, 33, 31, 0.04);
   overflow: hidden;
   color: unset;
   margin-left: 0;
   margin-bottom: 1.2rem;
   font-family:
-    system-ui,
     -apple-system,
     BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    "Open Sans",
+    "SF Pro Text",
     "Helvetica Neue",
     sans-serif;
-  transition: box-shadow ease 0.3s;
+  transition:
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
 
   &:visited,
   &:active {
@@ -256,12 +256,18 @@
   width: 100%;
   max-width: 100%;
   display: inline-block;
-  background-color: rgb(229, 229, 229);
-  box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
-  transition: box-shadow ease 0.3s;
+  background-color: #f7f6f2;
+  border: 1px solid rgba(34, 33, 31, 0.1);
+  box-shadow: 0 1px 2px rgba(34, 33, 31, 0.04);
+  transition:
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
   overflow: hidden;
   &:hover {
-    box-shadow: rgba(149, 157, 165, 0.4) 0px 8px 24px;
+    border-color: rgba(168, 69, 46, 0.28);
+    box-shadow: 0 6px 18px rgba(34, 33, 31, 0.08);
+    transform: translateY(-1px);
   }
   .lazyload-outer-wrap {
     margin: 0;
@@ -272,33 +278,45 @@
     height: auto;
     aspect-ratio: 2 / 1;
     background-color: #fff;
+    border-bottom: 1px solid rgba(34, 33, 31, 0.06);
   }
   .title {
-    color: rgb(43, 43, 43);
-    font-size: 12px;
-    padding: 0.25em 0.6em 0.5em 0.6em;
-    font-weight: bold;
-    display: block;
+    color: #22211f;
+    font-size: 12.5px;
+    line-height: 1.45;
+    margin: 0.5em 0.75em 0;
+    font-weight: 600;
+    display: -webkit-box;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    /*! autoprefixer: ignore next */
+    -webkit-box-orient: vertical;
+    /*! autoprefixer: on */
+    overflow: hidden;
+    text-overflow: ellipsis;
     font-family:
-      system-ui,
       -apple-system,
       BlinkMacSystemFont,
-      "Segoe UI",
-      Roboto,
-      Oxygen,
-      Ubuntu,
-      Cantarell,
-      "Open Sans",
+      "SF Pro Text",
       "Helvetica Neue",
       sans-serif;
-    &::after {
-      content: "github.com";
-      display: block;
-      font-weight: normal;
-      color: #777;
-    }
   }
-  border-radius: 8px;
+  &::after {
+    content: "github.com";
+    display: block;
+    padding: 0.2em 0.75em 0.6em;
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: normal;
+    color: #6f6b64;
+    font-family:
+      -apple-system,
+      BlinkMacSystemFont,
+      "SF Pro Text",
+      "Helvetica Neue",
+      sans-serif;
+  }
+  border-radius: 4px;
 }
 
 @media (min-width: 451px) {

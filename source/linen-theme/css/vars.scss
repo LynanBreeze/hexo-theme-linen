@@ -3,23 +3,48 @@
   padding-right: min(3vw, 26px);
 }
 
-$darkText: #232323;
-$grayerText: #575757;
-$metaText: #666666;
-$moreGrayText: #757575;
-$green: #0f730c;
+// Unified Linen Design Palette (Warm Paper & Terracotta Editorial System)
+$accent: #a8452e;
+$accentDark: #8c3623;
+$accentSoft: rgba(168, 69, 46, 0.08);
+$accentBorder: rgba(168, 69, 46, 0.28);
+
+$bg: #ffffff;
+$surface: #f7f6f2;
+$surfaceAlt: #f0eee8;
+
+$darkText: #22211f;
+$grayerText: #56534e;
+$metaText: #6f6b64;
+$moreGrayText: #7c776f;
+
+$borderSubtle: rgba(34, 33, 31, 0.06);
+$borderColor: rgba(34, 33, 31, 0.1);
+$borderStrong: rgba(34, 33, 31, 0.18);
+
+// Legacy variable aliases mapped to the unified Linen palette
+$green: $accent;
+$linkColor: $accent;
+$blue: $accent;
+
 $postMetaFontSize: 13px;
 $postItemGap: 20px;
-$black: #000000;
-$gray3: #333333;
-$gray5: #555555;
-$gray7: #777777;
-$gray9: #777777;
-$graya: #aaaaaa;
-$grayb: #bbbbbb;
-$grayc: #cccccc;
-$linkColor: rgb(0, 102, 204);
-$blue: rgb(0, 113, 227);
+$black: #191816;
+$gray3: #353330;
+$gray5: #56534e;
+$gray7: #736f68;
+$gray9: #8f8a82;
+$graya: #a39e95;
+$grayb: #bbb6ad;
+$grayc: #d0cbc2;
+
+$radiusSm: 2px;
+$radiusMd: 4px;
+$radiusLg: 6px;
+$radiusSheet: 8px;
+
+$easeOut: cubic-bezier(0.22, 1, 0.36, 1);
+
 $linkFontFamily:
   SF Mono,
   SFMono-Regular,
@@ -28,18 +53,20 @@ $linkFontFamily:
   monospace;
 $navbarMinHeight: 65px;
 $commonPadding: min(3vw, 15px);
-$postWidgetGap: 16px;
+$postWidgetGap: 20px;
+$siteMaxWidth: max(1032px, min(1192px, 68vw));
 $postWidth: max(min(1192px, 68vw), 960px);
 
 @mixin defaultFont {
   font-family:
-    SF Pro Text,
-    SF Pro Icons,
-    Helvetica Neue,
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Text",
+    "SF Pro Icons",
+    "Helvetica Neue",
     Helvetica,
     Arial,
-    sans-serif,
-    serif;
+    sans-serif;
 }
 
 @mixin ellipsis($row_count: 1) {
@@ -79,6 +106,7 @@ $postWidth: max(min(1192px, 68vw), 960px);
     "source han serif cn",
     "STSongti-SC-Regular",
     "Songti SC",
+    "Noto Serif SC",
     "SimSun",
     -apple-system,
     BlinkMacSystemFont,
@@ -98,33 +126,36 @@ $postWidth: max(min(1192px, 68vw), 960px);
   margin-bottom: -10px;
   .tag-item {
     background-color: transparent;
-    padding: 4px 3px;
-    font-size: 14px;
+    padding: 3px 6px;
+    border-radius: $radiusMd;
+    font-size: 13.5px;
     color: $grayerText;
     margin-bottom: 10px;
-    display: inline-block;
-    margin-right: 10px;
-    transition: color 160ms ease, background-color 160ms ease;
+    display: inline-flex;
+    align-items: center;
+    margin-right: 8px;
+    transition:
+      color 180ms $easeOut,
+      background-color 180ms $easeOut;
     &:hover {
-      color: #555;
-      background-color: #f5f5f5;
+      color: $accent;
+      background-color: $surface;
     }
     &::before {
       content: "";
       width: 11px;
       height: 11px;
-      background-image: url("../img/icons/tag.svg");
-      background-size: cover;
-      filter: invert(1);
+      background-color: currentColor;
+      -webkit-mask: url("../img/icons/tag.svg") no-repeat center / contain;
+      mask: url("../img/icons/tag.svg") no-repeat center / contain;
       margin-right: 5px;
-      margin-bottom: -1px;
       text-decoration: none;
       display: inline-block;
-      opacity: 0.32;
-      transition: opacity 160ms ease;
+      opacity: 0.42;
+      transition: opacity 180ms $easeOut;
     }
     &:hover::before {
-      opacity: 0.5;
+      opacity: 0.78;
     }
   }
 }

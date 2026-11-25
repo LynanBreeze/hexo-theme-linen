@@ -198,11 +198,12 @@ function initAnchorHighlighter({
     style.id = "anchor-highlight-style";
     style.textContent = `
       @keyframes anchorFlash {
-        0%   { background-color: rgba(70, 148, 255, 0.2); }
+        0%   { background-color: rgba(168, 69, 46, 0.14); }
         100% { background-color: transparent; }
       }
       .${highlightClass} {
-        animation: anchorFlash ${duration}ms ease;
+        border-radius: 3px;
+        animation: anchorFlash ${duration}ms cubic-bezier(0.22, 1, 0.36, 1);
       }
     `;
     document.head.appendChild(style);
@@ -216,7 +217,7 @@ function initAnchorHighlighter({
 }
 
 initAnchorHighlighter({
-  duration: 4000,
+  duration: 1800,
 });
 
 function initImageGridSwitchers() {

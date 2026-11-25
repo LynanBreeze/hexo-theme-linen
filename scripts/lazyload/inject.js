@@ -111,7 +111,7 @@ module.exports = function (hexo) {
     opacity: 1;
   }
   .lazyload-wrap .error-wrap{
-    background-color: #f5f5f5;
+    background-color: #f7f6f2;
     opacity: 1;
     display: flex;
     flex-direction: column;
@@ -130,24 +130,28 @@ module.exports = function (hexo) {
     padding-top: 26.79640719%;
   }
   .lazyload-wrap .error-wrap .retry-btn{
-    margin-top: 2em;
-    background-image: linear-gradient(#f7f8fa ,#e7e9ec);
-    border-color: #adb1b8 #a2a6ac #8d9096;
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 3px;
-    box-shadow: rgba(255,255,255,.6) 0 1px 0 inset;
+    margin-top: 1.5em;
+    background-color: #ffffff;
+    border: 1px solid rgba(34, 33, 31, 0.18);
+    border-radius: 4px;
     box-sizing: border-box;
-    color: #0f1111;
-    display: inline-block;
-    font-family: "Amazon Ember",Arial,sans-serif;
-    font-size: 14px;
-    height: 29px;
+    color: #22211f;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
     font-size: 13px;
-    outline: 0;
-    overflow: hidden;
-    padding: 0 11px;
+    font-weight: 500;
+    height: 32px;
+    padding: 0 14px;
     text-align: center;
+    transition: border-color 180ms cubic-bezier(0.22, 1, 0.36, 1), color 180ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .lazyload-wrap .error-wrap .retry-btn:hover{
+    border-color: rgba(168, 69, 46, 0.35);
+    color: #a8452e;
+    background-color: rgba(168, 69, 46, 0.06);
   }`;
 
     let settingsContent = `<script>var $lazyload = {
