@@ -52,20 +52,6 @@
       & {
         margin: 0.25rem 0 -0.5em 0;
       }
-      @media (max-width: 900px) {
-        display: block;
-        white-space: nowrap;
-        overflow-x: auto;
-        overflow-y: hidden;
-        margin: 4px 0 0 -4px;
-        .tag-item {
-          display: inline-flex;
-          font-size: 11.5px;
-          padding: 1px 4px;
-          margin-bottom: 0;
-          vertical-align: middle;
-        }
-      }
       .tag-item {
         font-size: 12px;
         padding: 2px 4px;
@@ -87,6 +73,25 @@
           &:hover {
             color: $accent;
             background-color: $accentSoft;
+          }
+        }
+      }
+      @media (max-width: 900px) {
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        margin: 6px 0 0 0;
+        .tag-item {
+          display: inline-flex;
+          flex: 0 0 auto;
+          font-size: 11.5px;
+          padding: 1px 4px;
+          margin-bottom: 0;
+          vertical-align: middle;
+          &:first-child:not(.is-current) {
+            padding-left: 0;
           }
         }
       }

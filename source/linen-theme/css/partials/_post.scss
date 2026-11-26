@@ -1272,20 +1272,19 @@
   }
   .new-updates {
     background-color: $accentSoft;
-    border-left: 2.5px solid $accentBorder;
-    border-radius: 0 $radiusMd $radiusMd 0;
-    padding: 0.55em 0.8em 0.55em 1.8em;
+    border-radius: $radiusMd;
+    padding: 0.55em 0.85em 0.55em 1.9em;
     font-size: 0.85em;
     position: relative;
+    overflow: hidden;
     &::before {
       position: absolute;
-      top: 50%;
-      left: 0.45em;
-      transform: translateY(-50%);
+      top: 0;
+      left: 0;
       content: "";
       display: block;
-      width: 16px;
-      height: 16px;
+      width: 24px;
+      height: 24px;
       background-color: $accent;
       -webkit-mask: url("../img/icons/new1.svg") no-repeat center / contain;
       mask: url("../img/icons/new1.svg") no-repeat center / contain;
