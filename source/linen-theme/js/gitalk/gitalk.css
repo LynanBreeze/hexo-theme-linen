@@ -1248,13 +1248,14 @@
 }
 
 /*# sourceMappingURL=gitalk.css.map*/
-/* Comment composer follows a heading, account row, and full-width editor. */
+/* Comment composer places the title and account switcher on one header row above a full-width editor. */
 #gitalk-container .gt-container {
   --gt-avatar-size: 2.25rem;
+  --gt-header-avatar-size: 1.375rem;
   position: relative;
   display: grid;
-  grid-template-columns: var(--gt-avatar-size) minmax(0, 1fr);
-  column-gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  column-gap: 0.15rem;
   row-gap: 0;
 }
 
@@ -1272,27 +1273,82 @@
 }
 
 #gitalk-container .gt-container .gt-counts {
-  grid-column: 1 / -1;
+  grid-column: 1;
   grid-row: 1;
-  margin: 0;
-  padding: 1rem 0 0.75rem;
+  align-self: center;
+  margin: 0.95rem 0 0;
+  padding: 0 0.75rem 0 0;
   border: 0;
-  font-size: 1.25rem;
-  font-weight: 500;
-  line-height: 1.3;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+
+#gitalk-container .gt-container .gt-link-counts {
+  border-bottom: 1px solid transparent;
+  transition: color 180ms ease, border-color 180ms ease;
 }
 
 #gitalk-container .gt-container .gt-user {
   position: relative;
-  grid-column: 2;
-  grid-row: 2;
+  grid-column: 3;
+  grid-row: 1;
+  display: inline-flex;
+  align-items: center;
   align-self: center;
-  justify-self: start;
+  justify-self: end;
   float: none;
-  margin: 0;
-  font-size: 1rem;
+  margin: 0.95rem 0 0;
+  font-size: 0.875rem;
   font-weight: 400;
-  line-height: 1.5;
+  line-height: 1;
+}
+
+#gitalk-container .gt-container .gt-user-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.45rem;
+  margin-right: -0.45rem;
+  border-radius: 4px;
+  line-height: 1.25;
+  transition: color 180ms ease, background-color 180ms ease;
+}
+
+#gitalk-container .gt-container .gt-user .gt-user-name {
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.25;
+}
+
+#gitalk-container .gt-container .gt-user .gt-ico {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+#gitalk-container .gt-container .gt-user .gt-ico .gt-svg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.85em;
+  height: 0.85em;
+  vertical-align: middle;
+  transition: transform 180ms ease;
+}
+
+#gitalk-container .gt-container .gt-user .gt-ico svg,
+#gitalk-container .gt-container .gt-user .is--poping .gt-ico svg {
+  fill: currentColor;
+}
+
+#gitalk-container .gt-container .gt-user .is--poping .gt-ico .gt-svg {
+  transform: rotate(180deg);
 }
 
 #gitalk-container .gt-container .gt-header {
@@ -1301,13 +1357,16 @@
 
 #gitalk-container .gt-container .gt-header-avatar {
   position: static;
-  grid-column: 1;
-  grid-row: 2;
+  grid-column: 2;
+  grid-row: 1;
   align-self: center;
-  display: block;
-  width: var(--gt-avatar-size);
-  height: var(--gt-avatar-size);
-  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--gt-header-avatar-size);
+  height: var(--gt-header-avatar-size);
+  margin: 0.95rem 0 0;
+  line-height: 0;
   border-radius: 50%;
 }
 
@@ -1320,13 +1379,33 @@
 }
 
 #gitalk-container .gt-container .gt-avatar-github {
-  display: block;
-  grid-column: 1;
-  grid-row: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  grid-column: 2;
+  grid-row: 1;
   align-self: center;
-  width: var(--gt-avatar-size);
-  height: var(--gt-avatar-size);
-  margin: 0;
+  width: var(--gt-header-avatar-size);
+  height: var(--gt-header-avatar-size);
+  margin: 0.95rem 0 0;
+  line-height: 0;
+  cursor: pointer;
+  opacity: 0.78;
+  transition: opacity 180ms ease;
+}
+
+#gitalk-container .gt-container .gt-avatar-github:hover {
+  opacity: 1;
+}
+
+#gitalk-container .gt-container .gt-avatar-github .gt-ico-github,
+#gitalk-container .gt-container .gt-avatar-github .gt-svg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  vertical-align: middle;
 }
 
 #gitalk-container .gt-container .gt-avatar-github svg {
@@ -1335,14 +1414,23 @@
   height: 100%;
 }
 
+#gitalk-container .gt-container .gt-error,
+#gitalk-container .gt-container .gt-no-init {
+  grid-column: 1 / -1;
+}
+
+#gitalk-container .gt-container .gt-error {
+  grid-row: 2;
+}
+
 #gitalk-container .gt-container .gt-header-comment {
   position: relative;
   grid-column: 1 / -1;
   grid-row: 3;
   min-width: 0;
-  margin: 0.75rem 0 0;
+  margin: 0.85rem 0 0;
   padding: 0.75rem 1rem;
-  border-radius: 2px;
+  border-radius: 6px;
   background: #f5f5f5;
   cursor: text;
   transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1358,6 +1446,7 @@
   border-radius: 0;
   background: transparent;
   font: inherit;
+  font-size: 0.9375rem;
   resize: none;
   overflow: hidden;
   transition: height 0.25s cubic-bezier(0.4, 0, 0.2, 1),
@@ -1460,22 +1549,19 @@
 @media (max-width: 479px) {
   #gitalk-container .gt-container {
     --gt-avatar-size: 2rem;
-    grid-template-columns: var(--gt-avatar-size) minmax(0, 1fr);
-    column-gap: 0.875em;
+    --gt-header-avatar-size: 1.25rem;
   }
 
-  #gitalk-container .gt-container .gt-header-avatar {
-    width: var(--gt-avatar-size);
-    height: var(--gt-avatar-size);
-  }
-
-  #gitalk-container .gt-container .gt-avatar-github {
-    width: var(--gt-avatar-size);
-    height: var(--gt-avatar-size);
+  #gitalk-container .gt-container .gt-user .gt-user-name {
+    max-width: 8.5rem;
   }
 
   #gitalk-container .gt-container .gt-header-comment {
     padding: 0.75rem 0.875rem;
+  }
+
+  #gitalk-container .gt-container .gt-header-textarea {
+    font-size: 1rem;
   }
 
   #gitalk-container .gt-container .gt-header-comment:focus-within,
@@ -1496,24 +1582,20 @@
 }
 
 
-/* Keep the login menu anchored to the account row and above the editor. */
+/* Keep the login menu anchored beneath the header row and right-aligned to the account switcher. */
 #gitalk-container .gt-container .gt-user {
   z-index: 21;
 }
 
 #gitalk-container .gt-container .gt-popup {
   position: absolute;
-  top: calc(1rem + 2rem + 0.75rem + var(--gt-avatar-size) - 0.75rem);
-  right: auto;
-  left: calc(var(--gt-avatar-size) + 0.75rem);
+  grid-column: 1 / -1;
+  grid-row: 2;
+  top: 0.35rem;
+  right: 0;
+  left: auto;
+  border-radius: 6px;
   z-index: 22;
-}
-
-@media (max-width: 479px) {
-  #gitalk-container .gt-container .gt-popup {
-    top: calc(1rem + 2rem + 0.75rem + var(--gt-avatar-size) - 0.75rem);
-    left: calc(var(--gt-avatar-size) + 0.875rem);
-  }
 }
 
 /* Center the loading placeholder across the full comments area. */
@@ -1521,7 +1603,7 @@
   grid-column: 1 / -1;
   grid-row: 1;
   display: flex;
-  min-height: var(--gt-placeholder-inner-height, 10.5rem);
+  min-height: var(--gt-placeholder-inner-height, 7.36rem);
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -1538,15 +1620,16 @@
   font-weight: 400;
 }
 
-@media (min-width: 480px) {
-  #gitalk-container .gt-container .gt-comment-body img {
-    max-width: 50% !important;
-  }
+#gitalk-container .gt-container .gt-comment-body img:not(.linen-emoji),
+#gitalk-container .gt-container .gt-header-preview img:not(.linen-emoji) {
+  max-width: 100% !important;
+  height: auto;
+  box-sizing: border-box;
 }
 
-@media (max-width: 479px) {
-  #gitalk-container .gt-container .gt-comment-body img {
-    max-width: none !important;
+@media (min-width: 480px) {
+  #gitalk-container .gt-container .gt-comment-body img:not(.linen-emoji) {
+    max-width: 50% !important;
   }
 }
 

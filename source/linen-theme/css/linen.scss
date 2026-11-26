@@ -1516,14 +1516,12 @@ img.linen-emoji {
       margin-bottom: 0.22em;
       opacity: 0.7;
     }
-    &:empty::after {
+    &[href^="http"]:empty::after,
+    &[href^="http"]:has(img:not(.linen-emoji))::after {
       display: none;
     }
-    &:has(img) {
+    &:has(img:not(.linen-emoji)) {
       text-decoration: none;
-      &::after {
-        display: none;
-      }
     }
     &:hover {
       color: $accentDark;
@@ -2808,9 +2806,10 @@ img.linen-emoji {
     }
     #gitalk-container {
       --gt-avatar-size: 2.25rem;
-      --gt-placeholder-inner-height: calc(7.125rem + var(--gt-avatar-size) + 2px + #{$commonPadding});
+      --gt-placeholder-inner-height: calc(6.3rem + 2px + #{$commonPadding});
       @media (max-width: 479px) {
         --gt-avatar-size: 2rem;
+        --gt-placeholder-inner-height: calc(6.39375rem + 2px + #{$commonPadding});
       }
       margin: 1.25em 0 0;
       padding: 0.25rem $commonPadding 0;
@@ -3028,7 +3027,7 @@ img.linen-emoji {
             height: var(--gt-avatar-size);
           }
         }
-        a:not([class]) {
+        a:not([class]):not([data-hovercard-type="user"]) {
           color: $accent;
           font-weight: 500;
           text-decoration: underline;
@@ -3051,11 +3050,11 @@ img.linen-emoji {
             margin-bottom: 0.22em;
             opacity: 0.7;
           }
-          &:empty::after,
-          &:has(img)::after {
+          &[href^="http"]:empty::after,
+          &[href^="http"]:has(img:not(.linen-emoji))::after {
             display: none;
           }
-          &:has(img) {
+          &:has(img:not(.linen-emoji)) {
             text-decoration: none;
           }
           &:hover {
@@ -3087,6 +3086,7 @@ img.linen-emoji {
       .gt-container .gt-popup {
         background-color: $bgElevated;
         border-color: $borderColor;
+        border-radius: $radiusLg;
         color: $darkText;
         box-shadow: 0 8px 24px $shadowColor;
       }
@@ -3116,13 +3116,28 @@ img.linen-emoji {
         border-color: $borderColor;
         color: $darkText;
       }
-      .gt-container .gt-user .gt-ico svg,
       .gt-container .gt-svg svg {
         fill: $metaText;
       }
-      .gt-container .gt-user .gt-user-name,
       .gt-container .gt-counts {
-        color: $grayerText;
+        color: $darkText;
+      }
+      .gt-container .gt-user .gt-user-inner {
+        color: $metaText;
+        border-radius: $radiusMd;
+
+        &:hover,
+        &.is--poping {
+          color: $darkText;
+          background-color: $surface;
+        }
+      }
+      .gt-container .gt-user .gt-user-name {
+        color: inherit;
+      }
+      .gt-container .gt-user .gt-ico svg,
+      .gt-container .gt-user .is--poping .gt-ico svg {
+        fill: currentColor;
       }
       .gt-header-avatar,
       .gt-comment-avatar {
@@ -3133,7 +3148,9 @@ img.linen-emoji {
           border-radius: 50%;
         }
       }
-      .user-mention {
+      .user-mention,
+      .gt-comment-body a[data-hovercard-type="user"],
+      .gt-header-preview a[data-hovercard-type="user"] {
         color: $darkText;
         text-decoration: none;
         @include defaultFont;
@@ -3149,8 +3166,8 @@ img.linen-emoji {
         margin-top: 0.625em;
       }
       .gt-link-counts {
-        color: $darkText;
-        border-bottom-color: $borderStrong;
+        color: inherit;
+        border-bottom: 1px solid transparent;
         &:hover {
           color: $accent;
           border-bottom-color: $accent;
@@ -3175,11 +3192,14 @@ img.linen-emoji {
       .gt-container .gt-header-comment {
         background-color: $surface;
         border: 1px solid $borderSubtle;
-        border-radius: $radiusMd;
+        border-radius: $radiusLg;
         transition:
           padding 0.25s $easeOut,
           background-color 0.2s $easeOut,
           border-color 0.2s $easeOut;
+        &:hover {
+          border-color: $borderColor;
+        }
         &:focus-within {
           background-color: $bg;
           border-color: $accentBorder;
@@ -3776,7 +3796,7 @@ img.linen-emoji {
             .copyright-popover-content {
               position: absolute;
               bottom: 100%;
-              right: -30px;
+              left: 50%;
               margin-bottom: 10px;
               width: 280px;
               max-width: calc(100vw - 32px);
@@ -3791,7 +3811,7 @@ img.linen-emoji {
               pointer-events: none;
               opacity: 0;
               visibility: hidden;
-              transform: translateY(8px);
+              transform: translate(calc(-50% + var(--popover-shift, 0px)), 8px);
               transition:
                 opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
                 transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
@@ -3833,8 +3853,12 @@ img.linen-emoji {
               .copyright-popover-arrow {
                 position: absolute;
                 bottom: -5px;
-                right: 35px;
-                transform: rotate(45deg);
+                left: clamp(
+                  14px,
+                  calc(50% - var(--popover-shift, 0px)),
+                  calc(100% - 14px)
+                );
+                transform: translateX(-50%) rotate(45deg);
                 width: 8px;
                 height: 8px;
                 background-color: $bgElevated;
@@ -3849,7 +3873,7 @@ img.linen-emoji {
                 pointer-events: auto;
                 opacity: 1;
                 visibility: visible;
-                transform: translateY(0);
+                transform: translate(calc(-50% + var(--popover-shift, 0px)), 0);
               }
             }
           }
@@ -4423,6 +4447,9 @@ html[lang="zh-CN"] {
     color: $darkText;
     margin-bottom: 0.5em;
   }
+  .sponsor-item:not(:last-child) {
+    margin-bottom: 0.45em;
+  }
   .sponsor-name {
     font-size: 1em;
     color: $darkText;
@@ -4437,6 +4464,18 @@ html[lang="zh-CN"] {
     margin-left: 4px;
     font-size: 0.8em;
     color: $moreGrayText;
+  }
+  .sponsor-message {
+    margin-top: 0.35em;
+    padding: 0.4em 0.75em;
+    border-left: 2px solid $borderColor;
+    background-color: $surface;
+    border-radius: 0 $radiusMd $radiusMd 0;
+    font-size: 0.875em;
+    line-height: 1.55;
+    color: $grayerText;
+    white-space: pre-wrap;
+    word-break: break-word;
   }
 }
 

@@ -962,12 +962,66 @@ function initTravelRoutes() {
   });
 }
 
+function initCopyrightPopover() {
+  var containers = document.querySelectorAll(".copyright-popover-container");
+  if (!containers.length) return;
+
+  function updatePosition(container) {
+    var popover = container.querySelector(".copyright-popover-content");
+    if (!popover) return;
+
+    var vw = document.documentElement.clientWidth || window.innerWidth;
+    var margin = 16;
+    var popoverWidth = popover.offsetWidth;
+    if (!popoverWidth) return;
+
+    var containerRect = container.getBoundingClientRect();
+    var anchorCenter = containerRect.left + containerRect.width / 2;
+    var centeredLeft = anchorCenter - popoverWidth / 2;
+    var minLeft = margin;
+    var maxLeft = vw - margin - popoverWidth;
+    var clampedLeft =
+      maxLeft < minLeft
+        ? (vw - popoverWidth) / 2
+        : Math.min(Math.max(centeredLeft, minLeft), maxLeft);
+    var shift = clampedLeft - centeredLeft;
+
+    container.style.setProperty("--popover-shift", shift.toFixed(1) + "px");
+  }
+
+  function updateAll() {
+    containers.forEach(updatePosition);
+  }
+
+  containers.forEach(function (container) {
+    container.addEventListener("mouseenter", function () {
+      updatePosition(container);
+    });
+    container.addEventListener("focusin", function () {
+      updatePosition(container);
+    });
+    container.addEventListener(
+      "touchstart",
+      function () {
+        updatePosition(container);
+      },
+      { passive: true }
+    );
+  });
+
+  updateAll();
+  window.addEventListener("load", updateAll);
+  window.addEventListener("resize", updateAll);
+}
+
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", function () {
     initMaskScrollLock();
     initTravelRoutes();
+    initCopyrightPopover();
   });
 } else {
   initMaskScrollLock();
   initTravelRoutes();
+  initCopyrightPopover();
 }

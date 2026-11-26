@@ -103,6 +103,9 @@
         <span class="sponsor-name"><%=sponsor.name%></span>
         <span class="sponsor-amount"><%=__('common.sponsored')%> <%=sponsor.amount%></span>
         <span class="sponsor-date"><%=getPostDate(sponsor.date)%></span>
+        <% if (sponsor.message && String(sponsor.message).trim()) { %>
+        <div class="sponsor-message"><%=String(sponsor.message).trim()%></div>
+        <% } %>
       </li>
     <% }); %>
     </ul>
@@ -258,6 +261,29 @@ const seriesInfo = getSeriesInfo(page?.series);
             expandComment();
           }
         });
+
+        var githubUserHrefRe = /^https?:\/\/(?:www\.)?github\.com\/([A-Za-z0-9](?:[A-Za-z0-9_-]{0,38}))\/?$/i;
+        var normalizeMentions = function() {
+          var links = container.querySelectorAll(
+            ".gt-comment-body a:not(.user-mention), .gt-header-preview a:not(.user-mention)"
+          );
+          for (var i = 0; i < links.length; i++) {
+            var link = links[i];
+            var text = (link.textContent || "").trim();
+            var href = (link.getAttribute("href") || "").trim();
+            var match = href.match(githubUserHrefRe);
+            if (
+              (link.getAttribute("data-hovercard-type") === "user" && text.charAt(0) === "@") ||
+              (match && text.toLowerCase() === "@" + match[1].toLowerCase())
+            ) {
+              link.classList.add("user-mention");
+            }
+          }
+        };
+
+        normalizeMentions();
+        var mentionObserver = new MutationObserver(normalizeMentions);
+        mentionObserver.observe(container, { childList: true, subtree: true });
       }
     };
     document.body.appendChild(script);
