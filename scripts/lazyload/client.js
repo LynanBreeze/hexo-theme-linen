@@ -186,6 +186,9 @@
     element.dataset.blurhashRendered = "true";
   };
   var initPlaceholder = function initPlaceholder(element) {
+    if (!element || !element.dataset || !element.dataset.content) {
+      return;
+    }
     var wrap = document.createElement("div");
     // prevent triggering load event
     var contentStr = decodeURIComponent(element.dataset.content)
@@ -193,9 +196,12 @@
       .replace("<video", "<div")
       .replace("video>", "div>")
       .replace("<iframe", "<div")
-      .replace("iframe>", "iframe>");
+      .replace("iframe>", "div>");
     wrap.innerHTML = contentStr;
     var resourceElement = wrap.children[0];
+    if (!resourceElement) {
+      return;
+    }
     var altAttributes = parseAltAttributes(resourceElement.getAttribute("alt"));
     var placeholderImage =
       resourceElement.dataset.placeholderimg || altAttributes.placeholderImage;
@@ -281,6 +287,7 @@
           var width = imageElement.naturalWidth;
           if (
             isImage &&
+            width > 0 &&
             wrapElement &&
             wrapElement.tagName === "A" &&
             wrapElement.getAttribute("data-pswp-hassize") !== "true"
@@ -324,25 +331,32 @@
       element.classList.remove("loaded");
       e.preventDefault();
       e.stopPropagation();
-      var errorElement = element.querySelectorAll(".error-wrap")[0];
-      if (errorElement) {
-        element.removeChild(errorElement);
+      var errorElements = element.querySelectorAll(".error-wrap");
+      for (var errIdx = 0; errIdx < errorElements.length; errIdx++) {
+        element.removeChild(errorElements[errIdx]);
       }
-      var resourceElement = element.children[1];
-      element.removeChild(resourceElement);
+      var resourceElement = element.querySelector(".inner-wrap");
+      if (resourceElement) {
+        element.removeChild(resourceElement);
+      }
       var regeneratedElement = createResourceElement(contentStr);
       initOnLoadEvent(regeneratedElement);
       initOnErrorEvent(regeneratedElement);
       element.appendChild(regeneratedElement);
     };
     var initOnErrorEvent = function initOnErrorEvent(resourceElement) {
+      if (!resourceElement || !resourceElement.children[0]) return;
       resourceElement.children[0].onerror = function () {
+        if (element.querySelector(".error-wrap")) {
+          return;
+        }
         var errorWrap = document.createElement("div");
         errorWrap.classList.add("error-wrap");
         var errorTip = document.createElement("span");
         errorTip.classList.add("error-tip");
         errorWrap.appendChild(errorTip);
         var button = document.createElement("button");
+        button.type = "button";
         button.innerText = "Retry";
         button.classList.add("retry-btn");
         button.onclick = retry;
@@ -354,76 +368,75 @@
     initOnErrorEvent(newElement);
     element.appendChild(newElement);
   };
-  function observeWithStableVisible(
-    target,
-    { threshold = [0, 0.2, 0.4, 0.6, 0.8, 1], minVisibleMs = 200 } = {},
-  ) {
-    let timer = null;
-    let visible = false;
+  var MIN_VISIBLE_MS = 200;
+  var visibilityTimers = new WeakMap();
+  var sharedObserver = null;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        const isVisible =
-          entry.intersectionRatio >=
-          (window.$lazyload && window.$lazyload.intersectionRatio
-            ? window.$lazyload.intersectionRatio
-            : 0.33);
+  var getSharedObserver = function getSharedObserver() {
+    if (sharedObserver) return sharedObserver;
+    var minRatio =
+      window.$lazyload && window.$lazyload.intersectionRatio
+        ? window.$lazyload.intersectionRatio
+        : 0.33;
+    sharedObserver = new IntersectionObserver(
+      function (entries, observer) {
+        for (var idx = 0; idx < entries.length; idx++) {
+          var entry = entries[idx];
+          var target = entry.target;
+          var isVisible = entry.intersectionRatio >= minRatio;
+          var existingTimer = visibilityTimers.get(target);
 
-        if (isVisible) {
-          visible = true;
-          timer = setTimeout(() => {
-            if (visible) {
-              if (!/loaded/.test(target.className)) {
-                restoreContent(target);
-              }
-              if (window.$lazyload && window.$lazyload.preloadCount) {
-                var currentIndex = Array.prototype.indexOf.call(
-                  lazyloadItems,
-                  target,
-                );
-                for (var _i = 1; _i <= window.$lazyload.preloadCount; _i++) {
-                  var item = lazyloadItems[currentIndex - _i];
-                  if (item) {
-                    restoreContent(item);
+          if (isVisible) {
+            if (!existingTimer) {
+              (function (el) {
+                var timer = setTimeout(function () {
+                  visibilityTimers.delete(el);
+                  if (!/loaded/.test(el.className)) {
+                    restoreContent(el);
                   }
-                }
-                for (var _i = 1; _i <= window.$lazyload.preloadCount; _i++) {
-                  var item = lazyloadItems[currentIndex + _i];
-                  if (item) {
-                    restoreContent(item);
+                  if (window.$lazyload && window.$lazyload.preloadCount) {
+                    var currentIndex = Array.prototype.indexOf.call(
+                      lazyloadItems,
+                      el,
+                    );
+                    for (var offset = 1; offset <= window.$lazyload.preloadCount; offset++) {
+                      var prevItem = lazyloadItems[currentIndex - offset];
+                      if (prevItem) restoreContent(prevItem);
+                      var nextItem = lazyloadItems[currentIndex + offset];
+                      if (nextItem) restoreContent(nextItem);
+                    }
                   }
-                }
-              }
-              observer.disconnect();
+                  observer.unobserve(el);
+                }, MIN_VISIBLE_MS);
+                visibilityTimers.set(el, timer);
+              })(target);
             }
-          }, minVisibleMs);
-        } else {
-          visible = false;
-          clearTimeout(timer);
+          } else if (existingTimer) {
+            clearTimeout(existingTimer);
+            visibilityTimers.delete(target);
+          }
         }
       },
-      { threshold },
+      { threshold: [0, 0.2, 0.4, 0.6, 0.8, 1] },
     );
-
-    observer.observe(target);
-    return observer;
-  }
-
-  var createObserver = function createObserver(element) {
-    observeWithStableVisible(element);
+    return sharedObserver;
   };
+
   if (!window.IntersectionObserver) {
     for (var i = 0; i < lazyloadItems.length; i++) {
-      var item = lazyloadItems[i];
-      restore_fallback(item);
+      try {
+        restore_fallback(lazyloadItems[i]);
+      } catch (e) {}
     }
     return;
   }
+  var observerInstance = getSharedObserver();
   for (var _i = 0; _i < lazyloadItems.length; _i++) {
     var item = lazyloadItems[_i];
-    initPlaceholder(item);
-    createObserver(item);
+    try {
+      initPlaceholder(item);
+      observerInstance.observe(item);
+    } catch (e) {}
   }
   setTimeout(() => {
     if (window.$lazyload && window.$lazyload.preloadCount) {

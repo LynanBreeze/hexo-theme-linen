@@ -1,7 +1,7 @@
 "use strict";
 
 const { defaultConfig } = require("./config");
-const { getAssetsDbImgs } = require("../lib/site-data");
+const { getAssetsDbImgsIndex } = require("../lib/site-data");
 function getElemAttributes(elemText) {
   // Regex to pick out start tag from start of element's HTML.
   var re_start_tag = /^<\w+\b(?:\s+[\w\-.:]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[\w\-.:]+))?)*\s*\/?>/;
@@ -54,7 +54,7 @@ function getLivePhotoInfo(src = "", style = "") {
   }
 
   try {
-    const livePhotoUrl = new URL(src, "https://lynan.cn");
+    const livePhotoUrl = new URL(src, "https://example.invalid");
     const picUrl = livePhotoUrl.searchParams.get("picUrl") || livePhotoUrl.searchParams.get("photoSrc");
     const aspectRatio = /aspect-ratio\s*:\s*([^;]+)/i.exec(style)?.[1]?.trim() || "";
     const [width, height] = aspectRatio.includes("/")
@@ -81,17 +81,6 @@ function decodeHexEntity(str) {
     : "";
 }
 
-function isUrlEqual(src1 = "", src2 = "") {
-  try {
-    const u1 = new URL(src1);
-    const u2 = new URL(src2);
-
-    return u1.pathname === u2.pathname && u1.search === u2.search && u1.hash === u2.hash;
-  } catch (e) {
-    return false;
-  }
-}
-
 function appendAttributeToTag(tag, attrName, attrValue) {
   if (!attrValue || new RegExp(`\\s${attrName}=`).test(tag)) {
     return tag;
@@ -103,14 +92,19 @@ function getPlaceholderStyle(placeholder = "") {
   if (!placeholder || placeholder.startsWith("blurhash:")) {
     return "";
   }
-  return /http|data:image/.test(placeholder) ? `background-image: url(${placeholder})` : placeholder;
+  return /^(?:https?:\/\/|data:image\/|\/)/i.test(placeholder)
+    ? `background-image: url(${placeholder})`
+    : placeholder;
 }
 
-function formatAttributes(str, src, imgs = [], language) {
+function formatAttributes(str, src, imgsIndex, language) {
   let res = {};
-  const imgItem = imgs.find((item) => isUrlEqual(item.url, src || ""));
+  const imgItem = imgsIndex ? imgsIndex.findByUrl(src || "") : undefined;
   let attributesObj = getElemAttributes(str);
-  const originalItem = imgs.find((item) => item.url === imgItem?.originalUrl);
+  const originalItem =
+    imgItem?.originalUrl && imgsIndex
+      ? imgsIndex.byUrl.get(imgItem.originalUrl)
+      : undefined;
   const styleAttr = attributesObj.style || "";
 
   const styleStringToObject = (input) => {
@@ -275,7 +269,7 @@ function lazyProcess(htmlContent) {
   };
 
   const enableGallery = themeConfig?.photoswipe === true;
-  const imgs = getAssetsDbImgs(this.base_dir, this);
+  const imgsIndex = getAssetsDbImgsIndex(this.base_dir, this);
   let livePhotoThumbIndex = 0;
 
   return htmlContent
@@ -284,7 +278,7 @@ function lazyProcess(htmlContent) {
         return str;
       }
 
-      const formatedAttributes = formatAttributes(str, src, imgs, language);
+      const formatedAttributes = formatAttributes(str, src, imgsIndex, language);
       const wrapStyle = formatedAttributes.style;
 
       let placeholerStyle = "";
@@ -333,9 +327,12 @@ function lazyProcess(htmlContent) {
         : "";
 
       const itemTag = formatedAttributes.isLink ? "a" : "span";
+      const linkAttrs = formatedAttributes.isLink
+        ? ` href="${src}" target="_blank" rel="noopener"`
+        : "";
       const widthStyle = getInlineWidthStyle(wrapStyle || "");
 
-      return `<span class="lazyload-outer-wrap" style="width: 100%;"><${itemTag} class="gallery-item" href="${src}" ${pswpConfig} target="_blank" rel="noopener" ${
+      return `<span class="lazyload-outer-wrap" style="width: 100%;"><${itemTag} class="gallery-item"${linkAttrs} ${pswpConfig} ${
         theme === "landscape" ? 'data-fancybox="gallery"' : ""
       } ${widthStyle}><noscript>${noScriptElementStr}</noscript><span class="lazyload-wrap" data-content="${encodeURIComponent(
         formatedStr
@@ -445,14 +442,15 @@ function stripNoLazyFromMediaTag(tag) {
 
 module.exports.processCovers = function (str, data) {
   try {
-    const imgs = getAssetsDbImgs(this.base_dir, this);
-    const imgData = imgs.find((item) => isUrlEqual(item.url, data.page.cover || "" || ""));
-    if (data?.page?.coverPlaceholder || imgData?.placeholder) {
+    const imgsIndex = getAssetsDbImgsIndex(this.base_dir, this);
+    const imgData = imgsIndex.findByUrl(data?.page?.cover || "");
+    const coverPlaceholderStyle = getPlaceholderStyle(
+      data?.page?.coverPlaceholder || imgData?.placeholder || ""
+    );
+    if (coverPlaceholderStyle) {
       str = str.replace(
         '<div class="post-cover-img-wrap">',
-        `<div class="post-cover-img-wrap" style="background-image: url(${
-          data?.page?.coverPlaceholder || imgData?.placeholder
-        })">`
+        `<div class="post-cover-img-wrap" style="${coverPlaceholderStyle}">`
       );
     }
     str = str.replace(
@@ -462,7 +460,7 @@ module.exports.processCovers = function (str, data) {
           return coverStr.replace(imgStr, stripNoLazyFromMediaTag(imgStr));
         }
 
-        const imgData = imgs.find((item) => isUrlEqual(item.url, src || ""));
+        const imgData = imgsIndex.findByUrl(src || "");
         const placeholder = imgData?.placeholder || "";
         const contentImgStr = appendAttributeToTag(imgStr, "data-placeholderimg", placeholder);
         const placeholderStyle = getPlaceholderStyle(placeholder);

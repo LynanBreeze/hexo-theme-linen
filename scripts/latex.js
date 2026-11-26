@@ -15,7 +15,8 @@ const renderStore = new WeakMap();
 let nonceCounter = 0;
 
 function getThemeLatexConfig(hexo) {
-  const raw = hexo?.config?.theme_config?.latex;
+  const raw =
+    hexo?.theme?.config?.latex ?? hexo?.config?.theme_config?.latex;
   if (raw === true) {
     return { enable: true, css: "", options: {} };
   }

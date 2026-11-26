@@ -401,13 +401,18 @@ const getLivePhotoHtml = (iframeSrc) => {
     "";
   const isMuted = livePhotoUrl.searchParams.has("muted");
   const shouldLoop = livePhotoUrl.searchParams.has("loop");
-  const volume = Number(livePhotoUrl.searchParams.get("volume") || 100);
+  const volumeParam = livePhotoUrl.searchParams.get("volume");
+  const rawVolume =
+    volumeParam === null || volumeParam === "" ? 100 : Number(volumeParam);
+  const volume = Number.isFinite(rawVolume)
+    ? Math.min(Math.max(rawVolume, 0), 100)
+    : 100;
 
   if (!picUrl || !videoUrl) {
     return `<div class="pswp-live-photo-wrap"><img class="pswp-live-photo-img" src="${escapeHtml(picUrl)}" draggable="false" alt="" /></div>`;
   }
 
-  return `<div class="pswp-live-photo-wrap" data-volume="${Math.min(Math.max(volume, 0), 100)}">
+  return `<div class="pswp-live-photo-wrap" data-volume="${volume}">
       <img class="pswp-live-photo-img" src="${escapeHtml(picUrl)}" draggable="false" alt="" />
       <video class="pswp-live-photo-video" src="${escapeHtml(videoUrl)}" playsinline webkit-playsinline preload="metadata"${isMuted ? " muted" : ""}${shouldLoop ? " loop" : ""}></video>
       <button class="pswp-live-photo-trigger" type="button" aria-label="Play Live Photo">
@@ -1095,9 +1100,19 @@ document.addEventListener("click", async (event) => {
   }
 
   if (video.paused) {
-    video.volume = Number(livePhoto.dataset.volume || 100) / 100;
-    await video.play();
-    livePhoto.classList.add("is-playing");
+    const rawVolAttr = livePhoto.dataset.volume;
+    const parsedVol =
+      rawVolAttr === undefined || rawVolAttr === "" ? 100 : Number(rawVolAttr);
+    const safeVol = Number.isFinite(parsedVol)
+      ? Math.min(Math.max(parsedVol, 0), 100) / 100
+      : 1;
+    video.volume = safeVol;
+    try {
+      await video.play();
+      livePhoto.classList.add("is-playing");
+    } catch (error) {
+      livePhoto.classList.remove("is-playing");
+    }
   } else {
     video.pause();
     livePhoto.classList.remove("is-playing");

@@ -20,7 +20,11 @@ const seriesList = Array.from(seriesCountMap.entries())
   .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 const parseMapCoordinate = (post) => {
   if (post?.mapPlace?.coordinate?.length === 2) {
-    return { lat: Number(post.mapPlace.coordinate[0]), lng: Number(post.mapPlace.coordinate[1]) };
+    const lat = Number(post.mapPlace.coordinate[0]);
+    const lng = Number(post.mapPlace.coordinate[1]);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      return { lat, lng };
+    }
   }
 
   const mapUrl = post?.mapPlace?.url || post?.coverInfo?.url;
@@ -41,7 +45,7 @@ const parseMapCoordinate = (post) => {
 
   return null;
 };
-const travelPlaces = isTravelSeries ? page.seriesPosts.map((post, index) => {
+const travelPlaces = isTravelSeries ? seriesPosts.map((post, index) => {
   const coordinate = parseMapCoordinate(post);
   if (!coordinate) return null;
   return {
@@ -58,11 +62,16 @@ const travelPlaces = isTravelSeries ? page.seriesPosts.map((post, index) => {
     lng: coordinate.lng,
   };
 }).filter(Boolean) : [];
-const travelPlacesJson = encodeURIComponent(JSON.stringify(travelPlaces));
+const showTravelMap = isTravelSeries && travelPlaces.length > 0;
+const travelPlacesJson = encodeURIComponent(
+  JSON.stringify(
+    travelPlaces.map(({ excerpt, ...mapPlaceData }) => mapPlaceData)
+  )
+);
 %>
 
-<div class="series-layout<%=isTravelSeries && travelPlaces.length ? ' travel-series-layout' : ''%>">
-  <% if (page.seriesInfo?.cover && !isTravelSeries) { %>
+<div class="series-layout<%=showTravelMap ? ' travel-series-layout' : ''%>">
+  <% if (page.seriesInfo?.cover && !showTravelMap) { %>
   <div class="series-cover-img-wrap" style="<%=page.seriesInfo?.coverPlaceholder ? `background-image: url(${url_for(page.seriesInfo.coverPlaceholder)})`: ''%>">
     <div class="series-cover-img-placeholder"></div>
     <script>
@@ -86,11 +95,11 @@ const travelPlacesJson = encodeURIComponent(JSON.stringify(travelPlaces));
     <div class="cover-info">
       <div class="series-info">
         <h1 class="series-name"><%=__('common.series') + ': ' + page.series %></h1>
-        <div class="description"><%=page.seriesInfo.description||''%> <i class="post-count-icon"></i><%=__('common.total')%> <%=page?.seriesPosts?.length%> <%=__('common.seriesPostCount')%></div>
+        <div class="description"><%=page.seriesInfo.description||''%> <i class="post-count-icon"></i><%=__('common.total')%> <%=totalCount%> <%=__('common.seriesPostCount')%></div>
       </div>
       <% if(page.seriesInfo?.coverInfo) { %>
       <% if(page.seriesInfo.coverInfo.url) { %>
-      <a class="copyright link" href="<%=page.seriesInfo.coverInfo.url%>" target="_blank">
+      <a class="copyright link" href="<%=page.seriesInfo.coverInfo.url%>" target="_blank" rel="noopener noreferrer">
         <% } else { %>
         <div class="copyright">
           <% } %>
@@ -99,12 +108,12 @@ const travelPlacesJson = encodeURIComponent(JSON.stringify(travelPlaces));
           <% if(page.seriesInfo.coverInfo.url) { %>
       </a>
       <% } else { %>
+        </div>
+      <% } %>
+      <% } %>
     </div>
-    <% } %>
   </div>
-  <% } %>
-</div>
-<% } else if (!isTravelSeries) { %>
+<% } else if (!showTravelMap) { %>
 <%-partial('partials/taxonomy-header', {
   type: 'series',
   title: page.series,
@@ -116,7 +125,7 @@ const travelPlacesJson = encodeURIComponent(JSON.stringify(travelPlaces));
 })%>
 <% } %>
 
-<% if (isTravelSeries && travelPlaces.length) { %>
+<% if (showTravelMap) { %>
 <noscript>
   <link rel="stylesheet" href="<%-url_for('/linen-theme/css/leaflet.css')%>" />
 </noscript>
@@ -174,7 +183,7 @@ const travelPlacesJson = encodeURIComponent(JSON.stringify(travelPlaces));
 <script src="<%=url_for(`/linen-theme/js/travel-map.js?v=${theme.version}`)%>" defer></script>
 <% } %>
 
-<% if (!isTravelSeries) { %>
+<% if (!showTravelMap) { %>
 <div class="posts-info-layout">
   <div class="posts-wrap">
     <div id="recent-posts">

@@ -7,11 +7,13 @@ const LEGACY_JOURNAL_SERIES = ["旅行", "Travel"];
 
 const jsonCache = new Map();
 const imgsCache = new Map();
+const imgsIndexCache = new Map();
 const registeredHexos = new WeakSet();
 
 function clearCache() {
   jsonCache.clear();
   imgsCache.clear();
+  imgsIndexCache.clear();
 }
 
 function registerCacheInvalidation(hexoInstance) {
@@ -131,6 +133,58 @@ function getAssetsDbImgs(baseDir, hexoInstance) {
 
   imgsCache.set(dirPath, merged);
   return merged;
+}
+
+function getUrlPathKey(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== "string") return "";
+  try {
+    const u = new URL(rawUrl);
+    return `${u.pathname}${u.search}${u.hash}`;
+  } catch (e) {
+    return "";
+  }
+}
+
+function getAssetsDbImgsIndex(baseDir, hexoInstance) {
+  if (hexoInstance) {
+    registerCacheInvalidation(hexoInstance);
+  }
+  const cacheKey = baseDir ? path.join(baseDir, "assets-db/imgs") : "";
+  if (cacheKey && imgsIndexCache.has(cacheKey)) {
+    return imgsIndexCache.get(cacheKey);
+  }
+
+  const list = getAssetsDbImgs(baseDir, hexoInstance);
+  const byUrl = new Map();
+  const byPathKey = new Map();
+
+  for (const item of list) {
+    if (!item || typeof item.url !== "string" || !item.url) continue;
+    if (!byUrl.has(item.url)) {
+      byUrl.set(item.url, item);
+    }
+    const pathKey = getUrlPathKey(item.url);
+    if (pathKey && !byPathKey.has(pathKey)) {
+      byPathKey.set(pathKey, item);
+    }
+  }
+
+  const index = {
+    list,
+    byUrl,
+    byPathKey,
+    findByUrl(src) {
+      if (!src || typeof src !== "string") return undefined;
+      if (byUrl.has(src)) return byUrl.get(src);
+      const pathKey = getUrlPathKey(src);
+      return pathKey ? byPathKey.get(pathKey) : undefined;
+    },
+  };
+
+  if (cacheKey) {
+    imgsIndexCache.set(cacheKey, index);
+  }
+  return index;
 }
 
 function normalizeLayoutStyle(style) {
@@ -281,6 +335,7 @@ module.exports = {
   registerCacheInvalidation,
   getSiteData,
   getAssetsDbImgs,
+  getAssetsDbImgsIndex,
   normalizeLayoutStyle,
   resolvePostLayoutStyle,
   resolvePostBreakoutConfig,

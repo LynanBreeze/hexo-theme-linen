@@ -238,7 +238,9 @@
       return;
     }
 
+    let mapDestroyed = false;
     const syncMapTheme = () => {
+      if (mapDestroyed) return;
       const nextStyleUrl = getMapStyleUrl();
       if (nextStyleUrl !== currentStyleUrl) {
         currentStyleUrl = nextStyleUrl;
@@ -248,9 +250,29 @@
       }
     };
 
+    const darkMedia =
+      typeof window.matchMedia === "function"
+        ? window.matchMedia("(prefers-color-scheme: dark)")
+        : null;
+
+    const cleanupMapLibre = () => {
+      if (mapDestroyed) return;
+      mapDestroyed = true;
+      window.removeEventListener("linen:themechange", syncMapTheme);
+      if (darkMedia) {
+        if (typeof darkMedia.removeEventListener === "function") {
+          darkMedia.removeEventListener("change", syncMapTheme);
+        } else if (typeof darkMedia.removeListener === "function") {
+          darkMedia.removeListener(syncMapTheme);
+        }
+      }
+      try {
+        map.remove();
+      } catch (e) {}
+    };
+
     window.addEventListener("linen:themechange", syncMapTheme);
-    if (typeof window.matchMedia === "function") {
-      const darkMedia = window.matchMedia("(prefers-color-scheme: dark)");
+    if (darkMedia) {
       if (typeof darkMedia.addEventListener === "function") {
         darkMedia.addEventListener("change", syncMapTheme);
       } else if (typeof darkMedia.addListener === "function") {
@@ -269,9 +291,7 @@
 
     const fallbackTimer = setTimeout(() => {
       if (!styleLoaded) {
-        try {
-          map.remove();
-        } catch (e) {}
+        cleanupMapLibre();
         loadLeafletFallback();
       }
     }, 8000);
@@ -279,9 +299,7 @@
     map.on("error", () => {
       if (!styleLoaded) {
         clearTimeout(fallbackTimer);
-        try {
-          map.remove();
-        } catch (e) {}
+        cleanupMapLibre();
         loadLeafletFallback();
       }
     });
