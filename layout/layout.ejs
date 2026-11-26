@@ -137,7 +137,7 @@ const version = theme.version;
 
   <%-partial('footer')%>
   <div id="mask"></div>
-  <a id="back-to-top" href="#page-top" title="back to top"></a>
+  <a id="back-to-top" href="#page-top" title="Back to top" aria-label="Back to top"></a>
   <noscript id="noscript-styles"></noscript>
   <% if(is_post()) { %>
   <script src="<%=url_for(`/linen-theme/js/toc.js?v=${version}`)%>" defer></script>

@@ -88,8 +88,8 @@
         };
         item.addEventListener("mouseenter", () => toggle(true));
         item.addEventListener("mouseleave", () => toggle(false));
-        item.addEventListener("focus", () => toggle(true));
-        item.addEventListener("blur", () => toggle(false));
+        item.addEventListener("focusin", () => toggle(true));
+        item.addEventListener("focusout", () => toggle(false));
       });
     };
 

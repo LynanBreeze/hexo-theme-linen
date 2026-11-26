@@ -1,0 +1,128 @@
+@use "../vars.scss" as *;
+
+html {
+  min-width: 320px;
+  scroll-behavior: smooth;
+  overscroll-behavior: auto none;
+  &.no-scroll {
+    overflow: hidden !important;
+  }
+}
+
+* {
+  -webkit-text-size-adjust: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid $accentFocus;
+  outline-offset: 2px;
+  border-radius: $radiusSm;
+}
+
+a {
+  text-decoration: none;
+  color: $linkColor;
+  &:visited,
+  &:active {
+    color: $linkColor;
+  }
+}
+
+#back-to-top {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  width: 42px;
+  height: 42px;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $bgTranslucent;
+  border: 1px solid $borderColor;
+  border-radius: $radiusMd;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: $darkText;
+  pointer-events: none;
+  transform: translateY(20px);
+  transition:
+    transform 0.32s $easeOut,
+    opacity 0.28s $easeOut,
+    border-color 0.2s $easeOut,
+    color 0.2s $easeOut,
+    background-color 0.2s $easeOut;
+  opacity: 0;
+  box-shadow: 0 6px 18px $shadowColor;
+  &::before {
+    content: "";
+    display: block;
+    width: 18px;
+    height: 18px;
+    background-color: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 15l-6-6-6 6'/%3E%3C/svg%3E") no-repeat center / contain;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 15l-6-6-6 6'/%3E%3C/svg%3E") no-repeat center / contain;
+  }
+  &:hover {
+    color: $accent;
+    border-color: $accentBorder;
+    background-color: $bgElevated;
+  }
+  &.visible {
+    transform: translateY(0);
+    pointer-events: all;
+    opacity: 1;
+  }
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background-color: $bg;
+  color: $darkText;
+  text-rendering: optimizeLegibility;
+  line-height: 1.5;
+  @include defaultFont;
+  overscroll-behavior-y: none;
+  overflow-x: hidden;
+  font-size: 16px;
+  &.ios {
+    #back-to-top {
+      display: none;
+    }
+  }
+  &.render-raw {
+    #page-content,
+    #toc {
+      display: none;
+    }
+    #raw-markdown-block {
+      display: block;
+    }
+  }
+  &.no-scroll {
+    overflow: hidden !important;
+  }
+}
+* {
+  box-sizing: border-box;
+}
+
+img.linen-emoji {
+  display: inline-block !important;
+  width: 1.15em !important;
+  height: 1.15em !important;
+  margin: 0 0.08em !important;
+  padding: 0 !important;
+  vertical-align: -0.2em !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  object-fit: contain;
+  cursor: inherit !important;
+  pointer-events: none;
+}

@@ -11,7 +11,7 @@ const series = Array.from(new Set(site.posts.filter(item=>item.series).sort('dat
   <% if (theme?.info?.site_desc) { %>
     <div class="info-row description"><%=theme?.info?.site_desc%></div>
   <% } %>
-  <div class="info-row site-statisc">
+  <div class="info-row site-stats">
     <a href="<%=url_for('/archives/#posts')%>" target="_self"><%=site.posts?.filter(post=>!post?.hide?.archive).length%> <%=__('common.posts')%></a>
     <span class="divider">/</span>
     <a href="<%=url_for('/archives/#categories')%>" target="_self"><%=site.categories.length%> <%=__('common.categories')%></a>

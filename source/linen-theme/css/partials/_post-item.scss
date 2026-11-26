@@ -1,0 +1,141 @@
+@use "../vars.scss" as *;
+
+@mixin postItem {
+  background-color: $bg;
+  display: block;
+  position: relative;
+  padding: 24px 0;
+  border-bottom: 1px solid $borderSubtle;
+  cursor: pointer;
+  &:last-child {
+    border-bottom: none;
+  }
+  &:hover {
+    .cover-img img {
+      transform: scale(1.028);
+    }
+  }
+  .item-body {
+    width: 100%;
+    display: block;
+    &::after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+  }
+  .title-excerpt {
+    display: block;
+  }
+  .title {
+    color: $darkText;
+    font-weight: bold;
+    font-size: 23px;
+    line-height: 1.38;
+    text-decoration: none;
+    white-space: wrap;
+    transition: color 180ms $easeOut;
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+    &:hover {
+      color: $accent;
+    }
+    .sub-title {
+      @include subTitle;
+    }
+  }
+  .excerpt {
+    cursor: text;
+    margin: 0.55rem 0 0.65rem;
+    color: $grayerText;
+    line-height: 1.65;
+    white-space: wrap;
+  }
+  .post-meta {
+    @include defaultFont;
+    color: $metaText;
+    font-size: $postMetaFontSize;
+    .categories {
+      &:first-child {
+        margin-left: -10px;
+      }
+      .category-item {
+        position: relative;
+        z-index: 2;
+        display: inline;
+        color: $metaText;
+        margin-left: 10px;
+        transition: color 160ms $easeOut;
+        &:hover {
+          text-decoration: underline;
+          text-underline-offset: 0.2em;
+          color: $accent;
+        }
+      }
+    }
+    .read-time {
+      margin-left: 10px;
+    }
+  }
+  .cover-img {
+    float: right;
+    width: 25%;
+    margin-left: 18px;
+    height: fit-content;
+    position: relative;
+    overflow: hidden;
+    border-radius: $radiusSm;
+    border: 1px solid $borderColor;
+    &:before {
+      content: "";
+      display: block;
+      width: 100%;
+      padding-top: 75%;
+    }
+    img {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s $easeOut;
+    }
+    .post-list-cover-lazy {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 0;
+      .placeholder {
+        width: 100%;
+        height: 100%;
+        padding-bottom: 0 !important;
+        background-size: cover;
+        background-position: center;
+      }
+      img {
+        object-fit: cover;
+      }
+    }
+  }
+  .tags {
+    white-space: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    .tag-item {
+      position: relative;
+      z-index: 2;
+    }
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}
