@@ -88,8 +88,8 @@
           transition: opacity 200ms $easeOut;
           &.toc {
             background-color: currentColor;
-            -webkit-mask: url("../img/icons/toc1.svg") no-repeat center / contain;
-            mask: url("../img/icons/toc1.svg") no-repeat center / contain;
+            -webkit-mask: url("../img/icons/toc1.svg") no-repeat center / 19px auto;
+            mask: url("../img/icons/toc1.svg") no-repeat center / 19px auto;
             display: none;
             cursor: pointer;
           }
@@ -101,12 +101,12 @@
           }
           &.github {
             background-color: currentColor;
-            -webkit-mask: url("../img/icons/github.svg") no-repeat center / contain;
-            mask: url("../img/icons/github.svg") no-repeat center / contain;
+            -webkit-mask: url("../img/icons/github.svg") no-repeat center / 18px 18px;
+            mask: url("../img/icons/github.svg") no-repeat center / 18px 18px;
           }
           &.zh-CN {
             background-image: url("../img/icons/chinese.svg");
-            background-size: contain;
+            background-size: 24px 24px;
             background-repeat: no-repeat;
             background-position: center;
             width: 22px;
@@ -115,7 +115,7 @@
           }
           &.en {
             background-image: url("../img/icons/english.svg");
-            background-size: contain;
+            background-size: 24px 24px;
             background-repeat: no-repeat;
             background-position: center;
             width: 22px;
@@ -124,8 +124,8 @@
           }
           &.rss {
             background-color: currentColor;
-            -webkit-mask: url("../img/icons/rss.svg") no-repeat center / contain;
-            mask: url("../img/icons/rss.svg") no-repeat center / contain;
+            -webkit-mask: url("../img/icons/rss.svg") no-repeat center / 21px 21px;
+            mask: url("../img/icons/rss.svg") no-repeat center / 21px 21px;
           }
           &.theme-toggle {
             appearance: none;
@@ -142,8 +142,8 @@
             position: relative;
             svg {
               position: absolute;
-              width: 19px;
-              height: 19px;
+              width: 20px;
+              height: 20px;
               transition:
                 opacity 220ms $easeOut,
                 transform 260ms $easeOut;
@@ -153,6 +153,8 @@
               transform: rotate(-35deg) scale(0.75);
             }
             .icon-moon {
+              width: 21px;
+              height: 21px;
               opacity: 1;
               transform: rotate(0deg) scale(1);
             }
@@ -181,7 +183,7 @@
           }
           &.hdr-switch {
             background-image: url("../img/icons/hdr.svg");
-            background-size: contain;
+            background-size: 21px 21px;
             background-repeat: no-repeat;
             background-position: center;
             cursor: pointer;
@@ -205,8 +207,8 @@
               );
               -webkit-mask: url("../img/icons/hdr.svg") no-repeat center;
               mask: url("../img/icons/hdr.svg") no-repeat center;
-              -webkit-mask-size: contain;
-              mask-size: contain;
+              -webkit-mask-size: 21px 21px;
+              mask-size: 21px 21px;
               opacity: 0;
               transition:
                 opacity 0.3s $easeOut,

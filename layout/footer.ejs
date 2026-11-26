@@ -42,7 +42,7 @@
           <h4><% if (theme?.info?.about) { %><a href="<%=url_for(theme.info.about)%>"<%- /^(https?:)?\/\//i.test(theme.info.about) ? ' target="_blank" rel="noopener noreferrer"' : '' %>><%= __('common.aboutThisSite') %></a><% } else { %><%= __('common.aboutThisSite') %><% } %></h4>
           <span class="footerMetaText copyright">
             <span class="copyright-popover-container">
-              <span class="copyright-trigger" tabindex="0" aria-haspopup="true">©</span>
+              <span class="copyright-trigger" tabindex="0" aria-haspopup="true">&copy;&#xFE0E;</span>
               <span class="copyright-popover-content">
                 <span class="copyright-popover-arrow"></span>
                 <span class="copyright-popover-header">
