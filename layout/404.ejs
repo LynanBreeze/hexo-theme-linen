@@ -1,0 +1,9 @@
+<section class="not-found" aria-labelledby="not-found-title">
+  <div class="not-found-code" aria-hidden="true">404</div>
+  <h1 id="not-found-title" class="not-found-title"><%=page.title || __('common.notFoundTitle')%></h1>
+  <p class="not-found-desc"><%=page.description || __('common.notFoundDesc')%></p>
+  <div class="not-found-actions">
+    <a class="not-found-btn primary" href="<%=url_for('/')%>"><%=__('common.backToHome')%></a>
+    <a class="not-found-btn" href="<%=url_for('/archives/')%>"><%=__('common.archives')%></a>
+  </div>
+</section>

@@ -234,7 +234,8 @@
       }
     }
   }
-  #post {
+  #post,
+  #page {
     h1 {
       font-size: 1.5em;
     }
@@ -262,7 +263,8 @@
 }
 
 @media (max-width: 728px) {
-  #post:not(.layout-style-journal):not(.travel-post) {
+  #post:not(.layout-style-journal):not(.travel-post),
+  #page {
     h2::before,
     h3::before {
       display: none;
@@ -549,7 +551,8 @@
   body {
     font-size: 16px;
   }
-  #post {
+  #post,
+  #page {
     h1 {
       font-size: max(min(6.5vw, 1.5em), 20px);
     }
@@ -718,32 +721,32 @@
 }
 
 @media print {
-  #toc {
-    display: none;
+  :root,
+  :root[data-theme="dark"] {
+    color-scheme: light;
+    @include linenLightPalette;
+    --linen-bg: #ffffff;
   }
-  .post-series {
-    display: none;
+  body {
+    background-color: #ffffff;
+    color: #191816;
   }
-  .nav-header-placeholder {
+  .nav-header .header-inner .right .buttonSet,
+  #toc,
+  .post-series,
+  .nav-header-placeholder,
+  .post-nav-wrap,
+  #gitalk-container,
+  .series-nav,
+  #related-posts,
+  #page-donates,
+  .sponsor-list,
+  #back-to-top,
+  #search-modal {
     display: none;
   }
   .nav-header.nav-header {
     position: relative;
-  }
-  .post-nav-wrap {
-    display: none;
-  }
-  #gitalk-container {
-    display: none;
-  }
-  .series-nav {
-    display: none;
-  }
-  #page-donates {
-    display: none;
-  }
-  #back-to-top {
-    display: none;
   }
   footer {
     margin-top: 1em;

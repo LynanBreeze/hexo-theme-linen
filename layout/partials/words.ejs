@@ -1,34 +1,42 @@
 <%
-  const content = post.content || "";
+  const content = post?.content || "";
   const text = content
     .replace(/<figure[^>]*>.*?<\/figure>/gs, "")
-    .replace(/<span class=\"pswp-caption-content\">.*?<\/span>/gs, "")
-    .replace(/<span class=\"katex-mathml\">.*?<\/span>/gs, "")
+    .replace(/<span class="pswp-caption-content">.*?<\/span>/gs, "")
+    .replace(/<span class="katex-mathml">.*?<\/span>/gs, "")
     .replace(/<noscript[^>]*>.*?<\/noscript>/gs, "")
     .replace(/<style[^>]*>.*?<\/style>/gs, "")
     .replace(/<script[^>]*>.*?<\/script>/gs, "")
-    .replace(/<\/?[^>]+(>|$)/g, "")
-  
-  const currentLanguage = page?.language || config?.language;
-  const comma = currentLanguage === 'en' ? ', ' : '，'
-  const words = (currentLanguage === 'en'? text?.split(' ')?.length : text?.trim()?.replace(/[\s\t\n]/g, '')?.length) || 0;
-  const photos = content.match(/class="gallery-item/gi, '')?.length || 0;
-  let res = [];
-  let smallRes = [];
-  if(count && (words || photos)) {
-    res = [__('common.approximately'), ' ', ...(words ? [words, __('common.words')] : []), words && photos ? comma : '', ...(photos ? [photos, photos > 1 ? __('common.photos') : __('common.photo')]: [])].filter(item=>item);
+    .replace(/<\/?[^>]+(>|$)/g, "");
+
+  const currentLanguage = page?.language || config?.language || "";
+  const isEnglish = /^en\b/i.test(String(currentLanguage));
+  const comma = isEnglish ? ", " : "，";
+  const words = isEnglish
+    ? (text.trim().match(/\S+/g) || []).length
+    : text.replace(/\s+/g, "").length;
+
+  const galleryMatches = content.match(/class="[^"]*\bgallery-item\b/gi);
+  const photos = galleryMatches
+    ? galleryMatches.length
+    : (content.match(/<img\b(?![^>]*\b(?:linen-emoji|not-gallery-item)\b)[^>]*>/gi) || []).length;
+
+  const wordLabel = words ? `${words} ${__('common.words')}` : "";
+  const photoLabel = photos
+    ? `${photos} ${photos > 1 ? __('common.photos') : __('common.photo')}`
+    : "";
+  const countsText = [wordLabel, photoLabel].filter(Boolean).join(comma);
+
+  let primaryText = "";
+  let detailText = "";
+
+  if (readTime) {
+    const mins = estimateReadingTime(text, photos, content);
+    primaryText = `${__('common.approximately')} ${mins} ${__('common.minsRead')}`;
+    if (count && countsText) {
+      detailText = `(${countsText})`;
+    }
+  } else if (count && countsText) {
+    primaryText = `${__('common.approximately')} ${countsText}`;
   }
-  if(readTime) {
-    res = res.concat([res.length ? comma : __('common.approximately'), estimateReadingTime(text, photos, content), __('common.minsRead')])
-  }
-  if(count && readTime) {
-    res = [__('common.approximately'), estimateReadingTime(text, photos, content), __('common.minsRead')].filter(item=>item);
-    smallRes = words ? ['(', ...(words ? [words, __('common.words')] : []), words && photos ? comma : '', ...(photos ? [photos, photos > 1 ? __('common.photos') : __('common.photo')]: []), ')'].filter(item=>item) : [];
-  }
-%>
-<% res.forEach(function(item) { %>
-  <span><%= item %></span>
-<% }); %>
-<% smallRes.forEach(function(item) { %>
-  <small><%= item %></small>
-<% }); %>
+%><% if (primaryText) { %><span><%= primaryText %></span><% } %><% if (detailText) { %> <small><%= detailText %></small><% } %>

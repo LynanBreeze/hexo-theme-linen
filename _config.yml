@@ -9,6 +9,12 @@ colorScheme: auto
 # Show light/dark theme toggle button in the header
 themeToggle: true
 
+# Opt-in client-side local search (generates a lightweight JSON index on build)
+search:
+  enable: false
+  path: linen-theme/search-index.json
+  content: true
+
 post:
   # Editorial breakout: constrain prose to a comfortable reading width while
   # allowing photos, image grids, tables, and wide embeds to break out full width

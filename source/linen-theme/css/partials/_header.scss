@@ -97,6 +97,7 @@
             background-color: currentColor;
             -webkit-mask: url("../img/icons/search.svg") no-repeat center / contain;
             mask: url("../img/icons/search.svg") no-repeat center / contain;
+            cursor: pointer;
           }
           &.github {
             background-color: currentColor;

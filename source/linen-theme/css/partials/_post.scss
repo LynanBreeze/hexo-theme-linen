@@ -124,7 +124,15 @@
   display: none;
 }
 
+#page {
+  padding: clamp(22px, 3vw, 34px) 0 0;
+  > h1.post-title:first-child {
+    margin-top: 0;
+  }
+}
+
 #post,
+#page,
 #raw-markdown-block {
   background-color: $bg;
   color: $darkText;

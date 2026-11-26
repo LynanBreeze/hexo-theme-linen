@@ -15,7 +15,10 @@ const relatedPosts = site.posts.filter(item=>item.source !== page.source).filter
 <div id="related-posts">
   <div class="related-posts-title"><%=__('common.relatedPosts')%></div>
   <% relatedPosts.each(post => { 
-      const coverImg = post.thumbnail || post.cover || url_for('/linen-theme/img/related-post.jpg')
+      const coverImg = post.thumbnail || post.cover || '/linen-theme/img/related-post.jpg';
+      const excerptText = typeof strip_html === 'function'
+        ? strip_html(post?.excerpt || '').trim()
+        : String(post?.excerpt || '').replace(/<[^>]+>/g, '').trim();
       %>
   <a href="<%=url_for(post.path)%>">
     <div class="shared-link">
@@ -24,7 +27,7 @@ const relatedPosts = site.posts.filter(item=>item.source !== page.source).filter
       </div>
       <div class="link-content">
         <span class="link-title"><%=post.title%></span>
-        <span class="link-desc"><%-post?.excerpt||''%></span>
+        <span class="link-desc"><%=excerptText%></span>
       </div>
     </div>
   </a>

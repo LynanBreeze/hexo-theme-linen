@@ -9,15 +9,22 @@
   topPosts = getFirstFour(topPosts);
 %>
 <div id="top-posts">
-  <% topPosts.forEach(post => { %>
+  <% topPosts.forEach(post => {
+      const coverImg = post.thumbnail || post.cover;
+      const excerptText = typeof strip_html === 'function'
+        ? strip_html(post?.excerpt || '').trim()
+        : String(post?.excerpt || '').replace(/<[^>]+>/g, '').trim();
+  %>
   <a class="post-item" href="<%=url_for(post.path)%>">
     <div class="item-body">
+      <% if (coverImg) { %>
       <div class="cover-img">
-        <img src="<%=url_for(post.thumbnail || post.cover)%>" alt="" />
+        <img src="<%=url_for(coverImg)%>" alt="" loading="lazy" />
       </div>
+      <% } %>
       <div class="title-excerpt">
         <div class="title"><%=post.title%><% if (post.subTitle) { %><span class="sub-title"><%=post.subTitle%></span><% } %></div>
-        <div class="excerpt"><%=post?.excerpt||''%></div>
+        <div class="excerpt"><%=excerptText%></div>
         <div class="post-meta">
           <time class="date" datetime="<%=post.date.toJSON()%>">
             <%=getPostDate(post)%>

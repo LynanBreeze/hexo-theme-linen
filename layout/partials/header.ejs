@@ -3,8 +3,11 @@ const { hasTranslatation, targetLanguagePath, targetLanguage } = getTranslationP
 
 const logoConfig = theme?.logo || {};
 const { src: logoSrc, text: logoText, width: logoWidth, height: logoHeight } = logoConfig;
+const logoTitle = logoText || config?.title || 'Home';
 const rssPath = config?.feed?.path || theme?.feed?.path;
 const showThemeToggle = (theme?.themeToggle ?? config?.theme_config?.themeToggle ?? true) !== false;
+const searchEnabled = Boolean(theme?.search?.enable ?? config?.theme_config?.search?.enable ?? false);
+const currentPath = `/${page.path || ''}`.replace(/\/index\.html$/, '/');
 %>
 
 <% if (is_post()) { %>
@@ -12,14 +15,30 @@ const showThemeToggle = (theme?.themeToggle ?? config?.theme_config?.themeToggle
 <% } %>
 <div class="nav-header<%=is_post() ? ' is-post': ''%>">
   <div class="header-inner">
-    <a class="title<%= !logoSrc ? ' default-logo' : '' %>" href="<%=url_for('/')%>" title="index" style="<%=[logoSrc ? `background-image: url(${url_for(logoSrc)})`: '', logoWidth && logoHeight ? `aspect-ratio: ${logoWidth}/${logoHeight}` : ''].filter(v => v).join(';')%>"><%=logoText||''%></a>
+    <a class="title<%= !logoSrc ? ' default-logo' : '' %>" href="<%=url_for('/')%>" title="<%=logoTitle%>" aria-label="<%=logoTitle%>" style="<%=[logoSrc ? `background-image: url(${url_for(logoSrc)})`: '', logoWidth && logoHeight ? `aspect-ratio: ${logoWidth}/${logoHeight}` : ''].filter(v => v).join(';')%>"><%=logoText||''%></a>
     <div class="right">
       <div class="navItems">
-        <% (theme?.navItems || []).forEach(({ name, path }) => { %>
-        <a class="navItem<%=`/${page.path}`.startsWith(path) ? ' active' : ''%>" href="<%=url_for(path)%>"><%=name%></a>
+        <% (theme?.navItems || []).forEach(({ name, path }) => {
+          const normalizedItemPath = path === '/' ? '/' : (path.startsWith('/') ? path : `/${path}`);
+          const isNavActive = normalizedItemPath === '/'
+            ? (currentPath === '/' || is_home())
+            : currentPath.startsWith(normalizedItemPath);
+        %>
+        <a class="navItem<%=isNavActive ? ' active' : ''%>" href="<%=url_for(path)%>"><%=name%></a>
         <% }); %>
       </div>
       <div class="buttonSet">
+        <% if (searchEnabled) { %>
+        <button
+          type="button"
+          id="search-toggle"
+          class="button search"
+          title="<%=__('common.search')%>"
+          aria-label="<%=__('common.search')%>"
+          aria-haspopup="dialog"
+          aria-controls="search-modal"
+        ></button>
+        <% } %>
         <% if (page.hdrSwitch) { %>
         <button type="button" class="button hdr-switch" title="Switch HDR/SDR content" aria-label="Switch HDR/SDR content"></button>
         <script>

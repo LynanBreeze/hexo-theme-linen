@@ -521,10 +521,46 @@ function handleClick(e) {
   }
 }
 
+function closeActiveOverlays() {
+  var tocElement = document.getElementById("toc");
+  var seriesElement = document.getElementById("series");
+  var maskElement = document.getElementById("mask");
+  var donateModal = document.getElementById("donate-modal");
+  var closedAny = false;
+
+  if (tocElement && tocElement.classList.contains("visible")) {
+    tocElement.classList.remove("visible");
+    var tocToggleBtn = document.getElementById("toc-toggle");
+    if (tocToggleBtn) tocToggleBtn.setAttribute("aria-expanded", "false");
+    closedAny = true;
+  }
+  if (seriesElement && seriesElement.classList.contains("visible")) {
+    seriesElement.classList.remove("visible");
+    closedAny = true;
+  }
+  if (donateModal && donateModal.classList.contains("visible")) {
+    donateModal.classList.remove("visible");
+    closedAny = true;
+  }
+  if (maskElement && maskElement.classList.contains("visible")) {
+    maskElement.classList.remove("visible");
+    closedAny = true;
+  }
+  if (closedAny) {
+    setBodyScrollLocked(false);
+  }
+  return closedAny;
+}
+
 var isClickHandlerBound = false;
 function bindClickHandler() {
   if (isClickHandlerBound) return;
   document.addEventListener("click", handleClick, true);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      closeActiveOverlays();
+    }
+  });
   isClickHandlerBound = true;
 }
 

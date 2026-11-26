@@ -85,6 +85,93 @@ ul {
   margin: 0.5em 0;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.not-found {
+  max-width: 540px;
+  margin: clamp(48px, 10vh, 110px) auto;
+  padding: 0 12px;
+  text-align: center;
+
+  .not-found-code {
+    @include sourceSerifFont;
+    font-size: clamp(64px, 12vw, 108px);
+    line-height: 1;
+    font-weight: 400;
+    letter-spacing: -0.04em;
+    color: $accent;
+    opacity: 0.72;
+    margin-bottom: 14px;
+  }
+
+  .not-found-title {
+    @include sourceSerifFont;
+    font-size: clamp(22px, 3vw, 28px);
+    line-height: 1.35;
+    font-weight: 700;
+    color: $darkText;
+    margin: 0 0 12px;
+  }
+
+  .not-found-desc {
+    font-size: 15px;
+    line-height: 1.7;
+    color: $grayerText;
+    margin: 0 0 28px;
+  }
+
+  .not-found-actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .not-found-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 20px;
+    border-radius: $radiusMd;
+    border: 1px solid $borderColor;
+    background-color: $bgElevated;
+    color: $darkText;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition:
+      background-color 180ms $easeOut,
+      border-color 180ms $easeOut,
+      color 180ms $easeOut;
+
+    &:hover {
+      background-color: $surface;
+      border-color: $borderStrong;
+    }
+
+    &.primary {
+      background-color: $accent;
+      border-color: $accent;
+      color: $onAccent;
+
+      &:hover {
+        background-color: $accentDark;
+        border-color: $accentDark;
+      }
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
