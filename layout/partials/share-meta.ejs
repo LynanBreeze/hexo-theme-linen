@@ -1,14 +1,28 @@
 <% 
 var pageTitle = getPageTitle();
+var canonicalUrl = full_url_for(page.path).replace(/\/index\.html$/, '/');
+var pageDescription = typeof getPageDescription === 'function'
+  ? getPageDescription()
+  : String(page?.description || page?.seriesInfo?.description || page?.excerpt || config?.description || '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
 var ogImageRaw = page.seriesInfo?.cover || page.ogImage || page.cover || theme?.info?.siteCardBg || '';
 var ogImage = ogImageRaw ? full_url_for(ogImageRaw) : '';
 %>
+<link rel="canonical" href="<%=canonicalUrl%>">
 <meta property="og:type" content="<%= is_post() ? 'article' : 'website' %>">
 <meta property="og:title" content="<%=pageTitle%>">
-<meta property="og:url" content="<%=full_url_for(page.path)%>">
+<meta property="og:url" content="<%=canonicalUrl%>">
 <meta property="og:site_name" content="<%=config.title%>">
-<meta property="og:description" content="<%=page?.seriesInfo?.description||page.excerpt||config?.description||''%>">
+<meta property="og:description" content="<%=pageDescription%>">
 <meta property="og:locale" content="<%=page.language||config.language%>">
 <% if (ogImage) { %>
 <meta property="og:image" content="<%=ogImage%>">
+<% } %>
+<meta name="twitter:card" content="<%= ogImage ? 'summary_large_image' : 'summary' %>">
+<meta name="twitter:title" content="<%=pageTitle%>">
+<meta name="twitter:description" content="<%=pageDescription%>">
+<% if (ogImage) { %>
+<meta name="twitter:image" content="<%=ogImage%>">
 <% } %>

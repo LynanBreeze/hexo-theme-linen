@@ -1,0 +1,219 @@
+"use strict";
+
+const fs = require("fs");
+const path = require("path");
+const { describe, it } = require("node:test");
+const assert = require("node:assert/strict");
+const ejs = require("ejs");
+const { ROOT_DIR, createMockHexo, loadHexoScript } = require("./helpers/mock-hexo");
+
+function renderTemplate(relPath, locals) {
+  const fullPath = path.join(ROOT_DIR, relPath);
+  return ejs.render(fs.readFileSync(fullPath, "utf8"), locals, {
+    filename: fullPath,
+  });
+}
+
+describe("SEO, Date Helper, HoverTexts, ImageGrid & Archive Fixes", () => {
+  it("getPageDescription strips HTML tags and share-meta emits canonical + Twitter cards", () => {
+    const hexo = createMockHexo();
+    loadHexoScript("scripts/helpers/tools.js", hexo);
+
+    const ctx = {
+      page: {
+        path: "2026/hello/index.html",
+        title: "Hello",
+        excerpt: "<p>Intro to <code>Linen</code> &amp; <a href='/x'>Hexo</a>\nline 2</p>",
+        cover: "/img/cover.jpg",
+        language: "en",
+      },
+      config: { title: "Linen Blog", language: "en", description: "Fallback" },
+      theme: {},
+      is_post: () => true,
+      is_archive: () => false,
+      is_tag: () => false,
+      is_category: () => false,
+      is_month: () => false,
+      is_year: () => false,
+      is_home: () => false,
+      is_home_first_page: () => false,
+      __: (k) => k,
+      full_url_for: (p) => `https://example.com/${String(p || "").replace(/^\/+/, "")}`,
+    };
+
+    const desc = hexo._helpers.getPageDescription.call(ctx);
+    assert.equal(desc, "Intro to Linen & Hexo line 2");
+
+    const html = renderTemplate("layout/partials/share-meta.ejs", {
+      ...ctx,
+      getPageTitle: () => hexo._helpers.getPageTitle.call(ctx),
+      getPageDescription: () => hexo._helpers.getPageDescription.call(ctx),
+    });
+
+    assert.ok(html.includes('<link rel="canonical" href="https://example.com/2026/hello/">'));
+    assert.ok(html.includes('<meta property="og:url" content="https://example.com/2026/hello/">'));
+    assert.ok(html.includes('<meta property="og:description" content="Intro to Linen &amp; Hexo line 2">'));
+    assert.ok(html.includes('<meta name="twitter:card" content="summary_large_image">'));
+    assert.ok(html.includes('<meta name="twitter:image" content="https://example.com/img/cover.jpg">'));
+  });
+
+  it("getPostDate accepts both post objects and raw date strings/Date values", () => {
+    const hexo = createMockHexo();
+    loadHexoScript("scripts/helpers/tools.js", hexo);
+
+    const ctxZh = { page: { language: "zh-CN" }, config: { language: "zh-CN" } };
+    const ctxEn = { page: { language: "en" }, config: { language: "en" } };
+
+    assert.equal(
+      hexo._helpers.getPostDate.call(ctxZh, { date: "2026-05-03" }),
+      "5 月 3 日，2026",
+    );
+    assert.equal(
+      hexo._helpers.getPostDate.call(ctxZh, "2026-05-03"),
+      "5 月 3 日，2026",
+    );
+    assert.equal(
+      hexo._helpers.getPostDate.call(ctxEn, new Date("2026-05-03T00:00:00Z")),
+      "May 3, 2026",
+    );
+    assert.equal(hexo._helpers.getPostDate.call(ctxZh, "not-a-date"), "");
+  });
+
+  it("hoverTexts.js escapes regex metacharacters and HTML attributes safely", () => {
+    const hexo = createMockHexo();
+    loadHexoScript("scripts/hoverTexts.js", hexo);
+    const filter = hexo._filters.before_post_render[0];
+
+    const data = {
+      content: "Use C++ and foo(bar) here. Also C++ again.",
+      customComments: [
+        { text: "C++", index: 1, comment: 'Say "hi" <script>' },
+        { text: "foo(bar)", index: 0, comment: "Call site" },
+      ],
+    };
+
+    filter.call(hexo, data);
+    assert.ok(
+      data.content.includes(
+        'Use C++ and <span class="commented-text" data-comment="Call site">foo(bar)</span> here. Also <span class="commented-text" data-comment="Say &quot;hi&quot; &lt;script&gt;">C++</span> again.',
+      ),
+    );
+  });
+
+  it("markdown-it-image-grid.js prioritizes explicit switcher label and ignores pipes inside image markdown", () => {
+    const hexo = createMockHexo({
+      render: {
+        renderSync: ({ text }) => {
+          const m = text.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+          if (m) return `<p><img src="${m[2]}" alt="${m[1]}"><br /></p>`;
+          return `<p>${text}</p>`;
+        },
+      },
+    });
+    loadHexoScript("scripts/markdown-it-image-grid.js", hexo);
+    const filter = hexo._filters.before_post_render[0];
+
+    const data = {
+      content: [
+        ":::image-grid switcher",
+        "Daytime | ![Mountain Photo](/day.jpg)",
+        "![Beijing | Palace](/palace.jpg)",
+        ":::",
+      ].join("\n"),
+    };
+
+    filter.call(hexo, data);
+    assert.ok(data.content.includes('data-switch-label="Daytime"'));
+    assert.ok(data.content.includes(">Daytime</button>"));
+    assert.ok(data.content.includes('src="/palace.jpg"'));
+    assert.ok(data.content.includes('data-switch-label="Beijing | Palace"'));
+    assert.ok(!data.content.includes("<br"));
+  });
+
+  it("site-info.ejs links to /archives/#archives and archive.ejs uses category.path while filtering hide.archive", () => {
+    const sitePosts = [
+      {
+        title: "Public",
+        series: "Travel",
+        date: { year: () => 2026 },
+        categories: [{ name: "Photo Notes" }],
+      },
+      {
+        title: "Hidden",
+        series: "Secret",
+        hide: { archive: true },
+        date: { year: () => 2026 },
+        categories: [{ name: "Hidden Cat" }],
+      },
+    ];
+
+    const siteInfoHtml = renderTemplate("layout/partials/site-info.ejs", {
+      theme: {},
+      config: { author: "Lynan" },
+      site: {
+        posts: {
+          filter: (fn) => {
+            const arr = sitePosts.filter(fn);
+            arr.sort = () => arr;
+            return arr;
+          },
+        },
+        categories: { length: 1 },
+        tags: { length: 2 },
+      },
+      is_home_first_page: () => false,
+      url_for: (p) => p,
+      __: (k) => k,
+    });
+    assert.ok(siteInfoHtml.includes('href="/archives/#archives"'));
+    assert.ok(!siteInfoHtml.includes("/archives/#posts"));
+
+    const archiveHtml = renderTemplate("layout/archive.ejs", {
+      site: {
+        posts: sitePosts,
+        categories: {
+          toArray: () => [
+            {
+              name: "Photo Notes",
+              path: "categories/photo-notes/",
+              length: 1,
+              posts: [sitePosts[0]],
+            },
+            {
+              name: "Hidden Cat",
+              path: "categories/hidden-cat/",
+              length: 1,
+              posts: [sitePosts[1]],
+            },
+          ],
+        },
+      },
+      list_tags: () => "",
+      is_year: () => false,
+      url_for: (p) => p,
+      __: (k) => k,
+    });
+
+    assert.ok(archiveHtml.includes('href="/categories/photo-notes/"'));
+    assert.ok(!archiveHtml.includes("Hidden Cat"));
+    assert.ok(archiveHtml.includes("Travel"));
+    assert.ok(!archiveHtml.includes("Secret"));
+  });
+
+  it("layout.ejs links noscript.css in <head> independently of lazyload and noscript.css avoids hardcoded #333", () => {
+    const layoutSource = fs.readFileSync(
+      path.join(ROOT_DIR, "layout/layout.ejs"),
+      "utf8",
+    );
+    assert.ok(layoutSource.includes("linen-theme/css/noscript.css"));
+    assert.ok(!layoutSource.includes('<noscript id="noscript-styles"></noscript>'));
+
+    const noscriptCss = fs.readFileSync(
+      path.join(ROOT_DIR, "source/linen-theme/css/noscript.css"),
+      "utf8",
+    );
+    assert.ok(!noscriptCss.includes("color: #333"));
+    assert.ok(noscriptCss.includes("#theme-toggle"));
+    assert.ok(noscriptCss.includes("#search-toggle"));
+  });
+});

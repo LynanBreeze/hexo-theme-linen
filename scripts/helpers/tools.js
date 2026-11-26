@@ -140,17 +140,70 @@ hexo.extend.helper.register("getTranslationPage", function () {
   }
 });
 
+hexo.extend.helper.register("getPageDescription", function (maxLength = 220) {
+  const page = this.page || {};
+  const config = this.config || {};
+  const raw =
+    page.description ||
+    page.seriesInfo?.description ||
+    page.excerpt ||
+    config.description ||
+    "";
+  const plain = String(raw)
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (maxLength > 0 && plain.length > maxLength) {
+    return `${plain.slice(0, maxLength - 1).trimEnd()}…`;
+  }
+  return plain;
+});
+
 hexo.extend.helper.register("getPostDate", function (post, lang) {
-  const p = post || this.page;
-  if (!p || !p.date) return "";
+  let rawDate = null;
+  let postLang = null;
+
+  if (
+    post instanceof Date ||
+    typeof post === "string" ||
+    typeof post === "number"
+  ) {
+    rawDate = post;
+  } else if (post && typeof post === "object") {
+    if (
+      typeof post.format === "function" &&
+      typeof post.isValid === "function"
+    ) {
+      rawDate = post;
+    } else {
+      rawDate = post.date;
+      postLang = post.lang || post.language;
+    }
+  } else {
+    rawDate = this?.page?.date;
+    postLang = this?.page?.lang || this?.page?.language;
+  }
+
+  if (!rawDate) return "";
 
   // 统一转成 moment，避免 generator 阶段是原生 Date
-  const date = moment(p.date);
+  const date =
+    typeof rawDate === "string"
+      ? moment(new Date(rawDate))
+      : moment(rawDate);
+  if (!date.isValid()) return "";
 
   const language =
     lang ||
-    p.lang ||
-    p.language ||
+    postLang ||
     this?.page?.lang ||
     this?.page?.language ||
     this?.config?.language;

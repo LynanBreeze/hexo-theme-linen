@@ -36,7 +36,9 @@
 .hdr-switch {
   display: none;
 }
-#toc-toggle {
+#toc-toggle,
+#theme-toggle,
+#search-toggle {
   display: none;
 }
 .copy-btn {
@@ -57,7 +59,7 @@
 }
 #toc .toc-item-wrap.active .toc-item-link {
   font-weight: normal;
-  color: #333;
+  color: var(--linen-ink, #22211f);
 }
 #toc .toc-item-wrap.active .toc-item-link::before {
   display: none;

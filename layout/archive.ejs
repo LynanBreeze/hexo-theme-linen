@@ -1,14 +1,23 @@
 <%
+const visiblePosts = site.posts.filter(post => !post?.hide?.archive);
 const tagsList = list_tags({ show_count: false });
-const seriesList = Array.from(new Set(site.posts.filter(item=>item.series).map(item=>item.series))).map(seriesName=>({
+const seriesList = Array.from(new Set(visiblePosts.filter(item=>item.series).map(item=>item.series))).map(seriesName=>({
   name: seriesName,
-  count: site.posts.filter(post=>post.series === seriesName).length
+  count: visiblePosts.filter(post=>post.series === seriesName).length
 }));
-const categoriesList = Object.entries(site.posts.reduce((acc, post) => {
-  (post?.categories || []).forEach(cat => acc[cat.name] = (acc[cat.name] || 0) + 1);
-  return acc;
-}, {})).map(([name, count]) => ({ name, count }));
-const archivesList = Object.entries(site.posts.filter(post=>!post?.hide?.archive).reduce((acc, post) => {
+const categoriesList = site.categories && typeof site.categories.toArray === 'function'
+  ? site.categories.toArray()
+      .map(cat => ({
+        name: cat.name,
+        path: cat.path,
+        count: cat.posts ? cat.posts.filter(post => !post?.hide?.archive).length : cat.length
+      }))
+      .filter(cat => cat.count > 0)
+  : Object.entries(visiblePosts.reduce((acc, post) => {
+      (post?.categories || []).forEach(cat => acc[cat.name] = (acc[cat.name] || 0) + 1);
+      return acc;
+    }, {})).map(([name, count]) => ({ name, path: '', count }));
+const archivesList = Object.entries(visiblePosts.reduce((acc, post) => {
   const year = post.date.year();
   acc[year] = (acc[year] || 0) + 1;
   return acc;
@@ -22,9 +31,13 @@ const archivesList = Object.entries(site.posts.filter(post=>!post?.hide?.archive
       <aside>
       <h2 id="categories"><%=__('common.categories')%></h2>
       <ul class="archive-list">
-        <% categoriesList.forEach(category => { %>
+        <% categoriesList.forEach(category => {
+          const categoryHref = category.path
+            ? url_for(`/${String(category.path).replace(/^\/+/, '')}`)
+            : url_for(`/categories/${encodeURIComponent(category.name)}/`);
+        %>
         <li class="archive-list-item">
-          <a class="archive-list-link" data-firstletter="<%=category.name.charAt(0)%>" href="<%=url_for(`/categories/${category.name}/`)%>">
+          <a class="archive-list-link" data-firstletter="<%=category.name.charAt(0)%>" href="<%=categoryHref%>">
             <%=category.name%>
             <span class="archive-list-count"><%=category.count%></span>
           </a>

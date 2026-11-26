@@ -3,7 +3,6 @@
 const {
   getLazyloadConfig,
   resolveSiteAsset,
-  getNoscriptStyles,
 } = require("./assets");
 
 module.exports = function (hexo) {
@@ -51,14 +50,6 @@ module.exports = function (hexo) {
         htmlContent.substring(0, lastHeadClose) +
         headAdditions.join("") +
         htmlContent.substring(lastHeadClose);
-    }
-
-    if (htmlContent.includes('<noscript id="noscript-styles"></noscript>')) {
-      const noscriptCss = getNoscriptStyles(hexo);
-      htmlContent = htmlContent.replace(
-        '<noscript id="noscript-styles"></noscript>',
-        () => `<noscript id="noscript-styles"><style>${noscriptCss}</style></noscript>`,
-      );
     }
 
     return htmlContent;

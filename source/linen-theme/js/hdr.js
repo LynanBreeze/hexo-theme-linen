@@ -40,6 +40,9 @@ function switchHDR() {
   if (!HDRPath) return;
 
   var SDRPath = HDRPath.replace("/hdr", "/sdr");
+  if (SDRPath === HDRPath) return;
+  var encodedHDRPath = encodeURIComponent(HDRPath);
+  var encodedSDRPath = encodeURIComponent(SDRPath);
   var articleElement = document.querySelector(".article");
   var targetState = !hdrEnabled;
   if (articleElement) {
@@ -68,30 +71,23 @@ function switchHDR() {
         }
       });
       const lazyloadItem = item.querySelector(".lazyload-wrap");
+      if (!lazyloadItem) return;
       var dcontent = lazyloadItem.getAttribute("data-content") || "";
       if (targetState) {
-        if (dcontent.includes(encodeURIComponent(SDRPath))) {
+        if (dcontent.includes(encodedSDRPath)) {
           lazyloadItem.setAttribute(
             "data-content",
-            dcontent.replace(
-              encodeURIComponent(SDRPath),
-              encodeURIComponent(HDRPath)
-            )
+            dcontent.split(encodedSDRPath).join(encodedHDRPath)
           );
         }
       } else {
-        if (dcontent.includes(encodeURIComponent(HDRPath))) {
+        if (dcontent.includes(encodedHDRPath)) {
           lazyloadItem.setAttribute(
             "data-content",
-            dcontent.replace(
-              encodeURIComponent(HDRPath),
-              encodeURIComponent(SDRPath)
-            )
+            dcontent.split(encodedHDRPath).join(encodedSDRPath)
           );
         }
       }
-      var encodedHDRPath = encodeURIComponent(HDRPath);
-      var encodedSDRPath = encodeURIComponent(SDRPath);
       var isHDRAsset =
         dcontent.includes(encodedHDRPath) ||
         dcontent.includes(encodedSDRPath);

@@ -26,7 +26,19 @@ hexo.extend.filter.register(
           })
           .replace(/<p>/g, "")
           .replace(/<\/p>/g, "")
-          .replace(/<br\s?\>/g, "");
+          .replace(/<br\s*\/?>/gi, "");
+
+      const splitSwitcherLine = (line) => {
+        const contentStart = line.search(/!\[|<img\b|<iframe\b/i);
+        const delimiterIndex = line.indexOf("|");
+        const hasLabel =
+          delimiterIndex > -1 &&
+          (contentStart === -1 || delimiterIndex < contentStart);
+        return {
+          label: hasLabel ? line.slice(0, delimiterIndex).trim() : "",
+          imageMarkdown: hasLabel ? line.slice(delimiterIndex + 1).trim() : line,
+        };
+      };
 
       const formatedContent = data.content.replace(
         /:::image-grid(?:\s+([\w-]+))?([\s\S]*?):::/g,
@@ -40,16 +52,13 @@ hexo.extend.filter.register(
           if (grid === "switcher") {
             const items = lines
               .map((line, index) => {
-                const delimiterIndex = line.indexOf("|");
-                const hasLabel = delimiterIndex > -1;
-                const label = hasLabel ? line.slice(0, delimiterIndex).trim() : "";
-                const imageMarkdown = hasLabel ? line.slice(delimiterIndex + 1).trim() : line;
+                const { label, imageMarkdown } = splitSwitcherLine(line);
                 const renderedLine = renderMarkdownLine(imageMarkdown);
                 const alt = getImageAlt(renderedLine);
 
                 return /<img|<iframe/.test(renderedLine)
                   ? {
-                      label: alt || label || getFallbackLabel(renderedLine, index),
+                      label: label || alt || getFallbackLabel(renderedLine, index),
                       content: renderedLine
                     }
                   : null;
