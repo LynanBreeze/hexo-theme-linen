@@ -255,7 +255,8 @@
       margin-bottom: 0;
     }
 
-    strong {
+    strong,
+    b {
       font-family: inherit;
       font-weight: 700;
       color: $strongText;

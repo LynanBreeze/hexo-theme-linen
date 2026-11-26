@@ -44,30 +44,14 @@ $font-version: "__LINEN_FONT_VERSION__";
 @font-face {
   font-family: "source han serif cn";
   src:
-    local("STSongti-SC-Bold"),
-    local("Songti SC Bold"),
-    local("SongtiSC-Bold"),
-    local("Source Han Serif SC Bold"),
-    local("Source Han Serif CN Bold"),
-    url("../fonts/SourceHanSerifSC-Bold.woff2?v=#{$font-version}") format("woff2");
-  
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+4E00-9FFF, U+3000-303F, U+FF00-FFEF;
-}
-@font-face {
-  font-family: "source han serif cn";
-  src:
     local("STSongti-SC-Black"),
     local("Songti SC Black"),
     local("SongtiSC-Black"),
-    local("Source Han Serif SC Heavy"),
     local("Source Han Serif SC Bold"),
     local("Source Han Serif CN Bold"),
     url("../fonts/SourceHanSerifSC-Bold.woff2?v=#{$font-version}") format("woff2");
 
-  font-weight: 800 900;
+  font-weight: 600 900;
   font-style: normal;
   font-display: swap;
   unicode-range: U+4E00-9FFF, U+3000-303F, U+FF00-FFEF;
@@ -75,6 +59,25 @@ $font-version: "__LINEN_FONT_VERSION__";
 @font-face {
   font-family: "source-serif";
   src: url("../fonts/SourceSerif4-Regular.ttf.woff2?v=#{$font-version}") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  unicode-range:
+    U+0-7F, U+A0, U+B7, U+200A, U+2014, U+2018, U+2019, U+201C, U+201D, U+2022, U+2026, U+00B0,
+    U+0043;
+  font-display: swap;
+}
+@font-face {
+  font-family: "source-serif";
+  src:
+    local("Source Serif 4 Bold"),
+    local("SourceSerif4-Bold"),
+    local("Source Serif Pro Bold"),
+    local("Georgia-Bold"),
+    local("Georgia Bold"),
+    local("TimesNewRomanPS-BoldMT"),
+    local("Times New Roman Bold");
+  font-weight: 600 900;
+  font-style: normal;
   unicode-range:
     U+0-7F, U+A0, U+B7, U+200A, U+2014, U+2018, U+2019, U+201C, U+201D, U+2022, U+2026, U+00B0,
     U+0043;
