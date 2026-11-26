@@ -6,6 +6,7 @@ hexo.extend.generator.register("series", function (locals) {
   const seriesInfo = getSiteData(hexo, "series");
 
   locals.posts.forEach((post) => {
+    if (post?.hide?.archive) return;
     const series = post.series;
     if (series) {
       if (!seriesMap[series]) {

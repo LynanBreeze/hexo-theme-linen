@@ -4,7 +4,7 @@ const version = theme.version;
 
 <% 
   var tocs = is_post() ? extractTocFromHtml(page.content) : null;
-  var series = is_post() ? site.posts.filter(item=>item.series && item.series === page?.series).sort('date', -1) : []
+  var series = is_post() ? site.posts.filter(item=>item.series && item.series === page?.series && !item?.hide?.archive).sort('date', -1) : []
   var seriesInfo = is_post() && page?.series ? getSeriesInfo(page.series) : {}
   var lazyloadEnabled = Boolean(theme?.lazyload?.enable ?? config?.theme_config?.lazyload?.enable ?? false);
   var searchConfig = theme?.search || config?.theme_config?.search || {};
@@ -43,6 +43,14 @@ const version = theme.version;
   </script>
   <title><%=getPageTitle()%></title>
   <link rel="icon" type="image/x-icon" href="<%=url_for(theme?.icon ?? '/linen-theme/favicon.svg')%>" />
+  <%
+    const headFeedDisabled = theme?.feed === false || config?.theme_config?.feed === false;
+    const headRssPath = headFeedDisabled ? '' : (config?.feed?.path || theme?.feed?.path || '/feed.xml');
+    const isAtomFeed = /\.atom$|atom\.xml$/i.test(String(headRssPath));
+  %>
+  <% if (headRssPath) { %>
+  <link rel="alternate" type="<%= isAtomFeed ? 'application/atom+xml' : 'application/rss+xml' %>" title="<%= config.title %>" href="<%= url_for(headRssPath) %>" />
+  <% } %>
   <meta name="referrer" content="no-referrer-when-downgrade" />
   <% if (page.hide && page.hide.seo) { %>
   <meta name="robots" content="noindex, nofollow">

@@ -559,6 +559,18 @@ function bindClickHandler() {
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") {
       closeActiveOverlays();
+      return;
+    }
+    if (
+      (e.key === "Enter" || e.key === " ") &&
+      e.target &&
+      e.target.getAttribute &&
+      e.target.getAttribute("role") === "button" &&
+      e.target.tagName !== "BUTTON" &&
+      e.target.tagName !== "A"
+    ) {
+      e.preventDefault();
+      e.target.click();
     }
   });
   isClickHandlerBound = true;

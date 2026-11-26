@@ -5,13 +5,8 @@ const path = require("path");
 const { defaultConfig } = require("./config");
 
 const CLIENT_SCRIPT_PATH = path.join(__dirname, "client.js");
-const NOSCRIPT_CSS_PATH = path.join(
-  __dirname,
-  "../../source/linen-theme/css/noscript.css",
-);
 
 let cachedClientScript = null;
-let cachedNoscriptCss = null;
 
 function getLazyloadConfig(hexo) {
   return {
@@ -232,20 +227,9 @@ function getLazyloadClientScript() {
   return cachedClientScript;
 }
 
-function getNoscriptStyles(hexo) {
-  if (cachedNoscriptCss === null) {
-    const filePath = hexo?.theme_dir
-      ? path.join(hexo.theme_dir, "source/linen-theme/css/noscript.css")
-      : NOSCRIPT_CSS_PATH;
-    cachedNoscriptCss = fs.readFileSync(filePath, "utf-8");
-  }
-  return cachedNoscriptCss;
-}
-
 module.exports = {
   getLazyloadConfig,
   resolveSiteAsset,
   buildLazyloadStyles,
   getLazyloadClientScript,
-  getNoscriptStyles,
 };

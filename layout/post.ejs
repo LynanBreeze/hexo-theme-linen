@@ -23,7 +23,7 @@
   <% if(page.coverInfo) { %>
   <div class="cover-info">
     <% if(page.coverInfo.url) { %>
-    <a class="copyright link" href="<%=page.coverInfo.url%>" target="_blank">
+    <a class="copyright link" href="<%=page.coverInfo.url%>" target="_blank" rel="noopener noreferrer">
       <% } else { %>
       <div class="copyright">
         <% } %>
@@ -57,7 +57,7 @@
     <% } %>
     <div class="read-time"><%-partial('partials/words', { post: page, count: page?.readTime?.count ?? true, readTime: true })%></div>
     <% if (page.appendRawMarkdown) { %>
-      <div id="content-switch" data-rawcontentlabel="<%-__('common.switchTo')+__('common.rawMarkdownContent')%>" data-renderedcontentlabel="<%-__('common.switchTo')+__('common.renderedContent')%>"><%-__('common.switchTo')+__('common.rawMarkdownContent')%></div>
+      <div id="content-switch" role="button" tabindex="0" data-rawcontentlabel="<%-__('common.switchTo')+__('common.rawMarkdownContent')%>" data-renderedcontentlabel="<%-__('common.switchTo')+__('common.renderedContent')%>"><%-__('common.switchTo')+__('common.rawMarkdownContent')%></div>
     <% } %>
   </div>
   <% if (page.ageWarning && (Date.now() - new Date(page.date).getTime()) > 180 * 1000 * 60 * 60 * 24) { %>
@@ -66,7 +66,7 @@
   <div id="page-content"><%- renderTravelRoutes(page.content, page) %></div>
   <div id="page-content-end"></div>
   <div class="tags">
-    <% page.tags.forEach(tag => { %>
+    <% (page.tags || []).forEach(tag => { %>
     <a class="tag-item" href="<%=url_for(`/${tag.path}`)%>"><%=tag.name%></a>
     <% }); %>
   </div>
@@ -86,7 +86,7 @@
 <% } %>
 
 <% if(page.donates) { %>
-<div id="page-donates"><%=__('common.donateToAuthor')%>
+<div id="page-donates" role="button" tabindex="0" aria-haspopup="true"><%=__('common.donateToAuthor')%>
   <div id="donate-modal">
     <% page.donates.forEach(donateMethod => { %>
     <img class="qr-code" src="<%=url_for(donateMethod.qrcode)%>" alt="<%=donateMethod.type%>" />
@@ -113,14 +113,14 @@
 <% } %>
 
 <% if (page?.series) { 
-var series = site.posts.filter(item=>item.series && item.series === page?.series).sort('date', -1).toArray()
+var series = site.posts.filter(item=>item.series && item.series === page?.series && !item?.hide?.archive).sort('date', -1).toArray()
 const currentIndex = series.findIndex(item=>item.source === page.source);
 const previousPost = series[currentIndex - 1] || null;
 const nextPost = series[currentIndex + 1] || null;
 const seriesInfo = getSeriesInfo(page?.series);
 %>
 <div class="series-nav">
-  <div class="series-name">
+  <div class="series-name" role="button" tabindex="0" aria-controls="series">
     <div class="series-name-content">
       <i class="series-icon"></i>
       <span><%=page?.series%></span>
@@ -144,7 +144,7 @@ const seriesInfo = getSeriesInfo(page?.series);
 
   <div id="series" class="series-popup">
     <div class="popup-header">
-      <span class="close-series-popup-icon-wrap">
+      <span class="close-series-popup-icon-wrap" role="button" tabindex="0" aria-label="<%=__('common.close')%>">
         <i class="close-series-popup-icon"></i>
       </span>
       <span class="title"><%=page?.series%></span>

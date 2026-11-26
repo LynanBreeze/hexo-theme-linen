@@ -1,6 +1,9 @@
 const { url_for, full_url_for } = require("hexo-util");
 
-if (hexo?.config?.theme_config?.feed === false) {
+if (
+  hexo?.theme?.config?.feed === false ||
+  hexo?.config?.theme_config?.feed === false
+) {
   return;
 }
 
@@ -31,9 +34,39 @@ function toRfc822Date(dateValue) {
   return Number.isNaN(d.getTime()) ? "" : d.toUTCString();
 }
 
+function stripSwitcherLabel(line) {
+  const contentStart = line.search(/!\[|<img\b|<iframe\b/i);
+  const delimiterIndex = line.indexOf("|");
+  if (
+    delimiterIndex > -1 &&
+    (contentStart === -1 || delimiterIndex < contentStart)
+  ) {
+    return line.slice(delimiterIndex + 1).trim();
+  }
+  return line;
+}
+
 hexo.extend.generator.register("rss", function (locals) {
   const themeConfig = hexo.theme.config;
-  const posts = locals.posts.sort("-date").limit(themeConfig?.feed?.limit ?? 10);
+  const limit = themeConfig?.feed?.limit ?? 10;
+  const rawSorted = locals.posts.sort("-date");
+  const allPosts =
+    typeof rawSorted.toArray === "function"
+      ? rawSorted.toArray()
+      : typeof rawSorted.limit === "function"
+        ? rawSorted.limit(Infinity)
+        : Array.isArray(rawSorted)
+          ? rawSorted
+          : [];
+  const posts = allPosts
+    .filter((post) => {
+      if (!post || post.published === false) return false;
+      if (post.hide && (post.hide.rss || post.hide.archive || post.hide.seo)) {
+        return false;
+      }
+      return true;
+    })
+    .slice(0, limit);
   const config = hexo.config;
   const language = config.language || "";
   const cssUrl = url_for.bind(hexo)(`/linen-theme/css/rss-${language.startsWith("zh") ? "zh" : "en"}.xsl`);
@@ -60,14 +93,21 @@ hexo.extend.generator.register("rss", function (locals) {
   <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>${imageXml}
   ${posts
     .map((post) => {
-      let postContent = post._content
+      let postContent = String(post._content || "")
         .replace(
           /:::image-grid(?:\s+([\w-]+))?([\s\S]*?):::/g,
           (match, grid, content) => {
             const gridClass = grid ? ` ${grid}` : "";
+            const normalizedContent =
+              grid === "switcher"
+                ? content
+                    .split("\n")
+                    .map((line) => stripSwitcherLabel(line.trim()))
+                    .join("\n")
+                : content;
             return `<span class="image-grid${gridClass}">${hexo.render
               .renderSync({
-                text: content,
+                text: normalizedContent,
                 engine: "markdown",
               })
               .replace(/<p>/g, '<span class="grid-item">')
