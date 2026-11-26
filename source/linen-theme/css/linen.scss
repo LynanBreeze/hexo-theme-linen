@@ -492,15 +492,6 @@ img.linen-emoji {
                 #00c7be 70%,
                 #2979ff 100%
               );
-              @supports (color: color(display-p3 1 0 0)) {
-                background: linear-gradient(
-                  135deg,
-                  color(display-p3 1 0.16 0.36) 0%,
-                  color(display-p3 1 0.56 0) 34%,
-                  color(display-p3 0 0.84 0.78) 70%,
-                  color(display-p3 0.12 0.48 1) 100%
-                );
-              }
               -webkit-mask: url("../img/icons/hdr.svg") no-repeat center;
               mask: url("../img/icons/hdr.svg") no-repeat center;
               -webkit-mask-size: contain;
@@ -510,6 +501,15 @@ img.linen-emoji {
                 opacity 0.3s $easeOut,
                 filter 0.3s $easeOut;
               pointer-events: none;
+              @supports (color: color(display-p3 1 0 0)) {
+                background: linear-gradient(
+                  135deg,
+                  color(display-p3 1 0.16 0.36) 0%,
+                  color(display-p3 1 0.56 0) 34%,
+                  color(display-p3 0 0.84 0.78) 70%,
+                  color(display-p3 0.12 0.48 1) 100%
+                );
+              }
             }
 
             &::after {
@@ -1443,10 +1443,10 @@ img.linen-emoji {
       .category-item {
         display: inline;
         color: $metaText;
+        transition: color 160ms $easeOut;
         &:not(:first-child) {
           margin-left: 10px;
         }
-        transition: color 160ms $easeOut;
         &:hover {
           text-decoration: underline;
           text-underline-offset: 0.2em;
@@ -1916,7 +1916,9 @@ img.linen-emoji {
 
   .tags {
     @include tags;
-    margin: 2em 0 0;
+    & {
+      margin: 2em 0 0;
+    }
     &:empty {
       display: none;
     }
@@ -2667,6 +2669,8 @@ img.linen-emoji {
             position: relative;
             bottom: 1px;
             white-space: nowrap;
+            font-size: 14px;
+            color: $linkColor;
             i.new-icon {
               width: 18px;
               height: 18px;
@@ -2679,8 +2683,6 @@ img.linen-emoji {
               opacity: 0.78;
               margin-right: 2px;
             }
-            font-size: 14px;
-            color: $linkColor;
           }
         }
       }
@@ -2807,15 +2809,15 @@ img.linen-emoji {
     #gitalk-container {
       --gt-avatar-size: 2.25rem;
       --gt-placeholder-inner-height: calc(6.3rem + 2px + #{$commonPadding});
-      @media (max-width: 479px) {
-        --gt-avatar-size: 2rem;
-        --gt-placeholder-inner-height: calc(6.39375rem + 2px + #{$commonPadding});
-      }
       margin: 1.25em 0 0;
       padding: 0.25rem $commonPadding 0;
       background-color: $bg;
       min-height: calc(var(--gt-placeholder-inner-height) + 0.25rem + 1px);
       border-top: 1px solid $borderSubtle;
+      @media (max-width: 479px) {
+        --gt-avatar-size: 2rem;
+        --gt-placeholder-inner-height: calc(6.39375rem + 2px + #{$commonPadding});
+      }
       &:has(.gt-container) {
         min-height: 0;
       }
@@ -3272,7 +3274,9 @@ img.linen-emoji {
     }
     .tags {
       @include tags;
-      margin: 0.25rem 0 -0.5em 0;
+      & {
+        margin: 0.25rem 0 -0.5em 0;
+      }
       .tag-item {
         font-size: 12px;
         padding: 2px 4px;
@@ -3463,6 +3467,9 @@ img.linen-emoji {
   border-radius: $radiusMd;
   display: none;
   .series-name {
+    color: $grayerText;
+    font-size: 14px;
+    font-weight: 500;
     .series-name-content {
       display: inline-flex;
       align-items: center;
@@ -3472,9 +3479,6 @@ img.linen-emoji {
         color: $accent;
       }
     }
-    color: $grayerText;
-    font-size: 14px;
-    font-weight: 500;
     .dot {
       margin: 0 0.5em;
       display: inline-block;
@@ -4420,6 +4424,7 @@ html[lang="zh-CN"] {
     border: 1px solid $borderColor;
     border-radius: $radiusLg;
     box-shadow: 0 12px 32px $shadowStrong;
+    opacity: 0;
     .qr-code {
       width: 240px;
       height: 240px;
@@ -4427,7 +4432,6 @@ html[lang="zh-CN"] {
       object-fit: cover;
       border-radius: $radiusMd;
     }
-    opacity: 0;
     &.visible {
       transform: translate(-50%, -100%);
       opacity: 1;
@@ -5475,14 +5479,14 @@ details:not(.maplibregl-ctrl-attrib) {
   margin-bottom: 0.75em;
   overflow: hidden;
   p {
+    margin-left: 12px;
+    margin-right: 12px;
     &:first-of-type {
       margin-top: 0.6em;
     }
     &:last-of-type {
       margin-bottom: 0;
     }
-    margin-left: 12px;
-    margin-right: 12px;
   }
   summary {
     border-radius: 0;
@@ -5519,6 +5523,7 @@ details:not(.maplibregl-ctrl-attrib) {
 
   &[open] {
     padding-bottom: 0.65em;
+    background-color: $bg;
     summary {
       margin-bottom: 4px;
       border-bottom: 1px solid $borderSubtle;
@@ -5526,7 +5531,6 @@ details:not(.maplibregl-ctrl-attrib) {
         transform: translateY(-50%) rotate(90deg);
       }
     }
-    background-color: $bg;
   }
 }
 

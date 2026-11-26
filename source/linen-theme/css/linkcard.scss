@@ -292,6 +292,7 @@
   display: inline-block;
   background-color: var(--linen-surface, #f4f2ec);
   border: 1px solid var(--linen-border, rgba(34, 33, 31, 0.11));
+  border-radius: var(--linen-radius-md, 4px);
   box-shadow: 0 1px 2px var(--linen-border-subtle, rgba(34, 33, 31, 0.06));
   transition:
     border-color 220ms var(--linen-ease, cubic-bezier(0.22, 1, 0.36, 1)),
@@ -350,7 +351,6 @@
       "Helvetica Neue",
       sans-serif;
   }
-  border-radius: var(--linen-radius-md, 4px);
 }
 
 @media (min-width: 451px) {
