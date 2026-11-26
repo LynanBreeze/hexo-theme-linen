@@ -7,7 +7,7 @@ hexo.extend.filter.register("after_post_render", function (data) {
   let content = data.content;
 
   content = content.replace(
-    /<figure([^>]*)>([\s\S]*?)<\/figure>/gi,
+    /<figure([^>]*\bclass="[^"]*\bhighlight\b[^"]*"[^>]*)>([\s\S]*?)<\/figure>/gi,
     (match, attrs, inner) => {
       let newAttrs = attrs;
       let newInner = inner;

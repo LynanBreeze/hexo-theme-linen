@@ -6,6 +6,7 @@ const version = theme.version;
   var tocs = is_post() ? extractTocFromHtml(page.content) : null;
   var series = is_post() ? site.posts.filter(item=>item.series && item.series === page?.series).sort('date', -1) : []
   var seriesInfo = is_post() && page?.series ? getSeriesInfo(page.series) : {}
+  var lazyloadEnabled = Boolean(theme?.lazyload?.enable ?? config?.theme_config?.lazyload?.enable ?? false);
   var rawColorScheme = String(theme?.colorScheme || config?.theme_config?.colorScheme || 'auto').trim().toLowerCase();
   var colorScheme = (rawColorScheme === 'light' || rawColorScheme === 'dark') ? rawColorScheme : 'auto';
   var postBreakout = is_post() ? getPostBreakoutConfig(page, seriesInfo) : { enable: false, proseWidth: '' };
@@ -25,6 +26,18 @@ const version = theme.version;
   <meta charset="UTF-8" />
   <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="<%= colorScheme === 'auto' ? 'light dark' : colorScheme %>" />
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem("linen-theme-scheme");
+        if (saved === "light" || saved === "dark") {
+          document.documentElement.setAttribute("data-theme", saved);
+          var meta = document.querySelector('meta[name="color-scheme"]');
+          if (meta) meta.setAttribute("content", saved);
+        }
+      } catch (e) {}
+    })();
+  </script>
   <title><%=getPageTitle()%></title>
   <link rel="icon" type="image/x-icon" href="<%=url_for(theme?.icon ?? '/linen-theme/favicon.svg')%>" />
   <meta name="referrer" content="no-referrer-when-downgrade" />
@@ -46,7 +59,7 @@ const version = theme.version;
   <% theme.stylesheets.forEach(url => { %>
   <link rel="stylesheet" href="<%=url_for(`${url}?v=${version}`)%>" />
   <% }); %> <% } %>
-  <% if (theme?.lazyload?.enable ?? true) { %>
+  <% if (lazyloadEnabled) { %>
   <link rel="stylesheet" href="<%=url_for(`/linen-theme/css/lazyload.css?v=${version}`)%>" />
   <% } %>
   <% if (theme?.heads) { %>
@@ -62,7 +75,6 @@ const version = theme.version;
 </head>
 
 <body class="<%- is_post() ? 'is-post' : '' %>">
-  <div id=" "></div>
   <div id="page-top"></div>
   <%-partial('partials/header', {
       hasTocs: page?.toc ?? !!tocs?.length
@@ -125,7 +137,7 @@ const version = theme.version;
 
   <%-partial('footer')%>
   <div id="mask"></div>
-  <a id="back-to-top" href="# " title="back to top"></a>
+  <a id="back-to-top" href="#page-top" title="back to top"></a>
   <noscript id="noscript-styles"></noscript>
   <% if(is_post()) { %>
   <script src="<%=url_for(`/linen-theme/js/toc.js?v=${version}`)%>" defer></script>
@@ -144,7 +156,7 @@ const version = theme.version;
   <% if (page.hdrSwitch) { %>
   <script src="<%=url_for(`/linen-theme/js/hdr.js?v=${version}`)%>"></script>
   <% } %>
-  <% if (theme?.lazyload?.enable ?? true) { %>
+  <% if (lazyloadEnabled) { %>
   <script src="<%=url_for(`/linen-theme/js/lazyload.js?v=${version}`)%>"></script>
   <% } %>
   <% if (theme?.appends?.length > 0) { %>

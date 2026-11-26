@@ -27,7 +27,6 @@ common:
   donateToAuthor: "赞赏作者"
   details: "详情"
   copyrightDesc: "本文照片和文字为原创内容，未经授权，请勿转载或用于商业用途。"
-  reads: "阅读"
   seriesPostCount: "篇文章"
   total: "共"
   age_notice: "这是一个创建于 <span class='days-value'></span> 天前的主题，其中的信息可能已经有所发展或是发生改变。"
@@ -46,3 +45,4 @@ common:
   relatedTags: "关联标签"
   viewAll: "全部"
   pageProgress: "第 %d / %d 页"
+  toggleTheme: "切换浅色/深色主题"

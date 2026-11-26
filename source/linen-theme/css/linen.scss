@@ -2,8 +2,9 @@
 @use "./normalize.css" as *;
 @use "./vars.scss" as *;
 @use "./highlight-github.scss" as *;
-@use "./font-version.scss" as *;
 @use "./mediaquery.scss" as mq;
+
+$font-version: "__LINEN_FONT_VERSION__";
 
 :root {
   color-scheme: light;
@@ -76,24 +77,11 @@
   unicode-range: U+4E00-9FFF, U+3000-303F, U+FF00-FFEF;
 }
 @font-face {
-  font-family: "LXGWWenKai";
-  font-display: swap;
-  src: url("../fonts/LXGWWenKai-Regular.woff2?v=#{$font-version}") format("woff2");
-  font-display: swap;
-  unicode-range: U+4E00-9FFF;
-}
-
-@font-face {
   font-family: "source-serif";
   src: url("../fonts/SourceSerif4-Regular.ttf.woff2?v=#{$font-version}") format("woff2");
   unicode-range:
     U+0-7F, U+A0, U+B7, U+200A, U+2014, U+2018, U+2019, U+201C, U+201D, U+2022, U+2026, U+00B0,
     U+0043;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Source Sans Pro";
-  src: url("../fonts/Source-Sans-Pro-Regular-2.woff2?v=#{$font-version}") format("woff2");
   font-display: swap;
 }
 
@@ -466,6 +454,58 @@ img.linen-emoji {
             background-color: currentColor;
             -webkit-mask: url("../img/icons/rss.svg") no-repeat center / contain;
             mask: url("../img/icons/rss.svg") no-repeat center / contain;
+          }
+          &.theme-toggle {
+            appearance: none;
+            -webkit-appearance: none;
+            border: none;
+            background: transparent;
+            padding: 0;
+            margin: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: $darkText;
+            position: relative;
+            svg {
+              position: absolute;
+              width: 19px;
+              height: 19px;
+              transition:
+                opacity 220ms $easeOut,
+                transform 260ms $easeOut;
+            }
+            .icon-sun {
+              opacity: 0;
+              transform: rotate(-35deg) scale(0.75);
+            }
+            .icon-moon {
+              opacity: 1;
+              transform: rotate(0deg) scale(1);
+            }
+            :root[data-theme="dark"] & {
+              .icon-sun {
+                opacity: 1;
+                transform: rotate(0deg) scale(1);
+              }
+              .icon-moon {
+                opacity: 0;
+                transform: rotate(35deg) scale(0.75);
+              }
+            }
+            @media (prefers-color-scheme: dark) {
+              :root:not([data-theme="light"]) & {
+                .icon-sun {
+                  opacity: 1;
+                  transform: rotate(0deg) scale(1);
+                }
+                .icon-moon {
+                  opacity: 0;
+                  transform: rotate(35deg) scale(0.75);
+                }
+              }
+            }
           }
           &.hdr-switch {
             background-image: url("../img/icons/hdr.svg");
@@ -1460,13 +1500,6 @@ img.linen-emoji {
       margin-left: 10px;
       small {
         font-size: 85%;
-      }
-    }
-    .page-pv {
-      display: none;
-      margin-left: 10px;
-      span {
-        margin-left: 5px;
       }
     }
     #content-switch {
@@ -4719,6 +4752,11 @@ html[lang="zh-CN"] {
 
   .leaflet-container {
     font-family: inherit;
+    background: $surface;
+    .leaflet-tile-pane {
+      filter: var(--linen-map-tile-filter);
+      transition: filter 220ms $easeOut;
+    }
   }
 
   .leaflet-control-attribution {

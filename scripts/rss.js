@@ -1,4 +1,4 @@
-const { url_for } = require("hexo-util");
+const { url_for, full_url_for } = require("hexo-util");
 
 if (hexo?.config?.theme_config?.feed === false) {
   return;
@@ -22,27 +22,42 @@ function escape(value) {
   return str.replace(re, (ch) => map[ch]);
 }
 
+function toRfc822Date(dateValue) {
+  if (!dateValue) return "";
+  const d =
+    typeof dateValue.toDate === "function"
+      ? dateValue.toDate()
+      : new Date(dateValue);
+  return Number.isNaN(d.getTime()) ? "" : d.toUTCString();
+}
+
 hexo.extend.generator.register("rss", function (locals) {
   const themeConfig = hexo.theme.config;
   const posts = locals.posts.sort("-date").limit(themeConfig?.feed?.limit ?? 10);
   const config = hexo.config;
   const language = config.language || "";
-  const getPostDate = hexo.extend.helper.get("getPostDate");
   const cssUrl = url_for.bind(hexo)(`/linen-theme/css/rss-${language.startsWith("zh") ? "zh" : "en"}.xsl`);
+  const siteUrl = full_url_for.call(hexo, "/");
+  const feedIcon = themeConfig?.feed?.icon
+    ? full_url_for.call(hexo, themeConfig.feed.icon)
+    : "";
+  const imageXml = feedIcon
+    ? `
+  <image>
+      <url>${escape(feedIcon)}</url>
+      <title>${escape(config.title)}</title>
+      <link>${escape(siteUrl)}</link>
+    </image>`
+    : "";
 
   const feed = `<?xml version="1.0" encoding="UTF-8" ?>
-<?xml-stylesheet type="text/xsl" href="${cssUrl}"?>
+<?xml-stylesheet type="text/xsl" href="${escape(cssUrl)}"?>
 <rss version="2.0">
 <channel>
   <title>${escape(config.title)}</title>
-  <link>${config.url}</link>
+  <link>${escape(siteUrl)}</link>
   <description>${escape(config.description || "")}</description>
-  <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
-  <image>
-      <url>${/http/.test(themeConfig?.feed?.icon) ? themeConfig?.feed?.icon : `${config.url}${themeConfig?.feed?.icon}`}</url>
-      <title>${escape(config.title)}</title>
-      <link>${config.url}</link>
-    </image>
+  <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>${imageXml}
   ${posts
     .map((post) => {
       let postContent = post._content
@@ -69,14 +84,16 @@ hexo.extend.generator.register("rss", function (locals) {
           /<img\b(?![^>]*\bloading=)([^>]*)>/gi,
           '<img loading="lazy"$1>',
         )
-        .replace(/<iframe[\s\S]*?<\/iframe>/gi, "");
+        .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
+        .replace(/\]\]>/g, "]]]]><![CDATA[>");
+      const postUrl = full_url_for.call(hexo, post.path);
+      const pubDate = toRfc822Date(post.date);
 
       return `
     <item>
       <title>${escape(`${post.title}${post?.subTitle ? `(${post.subTitle})` : ""}`)}</title>
-      <link>${config.url + url_for.bind(hexo)(post.path)}</link>
-      <guid>${config.url + url_for.bind(hexo)(post.path)}</guid>
-      <pubDate>${getPostDate(post, language)}</pubDate>
+      <link>${escape(postUrl)}</link>
+      <guid>${escape(postUrl)}</guid>${pubDate ? `\n      <pubDate>${pubDate}</pubDate>` : ""}
       <description><![CDATA[${rawHtml}]]></description>
     </item>`;
     })

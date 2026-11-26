@@ -2,9 +2,6 @@
 
 @mixin rules {
   @media (max-width: 1280px) {
-  #post .post-meta .page-pv {
-    display: none;
-  }
   #post .footnote-anchor-wrap,
   #post .footnotes li {
     scroll-margin-top: calc(#{$navbarMinHeight} + 24px);

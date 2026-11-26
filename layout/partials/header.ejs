@@ -4,6 +4,7 @@ const { hasTranslatation, targetLanguagePath, targetLanguage } = getTranslationP
 const logoConfig = theme?.logo || {};
 const { src: logoSrc, text: logoText, width: logoWidth, height: logoHeight } = logoConfig;
 const rssPath = config?.feed?.path || theme?.feed?.path;
+const showThemeToggle = (theme?.themeToggle ?? config?.theme_config?.themeToggle ?? true) !== false;
 %>
 
 <% if (is_post()) { %>
@@ -36,6 +37,23 @@ const rssPath = config?.feed?.path || theme?.feed?.path;
         <% } %>
         <% if (rssPath) { %>
           <a class="button rss" href="<%=url_for(rssPath)%>" target="_blank" title="rss"></a>
+        <% } %>
+        <% if (showThemeToggle) { %>
+        <button
+          type="button"
+          id="theme-toggle"
+          class="button theme-toggle"
+          title="<%=__('common.toggleTheme')%>"
+          aria-label="<%=__('common.toggleTheme')%>"
+        >
+          <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.25" />
+            <path d="M12 2.5v2.25M12 19.25v2.25M4.93 4.93l1.59 1.59M17.48 17.48l1.59 1.59M2.5 12h2.25M19.25 12h2.25M4.93 19.07l1.59-1.59M17.48 6.52l1.59-1.59" />
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.354 15.354A8.5 8.5 0 0 1 8.646 3.646 8.5 8.5 0 1 0 20.354 15.354z" />
+          </svg>
+        </button>
         <% } %>
         <% if (hasTocs) { %>
         <div id="toc-toggle" class="button toc"></div>

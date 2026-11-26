@@ -1,58 +1,6 @@
-const fs = require("fs");
-const path = require("path");
+const { resolvePostLayoutStyle } = require("./lib/site-data");
 
-const TRAVEL_SERIES_NAMES = ["旅行", "Travel"];
 const TRAVEL_ROUTE_HEADING_REGEX = /^(?:路线|路线规划|Route|Route Planning)$/i;
-
-function normalizeLayoutStyle(style) {
-  if (typeof style !== "string") return "";
-  const normalized = style.trim().toLowerCase();
-  if (!normalized) return "";
-  if (normalized === "travel") return "journal";
-  return normalized;
-}
-
-function getSeriesConfig(baseDir, seriesName) {
-  if (!baseDir || !seriesName) return {};
-  try {
-    const raw = fs.readFileSync(
-      path.join(baseDir, "assets-db/series.json"),
-      "utf-8",
-    );
-    return JSON.parse(raw)?.[seriesName] || {};
-  } catch (error) {
-    return {};
-  }
-}
-
-function resolvePostLayoutStyle(data, ctx) {
-  const fromPost = normalizeLayoutStyle(data?.layoutStyle);
-  if (fromPost) return fromPost;
-
-  const seriesName = data?.series;
-  const baseDir = ctx?.base_dir || hexo?.base_dir;
-  const seriesInfo = getSeriesConfig(baseDir, seriesName);
-  const fromSeriesInfo = normalizeLayoutStyle(seriesInfo?.layoutStyle);
-  if (fromSeriesInfo) return fromSeriesInfo;
-
-  const themeConfig = ctx?.theme?.config || ctx?.config?.theme_config || hexo?.theme?.config || {};
-  const postConfig = themeConfig?.post || {};
-
-  if (
-    seriesName &&
-    postConfig?.seriesLayoutStyle &&
-    Object.prototype.hasOwnProperty.call(postConfig.seriesLayoutStyle, seriesName)
-  ) {
-    const fromSeriesMap = normalizeLayoutStyle(postConfig.seriesLayoutStyle[seriesName]);
-    if (fromSeriesMap) return fromSeriesMap;
-  }
-
-  if (seriesName && TRAVEL_SERIES_NAMES.includes(seriesName)) {
-    return "journal";
-  }
-
-  return normalizeLayoutStyle(postConfig?.layoutStyle) || "editorial";
-}
 const TRAVEL_ROUTE_PALETTE = [
   "#c97a63",
   "#a8452e",
@@ -358,35 +306,102 @@ function buildTravelRouteBlock(listHtml, isEnglishPost) {
   return `<div class="travel-route-block${showBar ? " has-bar" : ""}" style="--route-cols:${cols};">${summaryHtml}${barHtml}<ul class="travel-route-grid">${itemsHtml}</ul></div>`;
 }
 
-function processTravelRoute(content, data, ctx) {
-  if (!content || resolvePostLayoutStyle(data, ctx) !== "journal") {
+function extractBalancedListHtml(str) {
+  const openMatch = /^<(ul|ol)\b[^>]*>/i.exec(str);
+  if (!openMatch) return null;
+  const tagName = openMatch[1].toLowerCase();
+  const tokenRe = new RegExp(`<(\\/)?${tagName}\\b[^>]*>`, "gi");
+  let depth = 0;
+  let match;
+  while ((match = tokenRe.exec(str)) !== null) {
+    if (match[1]) {
+      depth -= 1;
+      if (depth === 0) {
+        return str.slice(0, match.index + match[0].length);
+      }
+    } else {
+      depth += 1;
+    }
+  }
+  return null;
+}
+
+function processTravelRoute(content, data, ctx, hexoInstance) {
+  if (
+    !content ||
+    resolvePostLayoutStyle(data, ctx, undefined, hexoInstance || hexo) !==
+      "journal"
+  ) {
     return content;
   }
 
   const isEnglishPost =
     data?.series === "Travel" ||
-    String(data?.language || data?.lang || ctx?.config?.language || "").startsWith("en");
+    String(
+      data?.language ||
+        data?.lang ||
+        ctx?.config?.language ||
+        hexoInstance?.config?.language ||
+        "",
+    ).startsWith("en");
 
-  return content.replace(
-    /(<h([23])[^>]*>([\s\S]*?)<\/h\2>)((?:\s|<!--[\s\S]*?-->|<div\s+id="gitalk-initiator"[^>]*><\/div>)*)(<(ul|ol)[^>]*>[\s\S]*?<\/\6>)/gi,
-    (fullMatch, headingHtml, _level, headingInner, betweenHtml, listHtml) => {
-      const headingText = stripHeadingText(headingInner);
-      if (!TRAVEL_ROUTE_HEADING_REGEX.test(headingText)) {
-        return fullMatch;
-      }
-      const routeBlock = buildTravelRouteBlock(listHtml, isEnglishPost);
-      if (!routeBlock) {
-        return fullMatch;
-      }
-      return `${headingHtml}${betweenHtml}${routeBlock}`;
-    },
-  );
+  const headingRe = /<h([23])\b[^>]*>([\s\S]*?)<\/h\1>/gi;
+  const betweenRe =
+    /^(?:\s|<!--[\s\S]*?-->|<div\s+id=["']gitalk-initiator["'][^>]*><\/div>|<span\s+id=["']more["'][^>]*><\/span>|<a\s+id=["']more["'][^>]*><\/a>)*/i;
+
+  let result = "";
+  let cursor = 0;
+  let match;
+
+  while ((match = headingRe.exec(content)) !== null) {
+    const headingEnd = match.index + match[0].length;
+    const headingText = stripHeadingText(match[2]);
+    if (!TRAVEL_ROUTE_HEADING_REGEX.test(headingText)) {
+      continue;
+    }
+
+    const tail = content.slice(headingEnd);
+    const betweenMatch = betweenRe.exec(tail);
+    const betweenLen = betweenMatch ? betweenMatch[0].length : 0;
+    const listStartInTail = betweenLen;
+    const listHtml = extractBalancedListHtml(tail.slice(listStartInTail));
+    if (!listHtml) {
+      continue;
+    }
+    if (/^<(?:ul|ol)\b[^>]*\bclass=["'][^"']*\btravel-route-grid\b/i.test(listHtml)) {
+      continue;
+    }
+
+    const routeBlock = buildTravelRouteBlock(listHtml, isEnglishPost);
+    if (!routeBlock) {
+      continue;
+    }
+
+    const listAbsStart = headingEnd + listStartInTail;
+    const listAbsEnd = listAbsStart + listHtml.length;
+
+    result += content.slice(cursor, listAbsStart) + routeBlock;
+    cursor = listAbsEnd;
+    headingRe.lastIndex = listAbsEnd;
+  }
+
+  if (cursor === 0) {
+    return content;
+  }
+
+  return result + content.slice(cursor);
 }
 
 function processCodeBlock(content) {
+  if (!content) return content;
   return content.replace(
-    /<\/figure>/g,
-    '<div class="copy-btn"></div></figure>',
+    /<figure\b([^>]*\bclass="[^"]*\bhighlight\b[^"]*"[^>]*)>([\s\S]*?)<\/figure>/gi,
+    (match, attrs, inner) => {
+      if (inner.includes('class="copy-btn"')) {
+        return match;
+      }
+      return `<figure${attrs}>${inner}<div class="copy-btn"></div></figure>`;
+    },
   );
 }
 
@@ -426,12 +441,16 @@ function process(content) {
   return updatedContent + '<div id="gitalk-initiator"></div>';
 }
 
+hexo.extend.helper.register("renderTravelRoutes", function (content, post) {
+  return processTravelRoute(content, post || this.page, this, hexo);
+});
+
 hexo.extend.filter.register(
   "after_post_render",
   function (data) {
     data.content = processCodeBlock(data.content);
     data.content = processTables(data.content);
-    data.content = processTravelRoute(data.content, data, this);
+    data.content = processTravelRoute(data.content, data, this, hexo);
     data.content = process.call(this, data.content);
     return data;
   },

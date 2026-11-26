@@ -1,21 +1,9 @@
 const pagination = require("hexo-pagination");
-const fs = require("fs");
-const path = require("path");
-
-const getSeriesInfo = () => {
-  try {
-    const seriesInfo = JSON.parse(
-      fs.readFileSync(path.join(hexo.base_dir, "assets-db/series.json"), "utf-8")
-    );
-    return seriesInfo;
-  } catch (error) {
-    return {};
-  }
-};
+const { getSiteData } = require("./lib/site-data");
 
 hexo.extend.generator.register("series", function (locals) {
   const seriesMap = {};
-  const seriesInfo = getSeriesInfo();
+  const seriesInfo = getSiteData(hexo, "series");
 
   locals.posts.forEach((post) => {
     const series = post.series;

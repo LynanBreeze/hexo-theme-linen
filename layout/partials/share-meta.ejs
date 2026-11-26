@@ -1,10 +1,14 @@
 <% 
 var pageTitle = getPageTitle();
+var ogImageRaw = page.seriesInfo?.cover || page.ogImage || page.cover || theme?.info?.siteCardBg || '';
+var ogImage = ogImageRaw ? full_url_for(ogImageRaw) : '';
 %>
-<meta property="og:type" content="blog">
+<meta property="og:type" content="<%= is_post() ? 'article' : 'website' %>">
 <meta property="og:title" content="<%=pageTitle%>">
-<meta property="og:url" content="<%=url_for(page.path)%>">
+<meta property="og:url" content="<%=full_url_for(page.path)%>">
 <meta property="og:site_name" content="<%=config.title%>">
-<meta property="og:description" content="<%=page?.seriesInfo?.description||page.excerpt||''%>">
+<meta property="og:description" content="<%=page?.seriesInfo?.description||page.excerpt||config?.description||''%>">
 <meta property="og:locale" content="<%=page.language||config.language%>">
-<meta property="og:image" content="<%=url_for(page.seriesInfo?.cover||page.ogImage||page.cover||theme?.info?.siteCardBg||'')%>">
+<% if (ogImage) { %>
+<meta property="og:image" content="<%=ogImage%>">
+<% } %>

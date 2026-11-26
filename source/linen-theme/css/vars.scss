@@ -51,6 +51,7 @@
   --linen-gray-c: #d0cbc2;
 
   --linen-icon-invert: none;
+  --linen-map-tile-filter: none;
   --linen-shimmer-highlight: rgba(255, 255, 255, 0.55);
   --linen-linkcard-gradient: linear-gradient(
     to right,
@@ -127,6 +128,8 @@
   --linen-gray-c: #47433d;
 
   --linen-icon-invert: invert(0.88) sepia(0.08);
+  --linen-map-tile-filter: invert(0.92) hue-rotate(180deg) brightness(0.92)
+    contrast(0.92) sepia(0.14) saturate(0.75);
   --linen-shimmer-highlight: rgba(255, 250, 240, 0.08);
   --linen-linkcard-gradient: linear-gradient(
     to right,
@@ -268,7 +271,7 @@ $proseMaxWidth: 720px;
 }
 
 @mixin sourceSansProFont {
-  font-family: "source-serif", "Source Sans Pro", serif;
+  font-family: "source-serif", Georgia, "Times New Roman", serif;
 }
 
 @mixin sourceSerifFont {

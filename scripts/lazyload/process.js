@@ -1,8 +1,7 @@
 "use strict";
 
-const fs = require("fs");
-const path = require("path");
 const { defaultConfig } = require("./config");
+const { getAssetsDbImgs } = require("../lib/site-data");
 function getElemAttributes(elemText) {
   // Regex to pick out start tag from start of element's HTML.
   var re_start_tag = /^<\w+\b(?:\s+[\w\-.:]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[\w\-.:]+))?)*\s*\/?>/;
@@ -27,35 +26,6 @@ function getElemAttributes(elemText) {
     match = re_attribs.exec(start_tag);
   }
   return attribs;
-}
-
-function readAllImgs(dirPath) {
-  try {
-    const files = fs.readdirSync(dirPath);
-    const jsonFiles = files.filter((file) => file.endsWith(".json"));
-
-    let merged = [];
-
-    for (const file of jsonFiles) {
-      const fullPath = path.join(dirPath, file);
-      const content = fs.readFileSync(fullPath, "utf-8");
-
-      try {
-        const data = JSON.parse(content);
-        if (Array.isArray(data)) {
-          merged = merged.concat(data); // 合并数组
-        } else {
-          console.warn(`⚠️ ${file} 不是数组，跳过`);
-        }
-      } catch (err) {
-        console.error(`❌ JSON parse error in ${file}:`, err);
-      }
-    }
-
-    return merged;
-  } catch (error) {
-    return [];
-  }
 }
 
 function getInlineWidthStyle(style) {
@@ -305,7 +275,7 @@ function lazyProcess(htmlContent) {
   };
 
   const enableGallery = themeConfig?.photoswipe === true;
-  const imgs = readAllImgs(path.join(this.base_dir, "assets-db/imgs"));
+  const imgs = getAssetsDbImgs(this.base_dir, this);
   let livePhotoThumbIndex = 0;
 
   return htmlContent
@@ -475,7 +445,7 @@ function stripNoLazyFromMediaTag(tag) {
 
 module.exports.processCovers = function (str, data) {
   try {
-    const imgs = readAllImgs(path.join(this.base_dir, "assets-db/imgs"));
+    const imgs = getAssetsDbImgs(this.base_dir, this);
     const imgData = imgs.find((item) => isUrlEqual(item.url, data.page.cover || "" || ""));
     if (data?.page?.coverPlaceholder || imgData?.placeholder) {
       str = str.replace(

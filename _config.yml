@@ -6,6 +6,8 @@ scripts:
 
 # Color scheme: auto (follows system prefers-color-scheme) | light | dark
 colorScheme: auto
+# Show light/dark theme toggle button in the header
+themeToggle: true
 
 post:
   # Editorial breakout: constrain prose to a comfortable reading width while
