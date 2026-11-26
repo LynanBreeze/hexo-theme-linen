@@ -1521,7 +1521,7 @@
   grid-column: 1 / -1;
   grid-row: 1;
   display: flex;
-  min-height: 12rem;
+  min-height: var(--gt-placeholder-inner-height, 10.5rem);
   flex-direction: column;
   align-items: center;
   justify-content: center;

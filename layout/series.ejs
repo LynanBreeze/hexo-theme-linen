@@ -1,5 +1,6 @@
 <%
-const isTravelSeries = ['旅行', 'Travel'].includes(page.series);
+const isTravelSeries = isMapSeries(page.series, page.seriesInfo);
+const isEnglishMap = String(page.language || config.language || '').startsWith('en') || page.series === 'Travel';
 const seriesPosts = page.seriesPosts || (page.posts ? (Array.isArray(page.posts) ? page.posts : page.posts.toArray()) : []);
 const currentSeriesPosts = page.posts ? (Array.isArray(page.posts) ? page.posts : page.posts.toArray()) : seriesPosts;
 const totalCount = seriesPosts.length;
@@ -119,23 +120,23 @@ const travelPlacesJson = encodeURIComponent(JSON.stringify(travelPlaces));
 <noscript>
   <link rel="stylesheet" href="<%-url_for('/linen-theme/css/leaflet.css')%>" />
 </noscript>
-<section class="travel-map-section" aria-label="<%=page.series === 'Travel' ? 'Travel map' : '旅行地图'%>">
+<section class="travel-map-section" aria-label="<%=isEnglishMap ? 'Travel map' : '旅行地图'%>">
   <div class="travel-map-panel">
     <div class="travel-map-copy">
-      <div class="travel-map-eyebrow"><%=page.series === 'Travel' ? 'Travel Map' : '旅行地图'%></div>
-      <h2><%=page.series === 'Travel' ? 'Places I have been' : '去过的地方'%></h2>
+      <div class="travel-map-eyebrow"><%=isEnglishMap ? 'Travel Map' : '旅行地图'%></div>
+      <h2><%=isEnglishMap ? 'Places I have been' : '去过的地方'%></h2>
       <div class="travel-map-stats">
         <span><%=travelPlaces.length%></span>
-        <%=page.series === 'Travel' ? 'mapped trips' : '次旅行足迹'%>
+        <%=isEnglishMap ? 'mapped trips' : '次旅行足迹'%>
       </div>
     </div>
     <div id="travel-map" class="travel-map-canvas" data-places="<%=travelPlacesJson%>">
-      <div class="travel-map-loading"><%=page.series === 'Travel' ? 'Loading map...' : '地图加载中...'%></div>
+      <div class="travel-map-loading"><%=isEnglishMap ? 'Loading map...' : '地图加载中...'%></div>
       <noscript>
         <img
           class="travel-map-fallback-img"
           src="<%=url_for('/linen-theme/img/travel-map-fallback.svg')%>"
-          alt="<%=page.series === 'Travel' ? 'Static travel map' : '旅行地图静态图'%>"
+          alt="<%=isEnglishMap ? 'Static travel map' : '旅行地图静态图'%>"
         />
       </noscript>
     </div>
@@ -231,7 +232,7 @@ const travelPlacesJson = encodeURIComponent(JSON.stringify(travelPlaces));
 
     const initLeafletMap = () => {
       if (!window.L) {
-        mapEl.innerHTML = '<div class="travel-map-loading"><%=page.series === "Travel" ? "Map failed to load." : "地图加载失败。"%></div>';
+        mapEl.innerHTML = '<div class="travel-map-loading"><%=isEnglishMap ? "Map failed to load." : "地图加载失败。"%></div>';
         return;
       }
 
@@ -318,7 +319,7 @@ const travelPlacesJson = encodeURIComponent(JSON.stringify(travelPlaces));
         script.async = true;
         script.onload = initLeafletMap;
         script.onerror = () => {
-          mapEl.innerHTML = '<div class="travel-map-loading"><%=page.series === "Travel" ? "Map failed to load." : "地图加载失败。"%></div>';
+          mapEl.innerHTML = '<div class="travel-map-loading"><%=isEnglishMap ? "Map failed to load." : "地图加载失败。"%></div>';
         };
         document.body.appendChild(script);
       }

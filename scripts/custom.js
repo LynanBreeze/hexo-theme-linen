@@ -1,5 +1,58 @@
+const fs = require("fs");
+const path = require("path");
+
 const TRAVEL_SERIES_NAMES = ["旅行", "Travel"];
 const TRAVEL_ROUTE_HEADING_REGEX = /^(?:路线|路线规划|Route|Route Planning)$/i;
+
+function normalizeLayoutStyle(style) {
+  if (typeof style !== "string") return "";
+  const normalized = style.trim().toLowerCase();
+  if (!normalized) return "";
+  if (normalized === "travel") return "journal";
+  return normalized;
+}
+
+function getSeriesConfig(baseDir, seriesName) {
+  if (!baseDir || !seriesName) return {};
+  try {
+    const raw = fs.readFileSync(
+      path.join(baseDir, "assets-db/series.json"),
+      "utf-8",
+    );
+    return JSON.parse(raw)?.[seriesName] || {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function resolvePostLayoutStyle(data, ctx) {
+  const fromPost = normalizeLayoutStyle(data?.layoutStyle);
+  if (fromPost) return fromPost;
+
+  const seriesName = data?.series;
+  const baseDir = ctx?.base_dir || hexo?.base_dir;
+  const seriesInfo = getSeriesConfig(baseDir, seriesName);
+  const fromSeriesInfo = normalizeLayoutStyle(seriesInfo?.layoutStyle);
+  if (fromSeriesInfo) return fromSeriesInfo;
+
+  const themeConfig = ctx?.theme?.config || ctx?.config?.theme_config || hexo?.theme?.config || {};
+  const postConfig = themeConfig?.post || {};
+
+  if (
+    seriesName &&
+    postConfig?.seriesLayoutStyle &&
+    Object.prototype.hasOwnProperty.call(postConfig.seriesLayoutStyle, seriesName)
+  ) {
+    const fromSeriesMap = normalizeLayoutStyle(postConfig.seriesLayoutStyle[seriesName]);
+    if (fromSeriesMap) return fromSeriesMap;
+  }
+
+  if (seriesName && TRAVEL_SERIES_NAMES.includes(seriesName)) {
+    return "journal";
+  }
+
+  return normalizeLayoutStyle(postConfig?.layoutStyle) || "editorial";
+}
 const TRAVEL_ROUTE_PALETTE = [
   "#c97a63",
   "#a8452e",
@@ -305,14 +358,14 @@ function buildTravelRouteBlock(listHtml, isEnglishPost) {
   return `<div class="travel-route-block${showBar ? " has-bar" : ""}" style="--route-cols:${cols};">${summaryHtml}${barHtml}<ul class="travel-route-grid">${itemsHtml}</ul></div>`;
 }
 
-function processTravelRoute(content, data) {
-  if (!content || !TRAVEL_SERIES_NAMES.includes(data?.series)) {
+function processTravelRoute(content, data, ctx) {
+  if (!content || resolvePostLayoutStyle(data, ctx) !== "journal") {
     return content;
   }
 
   const isEnglishPost =
     data?.series === "Travel" ||
-    String(data?.language || data?.lang || "").startsWith("en");
+    String(data?.language || data?.lang || ctx?.config?.language || "").startsWith("en");
 
   return content.replace(
     /(<h([23])[^>]*>([\s\S]*?)<\/h\2>)((?:\s|<!--[\s\S]*?-->|<div\s+id="gitalk-initiator"[^>]*><\/div>)*)(<(ul|ol)[^>]*>[\s\S]*?<\/\6>)/gi,
@@ -378,7 +431,7 @@ hexo.extend.filter.register(
   function (data) {
     data.content = processCodeBlock(data.content);
     data.content = processTables(data.content);
-    data.content = processTravelRoute(data.content, data);
+    data.content = processTravelRoute(data.content, data, this);
     data.content = process.call(this, data.content);
     return data;
   },

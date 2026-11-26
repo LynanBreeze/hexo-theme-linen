@@ -3,24 +3,195 @@
   padding-right: min(3vw, 26px);
 }
 
-// Unified Linen Design Palette (Warm Paper & Terracotta Editorial System)
-$accent: #a8452e;
-$accentDark: #8c3623;
-$accentSoft: rgba(168, 69, 46, 0.08);
-$accentBorder: rgba(168, 69, 46, 0.28);
+// Unified Linen Design Palette (Warm Linen Paper & Terracotta Editorial System)
+@mixin linenLightPalette {
+  --linen-accent: #a8452e;
+  --linen-accent-dark: #8c3623;
+  --linen-accent-soft: rgba(168, 69, 46, 0.08);
+  --linen-accent-soft-strong: rgba(168, 69, 46, 0.14);
+  --linen-accent-border: rgba(168, 69, 46, 0.28);
+  --linen-accent-underline: rgba(168, 69, 46, 0.34);
+  --linen-accent-focus: rgba(168, 69, 46, 0.45);
+  --linen-accent-hover-row: rgba(168, 69, 46, 0.03);
+  --linen-on-accent: #fcfbf8;
 
-$bg: #ffffff;
-$surface: #f7f6f2;
-$surfaceAlt: #f0eee8;
+  --linen-bg: #fcfbf8;
+  --linen-bg-elevated: #ffffff;
+  --linen-bg-translucent: rgba(252, 251, 248, 0.88);
+  --linen-bg-sheet: rgba(252, 251, 248, 0.96);
+  --linen-surface: #f4f2ec;
+  --linen-surface-translucent: rgba(244, 242, 236, 0.92);
+  --linen-surface-fade-0: rgba(244, 242, 236, 0);
+  --linen-surface-fade-1: rgba(244, 242, 236, 1);
+  --linen-surface-alt: #eae7df;
 
-$darkText: #22211f;
-$grayerText: #56534e;
-$metaText: #6f6b64;
-$moreGrayText: #7c776f;
+  --linen-ink: #22211f;
+  --linen-ink-strong: #141311;
+  --linen-ink-secondary: #56534e;
+  --linen-ink-muted: #6f6b64;
+  --linen-ink-subtle: #7c776f;
 
-$borderSubtle: rgba(34, 33, 31, 0.06);
-$borderColor: rgba(34, 33, 31, 0.1);
-$borderStrong: rgba(34, 33, 31, 0.18);
+  --linen-border-subtle: rgba(34, 33, 31, 0.07);
+  --linen-border: rgba(34, 33, 31, 0.11);
+  --linen-border-strong: rgba(34, 33, 31, 0.2);
+
+  --linen-hover-row: rgba(34, 33, 31, 0.028);
+  --linen-shadow-color: rgba(34, 33, 31, 0.09);
+  --linen-shadow-strong: rgba(34, 33, 31, 0.15);
+  --linen-mask: rgba(20, 19, 17, 0.5);
+  --linen-handle: rgba(34, 33, 31, 0.16);
+
+  --linen-black: #191816;
+  --linen-gray-3: #353330;
+  --linen-gray-5: #56534e;
+  --linen-gray-7: #736f68;
+  --linen-gray-9: #8f8a82;
+  --linen-gray-a: #a39e95;
+  --linen-gray-b: #bbb6ad;
+  --linen-gray-c: #d0cbc2;
+
+  --linen-icon-invert: none;
+  --linen-shimmer-highlight: rgba(255, 255, 255, 0.55);
+  --linen-linkcard-gradient: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 1),
+    rgba(255, 255, 255, 0.93),
+    rgba(255, 255, 255, 0.86),
+    rgba(255, 255, 255, 0.2)
+  );
+  --linen-linkcard-text-shadow: 0px 0px 2px #ffffff;
+  --linen-travel-panel-bg:
+    linear-gradient(135deg, rgba(252, 251, 248, 0.96), rgba(244, 242, 236, 0.94)),
+    var(--linen-surface);
+
+  // Warm Paper Syntax Highlighting
+  --linen-code-text: #2f2d2a;
+  --linen-code-comment: #8c857b;
+  --linen-code-keyword: #a8452e;
+  --linen-code-entity: #6d4c7d;
+  --linen-code-constant: #2e6472;
+  --linen-code-string: #4b6b4c;
+  --linen-code-variable: #a65d28;
+  --linen-code-tag: #3e6b52;
+  --linen-code-bullet: #876326;
+  --linen-code-addition: #2f6b47;
+  --linen-code-addition-bg: rgba(75, 107, 76, 0.12);
+  --linen-code-deletion: #a83b2e;
+  --linen-code-deletion-bg: rgba(168, 69, 46, 0.12);
+}
+
+@mixin linenDarkPalette {
+  --linen-accent: #d97757;
+  --linen-accent-dark: #e69175;
+  --linen-accent-soft: rgba(217, 119, 87, 0.14);
+  --linen-accent-soft-strong: rgba(217, 119, 87, 0.22);
+  --linen-accent-border: rgba(217, 119, 87, 0.38);
+  --linen-accent-underline: rgba(217, 119, 87, 0.42);
+  --linen-accent-focus: rgba(217, 119, 87, 0.55);
+  --linen-accent-hover-row: rgba(217, 119, 87, 0.07);
+  --linen-on-accent: #171614;
+
+  --linen-bg: #171614;
+  --linen-bg-elevated: #25231f;
+  --linen-bg-translucent: rgba(23, 22, 20, 0.88);
+  --linen-bg-sheet: rgba(27, 25, 22, 0.96);
+  --linen-surface: #201e1b;
+  --linen-surface-translucent: rgba(32, 30, 27, 0.92);
+  --linen-surface-fade-0: rgba(32, 30, 27, 0);
+  --linen-surface-fade-1: rgba(32, 30, 27, 1);
+  --linen-surface-alt: #2a2723;
+
+  --linen-ink: #e6e2da;
+  --linen-ink-strong: #f5f2eb;
+  --linen-ink-secondary: #b6b0a6;
+  --linen-ink-muted: #969086;
+  --linen-ink-subtle: #827c73;
+
+  --linen-border-subtle: rgba(230, 226, 218, 0.08);
+  --linen-border: rgba(230, 226, 218, 0.14);
+  --linen-border-strong: rgba(230, 226, 218, 0.24);
+
+  --linen-hover-row: rgba(230, 226, 218, 0.045);
+  --linen-shadow-color: rgba(0, 0, 0, 0.36);
+  --linen-shadow-strong: rgba(0, 0, 0, 0.56);
+  --linen-mask: rgba(0, 0, 0, 0.68);
+  --linen-handle: rgba(230, 226, 218, 0.24);
+
+  --linen-black: #f5f2eb;
+  --linen-gray-3: #d2cdc4;
+  --linen-gray-5: #b6b0a6;
+  --linen-gray-7: #989288;
+  --linen-gray-9: #7e786f;
+  --linen-gray-a: #6d6860;
+  --linen-gray-b: #5a554e;
+  --linen-gray-c: #47433d;
+
+  --linen-icon-invert: invert(0.88) sepia(0.08);
+  --linen-shimmer-highlight: rgba(255, 250, 240, 0.08);
+  --linen-linkcard-gradient: linear-gradient(
+    to right,
+    rgba(37, 35, 31, 1),
+    rgba(37, 35, 31, 0.94),
+    rgba(37, 35, 31, 0.86),
+    rgba(37, 35, 31, 0.28)
+  );
+  --linen-linkcard-text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.65);
+  --linen-travel-panel-bg:
+    linear-gradient(135deg, rgba(32, 30, 27, 0.98), rgba(23, 22, 20, 0.96)),
+    var(--linen-surface);
+
+  // Warm Charcoal Syntax Highlighting
+  --linen-code-text: #dfd9cf;
+  --linen-code-comment: #8a8378;
+  --linen-code-keyword: #df8265;
+  --linen-code-entity: #c29fd1;
+  --linen-code-constant: #7eb6c4;
+  --linen-code-string: #95b88a;
+  --linen-code-variable: #dfa068;
+  --linen-code-tag: #89b597;
+  --linen-code-bullet: #d8b26e;
+  --linen-code-addition: #95b88a;
+  --linen-code-addition-bg: rgba(149, 184, 138, 0.14);
+  --linen-code-deletion: #e38474;
+  --linen-code-deletion-bg: rgba(227, 132, 116, 0.14);
+}
+
+// Runtime CSS custom property bindings (enables dynamic theming & dark mode)
+$accent: var(--linen-accent);
+$accentDark: var(--linen-accent-dark);
+$accentSoft: var(--linen-accent-soft);
+$accentSoftStrong: var(--linen-accent-soft-strong);
+$accentBorder: var(--linen-accent-border);
+$accentUnderline: var(--linen-accent-underline);
+$accentFocus: var(--linen-accent-focus);
+$accentHoverRow: var(--linen-accent-hover-row);
+$onAccent: var(--linen-on-accent);
+
+$bg: var(--linen-bg);
+$bgElevated: var(--linen-bg-elevated);
+$bgTranslucent: var(--linen-bg-translucent);
+$bgSheet: var(--linen-bg-sheet);
+$surface: var(--linen-surface);
+$surfaceTranslucent: var(--linen-surface-translucent);
+$surfaceFade0: var(--linen-surface-fade-0);
+$surfaceFade1: var(--linen-surface-fade-1);
+$surfaceAlt: var(--linen-surface-alt);
+
+$darkText: var(--linen-ink);
+$strongText: var(--linen-ink-strong);
+$grayerText: var(--linen-ink-secondary);
+$metaText: var(--linen-ink-muted);
+$moreGrayText: var(--linen-ink-subtle);
+
+$borderSubtle: var(--linen-border-subtle);
+$borderColor: var(--linen-border);
+$borderStrong: var(--linen-border-strong);
+
+$hoverRow: var(--linen-hover-row);
+$shadowColor: var(--linen-shadow-color);
+$shadowStrong: var(--linen-shadow-strong);
+$maskColor: var(--linen-mask);
+$handleColor: var(--linen-handle);
 
 // Legacy variable aliases mapped to the unified Linen palette
 $green: $accent;
@@ -29,14 +200,14 @@ $blue: $accent;
 
 $postMetaFontSize: 13px;
 $postItemGap: 20px;
-$black: #191816;
-$gray3: #353330;
-$gray5: #56534e;
-$gray7: #736f68;
-$gray9: #8f8a82;
-$graya: #a39e95;
-$grayb: #bbb6ad;
-$grayc: #d0cbc2;
+$black: var(--linen-black);
+$gray3: var(--linen-gray-3);
+$gray5: var(--linen-gray-5);
+$gray7: var(--linen-gray-7);
+$gray9: var(--linen-gray-9);
+$graya: var(--linen-gray-a);
+$grayb: var(--linen-gray-b);
+$grayc: var(--linen-gray-c);
 
 $radiusSm: 2px;
 $radiusMd: 4px;
@@ -55,6 +226,7 @@ $navbarMinHeight: 65px;
 $commonPadding: min(3vw, 15px);
 $postWidgetGap: 20px;
 $siteMaxWidth: max(1000px, min(1192px, 68vw));
+$proseMaxWidth: 720px;
 
 @mixin defaultFont {
   font-family:

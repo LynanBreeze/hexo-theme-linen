@@ -6,14 +6,25 @@ const version = theme.version;
   var tocs = is_post() ? extractTocFromHtml(page.content) : null;
   var series = is_post() ? site.posts.filter(item=>item.series && item.series === page?.series).sort('date', -1) : []
   var seriesInfo = is_post() && page?.series ? getSeriesInfo(page.series) : {}
+  var rawColorScheme = String(theme?.colorScheme || config?.theme_config?.colorScheme || 'auto').trim().toLowerCase();
+  var colorScheme = (rawColorScheme === 'light' || rawColorScheme === 'dark') ? rawColorScheme : 'auto';
+  var postBreakout = is_post() ? getPostBreakoutConfig(page, seriesInfo) : { enable: false, proseWidth: '' };
+  var contentOuterClasses = [
+    is_post() ? 'post-outer' : (page.seriesInfo?.cover ? 'series-outer' : ''),
+    postBreakout.enable ? 'editorial-breakout' : ''
+  ].filter(Boolean).join(' ');
+  var contentOuterStyle = (postBreakout.enable && postBreakout.proseWidth)
+    ? `--linen-prose-width: ${postBreakout.proseWidth};`
+    : '';
 %>
 
 <!DOCTYPE html>
-<html lang="<%=page.language || config.language%>">
+<html lang="<%=page.language || config.language%>"<%- colorScheme !== 'auto' ? ` data-theme="${colorScheme}"` : '' %>>
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="<%= colorScheme === 'auto' ? 'light dark' : colorScheme %>" />
   <title><%=getPageTitle()%></title>
   <link rel="icon" type="image/x-icon" href="<%=url_for(theme?.icon ?? '/linen-theme/favicon.svg')%>" />
   <meta name="referrer" content="no-referrer-when-downgrade" />
@@ -55,9 +66,7 @@ const version = theme.version;
   <div id="page-top"></div>
   <%-partial('partials/header', {
       hasTocs: page?.toc ?? !!tocs?.length
-    })%> <% if (is_post()) { %>
-  <div class="banner-bg"></div>
-  <% } %>
+    })%>
   <div id="safe-area-test" style="position: fixed; bottom: 0; height: env(safe-area-inset-bottom);"></div>
   <div class="page-body">
     <div class="side-content">
@@ -107,7 +116,7 @@ const version = theme.version;
       </div>
       <% } %>
     </div>
-    <div id="content-outer" class="<%= is_post() ? 'post-outer' : page.seriesInfo?.cover ? 'series-outer': '' %>">
+    <div id="content-outer" class="<%= contentOuterClasses %>"<%- contentOuterStyle ? ` style="${contentOuterStyle}"` : '' %>>
       <main id="content-inner" class="content-inner">
         <%- body %>
       </main>

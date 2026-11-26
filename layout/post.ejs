@@ -39,8 +39,8 @@
 </div>
 <% } %>
 
-<% const isTravelSeries = ['旅行', 'Travel'].includes(page.series); %>
-<article id="post" class="article<%= isTravelSeries ? ' travel-post' : '' %>">
+<% const postLayoutStyle = getPostLayoutStyle(page); %>
+<article id="post" class="article layout-style-<%= postLayoutStyle %><%= postLayoutStyle === 'journal' ? ' travel-post' : '' %>">
   <h1 class="post-title"><%=page.title%><% if (page.subTitle) { %><span class="sub-title"><%=page.subTitle%></span><% } %></h1>
   <div class="post-meta">
     <% if (page.date && !date(page.date).startsWith('1970')) { %>
@@ -322,6 +322,10 @@ const seriesInfo = getSeriesInfo(page?.series);
     children: 'a.gallery-item',
     bgOpacity: 1,
     pswpModule: PhotoSwipe,
+    arrowPrevSVG: '<svg aria-hidden="true" class="pswp__icn" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+    arrowNextSVG: '<svg aria-hidden="true" class="pswp__icn" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>',
+    closeSVG: '<svg aria-hidden="true" class="pswp__icn" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>',
+    zoomSVG: '<svg aria-hidden="true" class="pswp__icn" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/><path d="M8 11h6"/><path class="pswp__zoom-icn-bar-v" d="M11 8v6"/></svg>',
     openPromise: () => {
       if (pendingOpenPromise) {
         const promise = pendingOpenPromise;
@@ -356,7 +360,8 @@ const seriesInfo = getSeriesInfo(page?.series);
     const matches = [...exifString.matchAll(/\{([^}]*)\}/g)].map(match => match[1])
     if (matches && matches.length) {
       const locationMatches = [...locationString.matchAll(/\{([^}]*)\}/g)].map(match => match[1]);
-      const keys = ['camera', 'lens', 'iso', 'focusLength', 'ev', 'aperture', 'shutterSpeed', 'hdr'];
+      const gearKeys = ['camera', 'lens'];
+      const specKeys = ['focusLength', 'aperture', 'shutterSpeed', 'iso', 'ev'];
       const [camera, iso, focusLength, aperture, shutterSpeed, ev, lens, isHDR] = matches;
       const isHDRActive = (isHDRScreen && (!!isHDR || (element && element.href && element.href.includes(hdrAssetsPrefix))) && window.hdrEnabled) ? 'HDR' : ''
       const exifObj = {
@@ -384,7 +389,15 @@ const seriesInfo = getSeriesInfo(page?.series);
         hdr: 'HDR Photo',
         location: 'Location'
       }
-      return `<div class="img-exif">${keys.map(key=>exifObj[key]?`<span class="${key}" title="${altTextMap[key]}">${typeof exifObj[key] === 'boolean' ? '' : exifObj[key]}</span>`: '').join('')}${exifObj.location ? `<a href="${exifObj.location.url}"><span class="location">${exifObj.location.title}</span></a>`: ''}</div>`;
+      const renderItems = (keys) => keys
+        .map(key => exifObj[key] ? `<span class="${key}" title="${altTextMap[key]}">${typeof exifObj[key] === 'boolean' ? '' : exifObj[key]}</span>` : '')
+        .join('');
+      const gearHtml = renderItems(gearKeys);
+      const specsHtml = renderItems(specKeys) +
+        (exifObj.hdr ? `<span class="hdr" title="${altTextMap.hdr}">${exifObj.hdr}</span>` : '') +
+        (exifObj.location ? `<a class="exif-location-link" href="${exifObj.location.url}" target="_blank" rel="noopener"><span class="location" title="${altTextMap.location}">${exifObj.location.title}</span></a>` : '');
+      if (!gearHtml && !specsHtml) return '';
+      return `<div class="img-exif">${gearHtml ? `<div class="img-exif-gear">${gearHtml}</div>` : ''}${specsHtml ? `<div class="img-exif-specs">${specsHtml}</div>` : ''}</div>`;
     }
     return '';
   }
@@ -634,7 +647,7 @@ const seriesInfo = getSeriesInfo(page?.series);
 
   const getScrollDelta = (element) => {
     if (!element) {
-      return { deltaX: 0, deltaY: 0, scrollContainer: null, target: null };
+      return { deltaX: 0, deltaY: 0, targetScrollLeft: null, scrollContainer: null, target: null };
     }
     const target = (typeof getScrollTarget === 'function' ? getScrollTarget(element) : null) || element;
     const rect = target.getBoundingClientRect();
@@ -643,12 +656,18 @@ const seriesInfo = getSeriesInfo(page?.series);
 
     const scrollContainer = target.closest && target.closest('.image-grid.scroll, .image-grid.slider');
     let deltaX = 0;
+    let targetScrollLeft = null;
 
     if (scrollContainer) {
+      const snapTarget = (target.closest && target.closest('.grid-item')) || target;
+      const snapRect = snapTarget.getBoundingClientRect();
       const containerRect = scrollContainer.getBoundingClientRect();
-      const targetCenter = rect.left + rect.width / 2;
+      const targetCenter = snapRect.left + snapRect.width / 2;
       const containerCenter = containerRect.left + containerRect.width / 2;
-      deltaX = targetCenter - containerCenter;
+      const rawTargetScrollLeft = scrollContainer.scrollLeft + (targetCenter - containerCenter);
+      const maxScrollLeft = Math.max(0, scrollContainer.scrollWidth - scrollContainer.clientWidth);
+      targetScrollLeft = Math.round(Math.max(0, Math.min(maxScrollLeft, rawTargetScrollLeft)));
+      deltaX = targetScrollLeft - scrollContainer.scrollLeft;
     } else {
       if (rect.left < 0) {
         deltaX = rect.left;
@@ -659,20 +678,60 @@ const seriesInfo = getSeriesInfo(page?.series);
 
     const headerHeight = getFixedHeaderHeight();
     const topSafePadding = headerHeight > 0 ? headerHeight + 16 : 16;
+    // Exception: if the item is only partially outside the viewport vertically, skip vertical scrolling
+    const isCompletelyOutsideVertically = rect.bottom <= 0 || rect.top >= windowHeight;
     let deltaY = 0;
 
-    if (rect.top < topSafePadding) {
-      deltaY = rect.top - topSafePadding;
-    } else if (rect.bottom > windowHeight) {
-      const desiredDeltaY = rect.bottom - windowHeight + 16;
-      const maxAllowedDeltaY = rect.top - topSafePadding;
-      deltaY = Math.min(desiredDeltaY, maxAllowedDeltaY);
+    if (isCompletelyOutsideVertically) {
+      if (rect.top < topSafePadding) {
+        deltaY = rect.top - topSafePadding;
+      } else if (rect.bottom > windowHeight) {
+        const desiredDeltaY = rect.bottom - windowHeight + 16;
+        const maxAllowedDeltaY = rect.top - topSafePadding;
+        deltaY = Math.min(desiredDeltaY, maxAllowedDeltaY);
+      }
     }
 
-    return { deltaX, deltaY, scrollContainer, target };
+    return { deltaX, deltaY, targetScrollLeft, scrollContainer, target };
   };
 
-  const waitForScrollEnd = (scrollContainer, needsScrollX, needsScrollY) => {
+  const suspendedScrollSnapState = new WeakMap();
+
+  const suspendScrollSnap = (container) => {
+    if (!container || !container.style) return () => {};
+    let state = suspendedScrollSnapState.get(container);
+    if (!state) {
+      state = {
+        original: container.style.scrollSnapType,
+        token: 0
+      };
+      suspendedScrollSnapState.set(container, state);
+    }
+    const token = ++state.token;
+    container.style.scrollSnapType = 'none';
+    // Force style flush so WebKit disables mandatory snapping before programmatic scrollTo starts
+    void container.offsetWidth;
+
+    return (finalScrollLeft) => {
+      const currentState = suspendedScrollSnapState.get(container);
+      if (!currentState || currentState.token !== token) {
+        return;
+      }
+      if (typeof finalScrollLeft === 'number' && Math.abs(container.scrollLeft - finalScrollLeft) > 1) {
+        container.scrollLeft = finalScrollLeft;
+      }
+      window.requestAnimationFrame(() => {
+        const latestState = suspendedScrollSnapState.get(container);
+        if (!latestState || latestState.token !== token) {
+          return;
+        }
+        container.style.scrollSnapType = latestState.original;
+        suspendedScrollSnapState.delete(container);
+      });
+    };
+  };
+
+  const waitForScrollEnd = (scrollContainer, needsScrollX, needsScrollY, targetScrollLeft) => {
     return new Promise((resolve) => {
       let resolved = false;
       let rafId = null;
@@ -680,9 +739,9 @@ const seriesInfo = getSeriesInfo(page?.series);
       let maxTimer = null;
 
       let hasMoved = false;
-      let hasMovedX = false;
-      let hasMovedY = false;
-      let idleFrames = 0;
+      let doneX = !needsScrollX;
+      let doneY = !needsScrollY;
+      let idleStartTime = null;
       let lastX = scrollContainer ? scrollContainer.scrollLeft : 0;
       let lastY = window.pageYOffset;
 
@@ -703,13 +762,15 @@ const seriesInfo = getSeriesInfo(page?.series);
       };
 
       const onContainerScrollEnd = () => {
-        if (!needsScrollY || !hasMovedY) {
+        doneX = true;
+        if (doneX && doneY) {
           finish();
         }
       };
 
       const onWindowScrollEnd = () => {
-        if (!needsScrollX || !hasMovedX) {
+        doneY = true;
+        if (doneX && doneY) {
           finish();
         }
       };
@@ -722,7 +783,7 @@ const seriesInfo = getSeriesInfo(page?.series);
         }
       }, 160);
 
-      const check = () => {
+      const check = (now) => {
         if (resolved) return;
 
         const currX = scrollContainer ? scrollContainer.scrollLeft : 0;
@@ -733,25 +794,29 @@ const seriesInfo = getSeriesInfo(page?.series);
 
         if (needsScrollX && diffX > 0.5) {
           hasMoved = true;
-          hasMovedX = true;
         }
         if (needsScrollY && diffY > 0.5) {
           hasMoved = true;
-          hasMovedY = true;
         }
 
         if (hasMoved) {
-          const isIdleX = !needsScrollX || diffX <= 0.5;
-          const isIdleY = !needsScrollY || diffY <= 0.5;
+          const isIdleX = doneX || diffX <= 0.5;
+          const isIdleY = doneY || diffY <= 0.5;
 
           if (isIdleX && isIdleY) {
-            idleFrames++;
-            if (idleFrames >= 6) {
+            if (idleStartTime === null) {
+              idleStartTime = now;
+            }
+            const reachedTargetX = !needsScrollX || (
+              typeof targetScrollLeft === 'number' && Math.abs(currX - targetScrollLeft) <= 1
+            );
+            const requiredIdleMs = (reachedTargetX && !needsScrollY) ? 50 : 110;
+            if (now - idleStartTime >= requiredIdleMs) {
               finish();
               return;
             }
           } else {
-            idleFrames = 0;
+            idleStartTime = null;
           }
         }
 
@@ -761,10 +826,12 @@ const seriesInfo = getSeriesInfo(page?.series);
         rafId = requestAnimationFrame(check);
       };
 
-      if (scrollContainer) {
+      if (scrollContainer && needsScrollX) {
         scrollContainer.addEventListener('scrollend', onContainerScrollEnd, { once: true, passive: true });
       }
-      window.addEventListener('scrollend', onWindowScrollEnd, { once: true, passive: true });
+      if (needsScrollY) {
+        window.addEventListener('scrollend', onWindowScrollEnd, { once: true, passive: true });
+      }
 
       rafId = requestAnimationFrame(check);
     });
@@ -788,18 +855,21 @@ const seriesInfo = getSeriesInfo(page?.series);
 
     let deltaX = 0;
     let deltaY = 0;
+    let targetScrollLeft = null;
     let scrollContainer = null;
 
     if (inGrid) {
       const scrollInfo = getScrollDelta(target);
       deltaX = scrollInfo.deltaX;
       deltaY = scrollInfo.deltaY;
+      targetScrollLeft = scrollInfo.targetScrollLeft;
       scrollContainer = scrollInfo.scrollContainer;
     } else if (isBlocked) {
-      // Non-grid image blocked by header: smooth scroll down if top edge overflows above viewport (< 16px)
+      // Non-grid image blocked by header: skip vertical scroll when only partially outside viewport
       const scrollTarget = (typeof getScrollTarget === 'function' ? getScrollTarget(target) : null) || target;
       const rect = scrollTarget.getBoundingClientRect();
-      if (rect.top < 16) {
+      const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+      if (rect.bottom <= 0 || rect.top >= windowHeight) {
         deltaY = rect.top - 16;
       }
     }
@@ -819,12 +889,14 @@ const seriesInfo = getSeriesInfo(page?.series);
 
     const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const behavior = prefersReducedMotion ? 'instant' : 'smooth';
+    let restoreScrollSnap = null;
 
-    if (needsScrollX && scrollContainer) {
-      if (typeof scrollContainer.scrollBy === 'function') {
-        scrollContainer.scrollBy({ left: deltaX, behavior });
+    if (needsScrollX && scrollContainer && typeof targetScrollLeft === 'number') {
+      restoreScrollSnap = suspendScrollSnap(scrollContainer);
+      if (typeof scrollContainer.scrollTo === 'function') {
+        scrollContainer.scrollTo({ left: targetScrollLeft, behavior });
       } else {
-        scrollContainer.scrollLeft += deltaX;
+        scrollContainer.scrollLeft = targetScrollLeft;
       }
     }
 
@@ -839,12 +911,19 @@ const seriesInfo = getSeriesInfo(page?.series);
     if (behavior === 'instant') {
       return new Promise((resolve) => {
         window.requestAnimationFrame(() => {
+          if (restoreScrollSnap) {
+            restoreScrollSnap(targetScrollLeft);
+          }
           window.requestAnimationFrame(resolve);
         });
       });
     }
 
-    return waitForScrollEnd(scrollContainer, needsScrollX, needsScrollY);
+    return waitForScrollEnd(scrollContainer, needsScrollX, needsScrollY, targetScrollLeft).then(() => {
+      if (restoreScrollSnap) {
+        restoreScrollSnap(targetScrollLeft);
+      }
+    });
   };
 
   lightbox.addFilter('clickedIndex', (index, event) => {
@@ -909,16 +988,25 @@ const seriesInfo = getSeriesInfo(page?.series);
           const currSlideElement = lightbox.pswp.currSlide.data.element;
           let captionHTML = '';
           if (currSlideElement) {
-            const gap = (window.innerHeight - lightbox.pswp.currSlide.data.height / lightbox.pswp.currSlide.data.width * window.innerWidth) / 2;
-            captionHTML = getExif(lightbox.pswp.currSlide.data && lightbox.pswp.currSlide.data.element) || '';
+            const slideData = lightbox.pswp.currSlide.data || {};
+            const aspectRatio = slideData.width ? (slideData.height / slideData.width) : 0;
+            const gap = (window.innerHeight - aspectRatio * window.innerWidth) / 2;
+            captionHTML = getExif(slideData.element) || '';
             if (window.innerWidth <= 600) {
-              el.style.top = `${gap}px`;
               el.classList.add('mobile');
+              if (gap < 110) {
+                el.classList.add('is-overlaid');
+                el.style.top = '58px';
+              } else {
+                el.classList.remove('is-overlaid');
+                el.style.top = `${gap}px`;
+              }
             } else {
               el.style.top = 'unset';
-              el.classList.remove('mobile');
+              el.classList.remove('mobile', 'is-overlaid');
             }
           }
+          el.classList.toggle('is-empty', !captionHTML);
           el.innerHTML = captionHTML || '';
         });
       }
@@ -972,6 +1060,7 @@ const seriesInfo = getSeriesInfo(page?.series);
     if (currentImage && currentImage.scrollIntoView) {
       currentImage.scrollIntoView({
         block: 'center',
+        inline: 'center',
         behavior: 'instant'
       });
     }

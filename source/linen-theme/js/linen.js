@@ -198,7 +198,7 @@ function initAnchorHighlighter({
     style.id = "anchor-highlight-style";
     style.textContent = `
       @keyframes anchorFlash {
-        0%   { background-color: rgba(168, 69, 46, 0.14); }
+        0%   { background-color: var(--linen-accent-soft-strong, rgba(168, 69, 46, 0.14)); }
         100% { background-color: transparent; }
       }
       .${highlightClass} {
@@ -645,7 +645,9 @@ function initMaskScrollLock() {
 }
 
 function initTravelRoutes() {
-  var contentEl = document.querySelector("#post.travel-post #page-content");
+  var contentEl = document.querySelector(
+    "#post.layout-style-journal #page-content, #post.travel-post #page-content"
+  );
   if (!contentEl) return;
 
   var ROUTE_HEADING_RE = /^(?:路线|路线规划|Route|Route Planning)$/i;

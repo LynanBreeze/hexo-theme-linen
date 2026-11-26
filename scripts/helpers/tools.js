@@ -41,6 +41,16 @@ hexo.extend.helper.register("getPageTitle", function () {
   return pageTitle;
 });
 
+const LEGACY_JOURNAL_SERIES = ["旅行", "Travel"];
+
+function normalizeLayoutStyle(style) {
+  if (typeof style !== "string") return "";
+  const normalized = style.trim().toLowerCase();
+  if (!normalized) return "";
+  if (normalized === "travel") return "journal";
+  return normalized;
+}
+
 function getFile(filePath, defaultValue) {
   try {
     return JSON.parse(fs.readFileSync(filePath));
@@ -55,6 +65,120 @@ hexo.extend.helper.register("getSeriesInfo", function (seriesName) {
     {},
   );
   return seriesInfo?.[seriesName] || {};
+});
+
+hexo.extend.helper.register("getPostLayoutStyle", function (post, seriesInfoArg) {
+  const p = post || this.page || {};
+  const themeConfig = this.theme || this.config?.theme_config || {};
+  const postConfig = themeConfig?.post || {};
+
+  const fromPost = normalizeLayoutStyle(p?.layoutStyle);
+  if (fromPost) return fromPost;
+
+  const seriesName = p?.series;
+  const seriesInfo =
+    seriesInfoArg ||
+    (seriesName
+      ? getFile(path.join(hexo.base_dir, "assets-db/series.json"), {})?.[seriesName] || {}
+      : {});
+
+  const fromSeriesInfo = normalizeLayoutStyle(seriesInfo?.layoutStyle);
+  if (fromSeriesInfo) return fromSeriesInfo;
+
+  if (seriesName && postConfig?.seriesLayoutStyle && Object.prototype.hasOwnProperty.call(postConfig.seriesLayoutStyle, seriesName)) {
+    const fromSeriesMap = normalizeLayoutStyle(postConfig.seriesLayoutStyle[seriesName]);
+    if (fromSeriesMap) return fromSeriesMap;
+  }
+
+  if (seriesName && LEGACY_JOURNAL_SERIES.includes(seriesName)) {
+    return "journal";
+  }
+
+  return normalizeLayoutStyle(postConfig?.layoutStyle) || "editorial";
+});
+
+hexo.extend.helper.register("getPostBreakoutConfig", function (post, seriesInfoArg) {
+  const p = post || this.page || {};
+  const themeConfig = this.theme || this.config?.theme_config || {};
+  const postConfig = themeConfig?.post || {};
+  const seriesName = p?.series;
+  const seriesInfo =
+    seriesInfoArg ||
+    (seriesName
+      ? getFile(path.join(hexo.base_dir, "assets-db/series.json"), {})?.[seriesName] || {}
+      : {});
+
+  const resolveEnable = (val) => {
+    if (typeof val === "boolean") return val;
+    if (val && typeof val === "object" && typeof val.enable === "boolean") {
+      return val.enable;
+    }
+    return undefined;
+  };
+
+  const resolveWidth = (val) => {
+    if (val && typeof val === "object" && typeof val.proseWidth === "string" && val.proseWidth.trim()) {
+      return val.proseWidth.trim();
+    }
+    return "";
+  };
+
+  const candidates = [
+    p?.editorialBreakout,
+    seriesInfo?.editorialBreakout,
+    postConfig?.editorialBreakout,
+    themeConfig?.editorialBreakout,
+  ];
+
+  let enable = false;
+  for (const candidate of candidates) {
+    const resolved = resolveEnable(candidate);
+    if (resolved !== undefined) {
+      enable = resolved;
+      break;
+    }
+  }
+
+  const proseWidth =
+    (typeof p?.proseWidth === "string" && p.proseWidth.trim()) ||
+    resolveWidth(p?.editorialBreakout) ||
+    (typeof seriesInfo?.proseWidth === "string" && seriesInfo.proseWidth.trim()) ||
+    resolveWidth(seriesInfo?.editorialBreakout) ||
+    resolveWidth(postConfig?.editorialBreakout) ||
+    (typeof postConfig?.proseWidth === "string" && postConfig.proseWidth.trim()) ||
+    resolveWidth(themeConfig?.editorialBreakout) ||
+    "";
+
+  return { enable, proseWidth };
+});
+
+hexo.extend.helper.register("isMapSeries", function (seriesName, seriesInfoArg) {
+  if (!seriesName) return false;
+  const themeConfig = this.theme || this.config?.theme_config || {};
+  const seriesInfo =
+    seriesInfoArg ||
+    getFile(path.join(hexo.base_dir, "assets-db/series.json"), {})?.[seriesName] ||
+    {};
+
+  if (typeof seriesInfo?.map === "boolean") {
+    return seriesInfo.map;
+  }
+
+  if (Array.isArray(themeConfig?.series?.mapSeries)) {
+    return themeConfig.series.mapSeries.includes(seriesName);
+  }
+
+  const fromSeriesInfo = normalizeLayoutStyle(seriesInfo?.layoutStyle);
+  if (fromSeriesInfo) {
+    return fromSeriesInfo === "journal";
+  }
+
+  const seriesLayoutMap = themeConfig?.post?.seriesLayoutStyle || {};
+  if (Object.prototype.hasOwnProperty.call(seriesLayoutMap, seriesName)) {
+    return normalizeLayoutStyle(seriesLayoutMap[seriesName]) === "journal";
+  }
+
+  return LEGACY_JOURNAL_SERIES.includes(seriesName);
 });
 
 hexo.extend.helper.register("getCategoryInfo", function (categoryName) {

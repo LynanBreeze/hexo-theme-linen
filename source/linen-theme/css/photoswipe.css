@@ -585,12 +585,175 @@ div.pswp__img--placeholder,
 }
 
 .pswp {
-  --pswp-bg: #fff;
+  --pswp-bg: var(--linen-bg, #fcfbf8);
+  --pswp-placeholder-bg: var(--linen-surface, #f4f2ec);
+  --pswp-icon-color: var(--linen-ink, #22211f);
+  --pswp-icon-color-secondary: var(--linen-ink-muted, #6f6b64);
 }
 
-.pswp__counter{
-  color: #232323;
+.pswp__top-bar {
+  height: auto;
+  padding: 12px 14px 0;
+  padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  align-items: center;
+  gap: 8px;
+}
+
+.pswp__preloader {
+  width: 36px;
+  height: 36px;
+}
+
+.pswp__preloader .pswp__icn {
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+}
+
+.pswp__counter {
+  height: 36px;
+  margin: 0;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--linen-radius-md, 4px);
+  background: var(--linen-bg-translucent, rgba(252, 251, 248, 0.88));
+  border: 1px solid var(--linen-border-subtle, rgba(34, 33, 31, 0.07));
+  backdrop-filter: saturate(160%) blur(12px);
+  -webkit-backdrop-filter: saturate(160%) blur(12px);
+  font-family:
+    "SF Mono",
+    SFMono-Regular,
+    ui-monospace,
+    Menlo,
+    monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  color: var(--linen-ink-muted, #6f6b64);
   text-shadow: none;
+}
+
+.pswp__button--close,
+.pswp__button--zoom,
+.pswp__button--arrow {
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--linen-radius-md, 4px);
+  background: var(--linen-bg-translucent, rgba(252, 251, 248, 0.88));
+  border: 1px solid var(--linen-border, rgba(34, 33, 31, 0.11));
+  box-shadow: 0 4px 14px var(--linen-shadow-color, rgba(34, 33, 31, 0.08));
+  backdrop-filter: saturate(160%) blur(12px);
+  -webkit-backdrop-filter: saturate(160%) blur(12px);
+  color: var(--linen-ink, #22211f);
+  transition:
+    opacity var(--pswp-transition-duration) cubic-bezier(0.4, 0, 0.22, 1),
+    color 180ms var(--linen-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    border-color 180ms var(--linen-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    background-color 180ms var(--linen-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+.pswp__button--close:focus,
+.pswp__button--zoom:focus,
+.pswp__button--arrow:focus {
+  padding: 0;
+  background: var(--linen-bg-translucent, rgba(252, 251, 248, 0.88));
+  border: 1px solid var(--linen-border, rgba(34, 33, 31, 0.11));
+  box-shadow: 0 4px 14px var(--linen-shadow-color, rgba(34, 33, 31, 0.08));
+}
+
+.pswp__button--zoom {
+  display: none;
+}
+
+.pswp--zoom-allowed .pswp__button--zoom {
+  display: inline-flex;
+}
+
+.pswp__button--arrow {
+  width: 40px;
+  height: 40px;
+  margin-top: -20px;
+}
+
+.pswp__button--arrow:disabled,
+.pswp--one-slide .pswp__button--arrow {
+  display: none;
+}
+
+.pswp__button--arrow--prev {
+  left: 14px;
+}
+
+.pswp__button--arrow--next {
+  right: 14px;
+}
+
+@media (hover: hover) {
+  .pswp__button--close:hover,
+  .pswp__button--zoom:hover,
+  .pswp__button--arrow:hover {
+    color: var(--linen-accent, #a8452e);
+    border-color: var(--linen-accent-border, rgba(168, 69, 46, 0.28));
+    background: var(--linen-bg-elevated, #ffffff);
+    box-shadow: 0 4px 14px var(--linen-shadow-color, rgba(34, 33, 31, 0.08));
+  }
+}
+
+.pswp__button--close:active,
+.pswp__button--zoom:active,
+.pswp__button--arrow:active {
+  color: var(--linen-accent, #a8452e);
+  border-color: var(--linen-accent-border, rgba(168, 69, 46, 0.28));
+  background: var(--linen-bg-elevated, #ffffff);
+  box-shadow: 0 4px 14px var(--linen-shadow-color, rgba(34, 33, 31, 0.08));
+}
+
+.pswp .pswp__hide-on-close {
+  opacity: 0.005;
+}
+
+.pswp--ui-visible .pswp__hide-on-close {
+  opacity: 1;
+}
+
+.pswp__button--close:focus-visible,
+.pswp__button--zoom:focus-visible,
+.pswp__button--arrow:focus-visible {
+  outline: 2px solid var(--linen-accent-focus, rgba(168, 69, 46, 0.45));
+  outline-offset: 2px;
+}
+
+.pswp__button--close .pswp__icn,
+.pswp__button--zoom .pswp__icn,
+.pswp__button--arrow .pswp__icn {
+  position: static;
+  top: auto;
+  left: auto;
+  right: auto;
+  margin: 0;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  color: currentColor;
+  stroke: currentColor;
+}
+
+.pswp__button--arrow .pswp__icn {
+  width: 20px;
+  height: 20px;
+}
+
+.pswp__button--arrow--next .pswp__icn {
+  transform: none;
 }
 
 .pswp__iframe-container {

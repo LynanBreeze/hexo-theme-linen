@@ -6,25 +6,26 @@
 @use "./mediaquery.scss" as mq;
 
 :root {
-  --linen-accent: #{$accent};
-  --linen-accent-dark: #{$accentDark};
-  --linen-accent-soft: #{$accentSoft};
-  --linen-accent-border: #{$accentBorder};
-  --linen-bg: #{$bg};
-  --linen-surface: #{$surface};
-  --linen-surface-alt: #{$surfaceAlt};
-  --linen-ink: #{$darkText};
-  --linen-ink-secondary: #{$grayerText};
-  --linen-ink-muted: #{$metaText};
-  --linen-ink-subtle: #{$moreGrayText};
-  --linen-border-subtle: #{$borderSubtle};
-  --linen-border: #{$borderColor};
-  --linen-border-strong: #{$borderStrong};
+  color-scheme: light;
+  @include linenLightPalette;
   --linen-radius-sm: #{$radiusSm};
   --linen-radius-md: #{$radiusMd};
   --linen-radius-lg: #{$radiusLg};
   --linen-radius-sheet: #{$radiusSheet};
   --linen-ease: #{$easeOut};
+  --linen-prose-width: #{$proseMaxWidth};
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    @include linenDarkPalette;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  @include linenDarkPalette;
 }
 
 @font-face {
@@ -110,7 +111,7 @@ html {
 }
 
 :focus-visible {
-  outline: 2px solid rgba(168, 69, 46, 0.45);
+  outline: 2px solid $accentFocus;
   outline-offset: 2px;
   border-radius: $radiusSm;
 }
@@ -261,7 +262,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(255, 255, 255, 0.88);
+  background-color: $bgTranslucent;
   border: 1px solid $borderColor;
   border-radius: $radiusMd;
   backdrop-filter: blur(10px);
@@ -276,7 +277,7 @@ a {
     color 0.2s $easeOut,
     background-color 0.2s $easeOut;
   opacity: 0;
-  box-shadow: 0 6px 18px rgba(34, 33, 31, 0.08);
+  box-shadow: 0 6px 18px $shadowColor;
   &::before {
     content: "";
     display: block;
@@ -289,7 +290,7 @@ a {
   &:hover {
     color: $accent;
     border-color: $accentBorder;
-    background-color: #fff;
+    background-color: $bgElevated;
   }
   &.visible {
     transform: translateY(0);
@@ -304,6 +305,8 @@ body {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  background-color: $bg;
+  color: $darkText;
   text-rendering: optimizeLegibility;
   line-height: 1.5;
   @include defaultFont;
@@ -353,7 +356,7 @@ img.linen-emoji {
   height: $navbarMinHeight;
   flex-shrink: 0;
   display: none;
-  background-color: #fff;
+  background-color: $bg;
 }
 
 .nav-header {
@@ -384,6 +387,12 @@ img.linen-emoji {
       background-image: url("../img/logo.svg");
       background-size: cover;
       -webkit-tap-highlight-color: transparent;
+      &.default-logo {
+        filter: var(--linen-icon-invert);
+        &:active {
+          filter: var(--linen-icon-invert);
+        }
+      }
       &:active {
         opacity: 1;
         filter: none;
@@ -420,38 +429,43 @@ img.linen-emoji {
         .button {
           width: 22px;
           height: 22px;
+          color: $darkText;
           transition: opacity 200ms $easeOut;
           &.toc {
-            background-image: url("../img/icons/toc1.svg");
-            background-size: contain;
+            background-color: currentColor;
+            -webkit-mask: url("../img/icons/toc1.svg") no-repeat center / contain;
+            mask: url("../img/icons/toc1.svg") no-repeat center / contain;
             display: none;
-            background-repeat: no-repeat;
-            background-position: center;
             cursor: pointer;
           }
           &.search {
-            background-image: url("../img/icons/search.svg");
-            background-size: cover;
+            background-color: currentColor;
+            -webkit-mask: url("../img/icons/search.svg") no-repeat center / contain;
+            mask: url("../img/icons/search.svg") no-repeat center / contain;
           }
           &.github {
-            background-image: url("../img/icons/github.svg");
-            background-size: cover;
+            background-color: currentColor;
+            -webkit-mask: url("../img/icons/github.svg") no-repeat center / contain;
+            mask: url("../img/icons/github.svg") no-repeat center / contain;
           }
           &.zh-CN {
             background-image: url("../img/icons/chinese.svg");
             background-size: cover;
             width: 25px;
             height: 25px;
+            filter: var(--linen-icon-invert);
           }
           &.en {
             background-image: url("../img/icons/english.svg");
             background-size: cover;
             width: 25px;
             height: 25px;
+            filter: var(--linen-icon-invert);
           }
           &.rss {
-            background-image: url("../img/icons/rss.svg");
-            background-size: cover;
+            background-color: currentColor;
+            -webkit-mask: url("../img/icons/rss.svg") no-repeat center / contain;
+            mask: url("../img/icons/rss.svg") no-repeat center / contain;
           }
           &.hdr-switch {
             background-image: url("../img/icons/hdr.svg");
@@ -460,6 +474,7 @@ img.linen-emoji {
             background-position: center;
             cursor: pointer;
             position: relative;
+            filter: var(--linen-icon-invert);
             transition: opacity 0.2s $easeOut;
 
             &:hover {
@@ -506,7 +521,7 @@ img.linen-emoji {
               top: 50%;
               margin-top: -1px;
               left: 2%;
-              background-color: $darkText;
+              background-color: #22211f;
               border-radius: 2px;
               transform: rotate(37deg) scaleX(1);
               transform-origin: center;
@@ -518,6 +533,7 @@ img.linen-emoji {
             }
 
             &.hdr_on {
+              filter: none;
               &::before {
                 opacity: 1;
                 filter: drop-shadow(0 0 3px rgba(255, 94, 58, 0.28));
@@ -546,7 +562,7 @@ img.linen-emoji {
   position: relative;
   background-size: cover;
   background-repeat: no-repeat;
-  background-color: #fff;
+  background-color: $bg;
   background-position: center;
   &::before,
   &::after {
@@ -556,7 +572,7 @@ img.linen-emoji {
     height: 100%;
     left: -1px;
     top: 0;
-    background-color: #fff;
+    background-color: $bg;
   }
   &::after {
     left: unset;
@@ -788,9 +804,10 @@ img.linen-emoji {
     strong {
       font-family: inherit;
       font-weight: 700;
-      color: #000;
+      color: $strongText;
     }
   }
+  &.layout-style-journal,
   &.travel-post {
     #page-content {
       counter-reset: travel-h2;
@@ -828,7 +845,7 @@ img.linen-emoji {
         font-weight: 900;
         line-height: 1.35;
         letter-spacing: 0.08em;
-        color: #1d1d1d;
+        color: $strongText;
         word-break: normal;
         overflow-wrap: break-word;
         text-wrap: balance;
@@ -856,14 +873,14 @@ img.linen-emoji {
           font-weight: 500;
           line-height: 1;
           letter-spacing: 0.16em;
-          color: #a8452e;
+          color: $accent;
           opacity: 1;
           -webkit-mask: none;
           mask: none;
           background:
-            linear-gradient(rgba(168, 69, 46, 0.35), rgba(168, 69, 46, 0.35))
+            linear-gradient($accentUnderline, $accentUnderline)
               left center / 24px 1px no-repeat,
-            linear-gradient(rgba(168, 69, 46, 0.35), rgba(168, 69, 46, 0.35))
+            linear-gradient($accentUnderline, $accentUnderline)
               right center / 24px 1px no-repeat;
           transition:
             background-size 0.3s ease,
@@ -876,7 +893,7 @@ img.linen-emoji {
           width: 22px;
           height: 1.5px;
           margin: 12px auto 0;
-          background-color: rgba(35, 35, 35, 0.22);
+          background-color: $borderStrong;
           transition:
             width 0.3s ease,
             background-color 0.3s ease;
@@ -895,7 +912,7 @@ img.linen-emoji {
 
           &::after {
             width: 32px;
-            background-color: rgba(168, 69, 46, 0.55);
+            background-color: $accentFocus;
           }
         }
       }
@@ -945,12 +962,12 @@ img.linen-emoji {
           font-size: 10px;
           font-weight: 400;
           line-height: 1;
-          color: rgba(168, 69, 46, 0.78);
+          color: $accent;
           -webkit-mask: none;
           mask: none;
           background-image: none;
           background-color: transparent;
-          opacity: 1;
+          opacity: 0.78;
           flex-shrink: 0;
           transition:
             color 0.25s ease,
@@ -966,7 +983,7 @@ img.linen-emoji {
           margin-left: 12px;
           background: linear-gradient(
             to right,
-            rgba(0, 0, 0, 0.08),
+            $borderColor,
             transparent 65%
           );
           transition: background 0.25s ease;
@@ -978,13 +995,13 @@ img.linen-emoji {
           &::before {
             opacity: 1;
             transform: scale(1.15);
-            color: #a8452e;
+            color: $accent;
           }
 
           &::after {
             background: linear-gradient(
               to right,
-              rgba(168, 69, 46, 0.25),
+              $accentBorder,
               transparent 75%
             );
           }
@@ -1008,7 +1025,7 @@ img.linen-emoji {
         font-weight: 900;
         line-height: 1.5;
         letter-spacing: 0.03em;
-        color: #2c2c2c;
+        color: $darkText;
         word-break: normal;
         overflow-wrap: break-word;
 
@@ -1019,7 +1036,8 @@ img.linen-emoji {
           font-size: 8.5px;
           font-weight: 400;
           line-height: 1;
-          color: rgba(168, 69, 46, 0.55);
+          color: $accent;
+          opacity: 0.58;
           flex-shrink: 0;
         }
 
@@ -1031,7 +1049,7 @@ img.linen-emoji {
           margin-left: 10px;
           background: linear-gradient(
             to right,
-            rgba(0, 0, 0, 0.06),
+            $borderSubtle,
             transparent 48%
           );
         }
@@ -1066,8 +1084,8 @@ img.linen-emoji {
         width: 100%;
         margin: 1.6em auto;
         border: none;
-        border-top: 1px dashed rgba(168, 69, 46, 0.42);
-        border-bottom: 1px dashed rgba(168, 69, 46, 0.42);
+        border-top: 1px dashed $accentFocus;
+        border-bottom: 1px dashed $accentFocus;
         border-collapse: collapse;
         border-spacing: 0;
         font-variant-numeric: tabular-nums;
@@ -1111,7 +1129,7 @@ img.linen-emoji {
           font-weight: 600;
           letter-spacing: 0.08em;
           color: $moreGrayText;
-          border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+          border-bottom: 1px solid $borderColor;
           background-color: transparent;
         }
 
@@ -1119,7 +1137,7 @@ img.linen-emoji {
           transition: background-color 0.2s ease;
 
           &:hover {
-            background-color: rgba(168, 69, 46, 0.025);
+            background-color: $accentHoverRow;
           }
 
           &:last-child td {
@@ -1128,11 +1146,11 @@ img.linen-emoji {
         }
 
         tbody td {
-          color: #2b2b2b;
-          border-bottom: 1px dashed rgba(0, 0, 0, 0.09);
+          color: $darkText;
+          border-bottom: 1px dashed $borderColor;
 
           &:first-child {
-            color: #a8452e;
+            color: $accent;
           }
         }
       }
@@ -1165,7 +1183,7 @@ img.linen-emoji {
           height: 100%;
           min-width: 6px;
           border-radius: 2px;
-          background-color: var(--stop-color, #a8452e);
+          background-color: var(--stop-color, $accent);
           transition:
             opacity 0.2s ease,
             transform 0.2s ease;
@@ -1189,7 +1207,7 @@ img.linen-emoji {
           list-style: none;
           margin: 0;
           padding: 9px 10px 8px;
-          border-top: 1px dashed rgba(0, 0, 0, 0.11);
+          border-top: 1px dashed $borderColor;
           display: flex;
           flex-direction: column;
           gap: 3px;
@@ -1198,8 +1216,8 @@ img.linen-emoji {
             background-color 0.2s ease;
 
           &:hover {
-            border-top-color: var(--stop-color, #a8452e);
-            background-color: rgba(168, 69, 46, 0.025);
+            border-top-color: var(--stop-color, $accent);
+            background-color: $accentHoverRow;
           }
         }
 
@@ -1214,7 +1232,7 @@ img.linen-emoji {
           font-family: $linkFontFamily;
           font-size: 10px;
           line-height: 1;
-          color: #999;
+          color: $gray9;
           letter-spacing: 0.08em;
           font-variant-numeric: tabular-nums;
         }
@@ -1223,7 +1241,7 @@ img.linen-emoji {
           width: 6px;
           height: 6px;
           border-radius: 50%;
-          background-color: var(--stop-color, #a8452e);
+          background-color: var(--stop-color, $accent);
           flex-shrink: 0;
         }
 
@@ -1241,7 +1259,7 @@ img.linen-emoji {
           font-family: $linkFontFamily, "SF Pro Text", -apple-system, sans-serif;
           font-size: 11.5px;
           line-height: 1.4;
-          color: #a8452e;
+          color: $accent;
           font-variant-numeric: tabular-nums;
         }
 
@@ -1479,7 +1497,7 @@ img.linen-emoji {
     color: $accent;
     font-weight: 500;
     text-decoration: underline;
-    text-decoration-color: rgba(168, 69, 46, 0.32);
+    text-decoration-color: $accentUnderline;
     text-underline-offset: 0.22em;
     text-decoration-thickness: 1px;
     transition:
@@ -1538,8 +1556,9 @@ img.linen-emoji {
     }
   }
 
-  .footnote-anchor-wrap {
-    scroll-margin-top: 1.5em;
+  .footnote-anchor-wrap,
+  .footnotes li {
+    scroll-margin-top: 2rem;
   }
 
   .footnotes .footnote-backref {
@@ -1627,7 +1646,7 @@ img.linen-emoji {
     tbody tr {
       transition: background-color 180ms $easeOut;
       &:hover {
-        background-color: rgba(34, 33, 31, 0.025);
+        background-color: $hoverRow;
       }
       &:last-child td {
         border-bottom: none;
@@ -1710,15 +1729,13 @@ img.linen-emoji {
           &::before {
             content: "";
             display: inline-block;
-            width: 35px;
-            height: 20px;
-            background-image: url("../img/icons/code.svg");
-            background-size: 15px 15px;
-            background-position: center;
-            background-repeat: no-repeat;
+            width: 15px;
+            height: 15px;
+            background-color: currentColor;
+            -webkit-mask: url("../img/icons/code.svg") no-repeat center / contain;
+            mask: url("../img/icons/code.svg") no-repeat center / contain;
             vertical-align: middle;
-            margin-bottom: 1px;
-            margin-right: 2px;
+            margin: 0 10px 1px 10px;
             opacity: 0.72;
           }
         }
@@ -1737,7 +1754,7 @@ img.linen-emoji {
       justify-content: center;
       cursor: pointer;
       color: $metaText;
-      background-color: rgba(247, 246, 242, 0.92);
+      background-color: $surfaceTranslucent;
       transition:
         color 180ms $easeOut,
         background-color 180ms $easeOut,
@@ -1772,7 +1789,7 @@ img.linen-emoji {
         top: 0.28em;
         right: 0.35em;
         &:hover {
-          background-color: rgba(34, 33, 31, 0.06);
+          background-color: $borderSubtle;
         }
       }
     }
@@ -1855,10 +1872,17 @@ img.linen-emoji {
       width: 100%;
       height: 24px;
       background-color: $surface;
-      background-image: url("../img/icons/up-down.svg");
-      background-size: 20px 20px;
-      background-repeat: no-repeat;
-      background-position: center;
+      color: $metaText;
+      &::after {
+        content: "";
+        display: block;
+        width: 20px;
+        height: 20px;
+        margin: 2px auto 0;
+        background-color: currentColor;
+        -webkit-mask: url("../img/icons/up-down.svg") no-repeat center / contain;
+        mask: url("../img/icons/up-down.svg") no-repeat center / contain;
+      }
       &::before {
         content: "";
         display: block;
@@ -1869,14 +1893,14 @@ img.linen-emoji {
         left: 0;
         background-image: linear-gradient(
           to bottom,
-          rgba(247, 246, 242, 0),
-          rgba(247, 246, 242, 1)
+          $surfaceFade0,
+          $surfaceFade1
         );
       }
     }
     .line,
     span.code {
-      color: #24292e;
+      color: var(--linen-code-text);
     }
 
     @include highlight_github_theme;
@@ -1884,6 +1908,7 @@ img.linen-emoji {
 
   code {
     background-color: $surfaceAlt;
+    color: $darkText;
     padding: 0.16em 0.42em;
     border-radius: $radiusMd;
     -webkit-text-size-adjust: 100%;
@@ -1904,21 +1929,24 @@ img.linen-emoji {
     }
   }
   .new-updates {
-    background-color: #f5f9ff;
-    padding: 0.5em;
-    text-indent: 1em;
-    font-size: 0.8em;
+    background-color: $accentSoft;
+    border-left: 2.5px solid $accentBorder;
+    border-radius: 0 $radiusMd $radiusMd 0;
+    padding: 0.55em 0.8em 0.55em 1.8em;
+    font-size: 0.85em;
     position: relative;
     &::before {
       position: absolute;
-      top: 0;
-      left: 0;
+      top: 50%;
+      left: 0.45em;
+      transform: translateY(-50%);
       content: "";
       display: block;
-      width: 24px;
-      height: 24px;
-      background-image: url("../img/icons/new1.svg");
-      background-size: cover;
+      width: 16px;
+      height: 16px;
+      background-color: $accent;
+      -webkit-mask: url("../img/icons/new1.svg") no-repeat center / contain;
+      mask: url("../img/icons/new1.svg") no-repeat center / contain;
     }
   }
   .attachment-item {
@@ -1927,8 +1955,9 @@ img.linen-emoji {
     vertical-align: bottom;
     flex-direction: column;
     align-items: center;
-    border-radius: 2px;
-    border: solid 1px #f5f5f5;
+    border-radius: $radiusMd;
+    border: solid 1px $borderColor;
+    background-color: $surface;
     transition: all ease-in-out 0.3s;
     .attachment-icon {
       margin-top: 2px;
@@ -1964,7 +1993,8 @@ img.linen-emoji {
       font-size: 12px;
     }
     &:hover {
-      box-shadow: rgba(100, 100, 111, 0.05) 0px 7px 29px 0px;
+      border-color: $accentBorder;
+      box-shadow: $shadowColor 0px 7px 24px 0px;
     }
   }
   .commented-text {
@@ -1986,7 +2016,7 @@ img.linen-emoji {
       border-width: 4px 6px 0 6px;
       border-style: solid;
       border-color: transparent;
-      border-top-color: $grayerText;
+      border-top-color: $darkText;
       top: -5px;
       left: 50%;
       transform: translateX(-50%);
@@ -1994,8 +2024,8 @@ img.linen-emoji {
 
     &::after {
       content: attr(data-comment);
-      background: $grayerText;
-      color: #fff;
+      background: $darkText;
+      color: $bg;
       border-radius: 5px;
       padding: 6px 8px;
       min-width: 80px;
@@ -2289,7 +2319,7 @@ img.linen-emoji {
 .taxonomy-header {
   padding: 26px 0 18px;
   margin-bottom: 12px;
-  border-bottom: 1px solid rgba(34, 33, 31, 0.14);
+  border-bottom: 1px solid $borderColor;
   position: relative;
   &::after {
     content: "";
@@ -2623,12 +2653,13 @@ img.linen-emoji {
             i.about-icon {
               width: 18px;
               height: 18px;
-              background-image: url("../img/icons/about.svg");
-              background-size: cover;
+              background-color: currentColor;
+              -webkit-mask: url("../img/icons/about.svg") no-repeat center / contain;
+              mask: url("../img/icons/about.svg") no-repeat center / contain;
               display: inline-block;
               vertical-align: middle;
               margin-bottom: 2px;
-              opacity: 0.7;
+              opacity: 0.78;
               margin-right: 2px;
             }
           }
@@ -2641,11 +2672,13 @@ img.linen-emoji {
             i.new-icon {
               width: 18px;
               height: 18px;
-              background-image: url("../img/icons/new.svg");
-              background-size: cover;
+              background-color: currentColor;
+              -webkit-mask: url("../img/icons/new.svg") no-repeat center / contain;
+              mask: url("../img/icons/new.svg") no-repeat center / contain;
               display: inline-block;
               vertical-align: middle;
               margin-bottom: 2px;
+              opacity: 0.78;
               margin-right: 2px;
             }
             font-size: 14px;
@@ -2666,29 +2699,6 @@ img.linen-emoji {
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-}
-
-.banner-bg {
-  width: 100%;
-  height: 28vw;
-  position: absolute;
-  z-index: -1;
-  top: $navbarMinHeight;
-  left: 0;
-  background-color: $bg;
-  background-image: url("../img/pattern-randomized.jpg");
-  background-size: cover;
-  opacity: 0.14;
-  &::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    display: block;
-    width: 100%;
-    height: 55%;
-    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
-  }
 }
 
 .page-body {
@@ -2742,18 +2752,76 @@ img.linen-emoji {
         margin-top: 0;
       }
     }
+    &.editorial-breakout {
+      #post {
+        .post-title,
+        .post-meta,
+        #post-age-warning,
+        .tags {
+          max-width: var(--linen-prose-width, #{$proseMaxWidth});
+          margin-left: auto;
+          margin-right: auto;
+        }
+        #page-content {
+          > * {
+            max-width: var(--linen-prose-width, #{$proseMaxWidth});
+            margin-left: auto;
+            margin-right: auto;
+          }
+          > .image-grid,
+          > .lazyload-outer-wrap,
+          > .table-wrap,
+          > table:not(:where(.highlight table)),
+          > .diagram-scroll,
+          > .links-warp,
+          > figure:not(.highlight),
+          > .breakout,
+          > p:has(
+              > .image-grid,
+              > .lazyload-outer-wrap,
+              > img:not(.linen-emoji),
+              > a:only-child > img:not(.linen-emoji),
+              > picture,
+              > video,
+              > iframe
+            ) {
+            max-width: 100%;
+          }
+          > .no-breakout {
+            max-width: var(--linen-prose-width, #{$proseMaxWidth});
+          }
+        }
+      }
+      #raw-markdown-block,
+      .post-nav-wrap,
+      .copyright-desc,
+      .sponsor-list,
+      #related-posts,
+      #gitalk-container {
+        max-width: calc(var(--linen-prose-width, #{$proseMaxWidth}) + #{$commonPadding} * 2);
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .series-nav {
+        max-width: var(--linen-prose-width, #{$proseMaxWidth});
+      }
+    }
     #gitalk-container {
       --gt-avatar-size: 2.25rem;
+      --gt-placeholder-inner-height: calc(7.125rem + var(--gt-avatar-size) + 2px + #{$commonPadding});
       @media (max-width: 479px) {
         --gt-avatar-size: 2rem;
       }
       margin: 1.25em 0 0;
       padding: 0.25rem $commonPadding 0;
       background-color: $bg;
-      min-height: 197px;
+      min-height: calc(var(--gt-placeholder-inner-height) + 0.25rem + 1px);
       border-top: 1px solid $borderSubtle;
       &:has(.gt-container) {
         min-height: 0;
+      }
+      .gt-container .gt-initing {
+        min-height: var(--gt-placeholder-inner-height);
       }
       .gt-meta {
         margin-top: 0;
@@ -2777,7 +2845,7 @@ img.linen-emoji {
           column-gap: 1rem;
           align-items: start;
           padding: 1.5em 0;
-          border-bottom: solid 1px rgb(242, 242, 242);
+          border-bottom: solid 1px $borderSubtle;
 
           &:last-child {
             border-bottom: 0;
@@ -2802,6 +2870,7 @@ img.linen-emoji {
         }
         .gt-comment-content {
           display: contents;
+          background-color: transparent;
         }
         .gt-comment-header {
           display: contents;
@@ -2826,6 +2895,7 @@ img.linen-emoji {
           position: relative;
           top: 0;
           margin: 0.2em 0 0;
+          color: $moreGrayText;
         }
         .gt-comment-body {
           grid-column: 2;
@@ -2834,6 +2904,19 @@ img.linen-emoji {
           margin-top: 0.9em;
           margin-left: calc(-1 * var(--comment-content-indent));
           width: calc(100% + var(--comment-content-indent));
+          color: $darkText !important;
+          blockquote {
+            color: $grayerText;
+            border-left-color: $borderStrong;
+          }
+          code {
+            background-color: $surfaceAlt;
+            color: $darkText;
+          }
+          pre {
+            background-color: $surface;
+            color: var(--linen-code-text);
+          }
         }
         .gt-comment-like {
           position: static;
@@ -2869,28 +2952,35 @@ img.linen-emoji {
           display: inline-flex;
           align-items: center;
           line-height: 1;
+          color: $metaText;
 
           .gt-svg {
             width: 1.25em;
             height: 1.25em;
-            background: url("../img/icons/medium-clap.svg") center / contain no-repeat;
+            background-color: currentColor;
+            -webkit-mask: url("../img/icons/medium-clap.svg") no-repeat center / contain;
+            mask: url("../img/icons/medium-clap.svg") no-repeat center / contain;
 
             svg {
               display: none;
             }
           }
 
-          &.is-reacted .gt-svg {
-            background-image: url("../img/icons/medium-clap-reacted.svg");
+          &.is-reacted {
+            color: $accent;
+            .gt-svg {
+              -webkit-mask: url("../img/icons/medium-clap-reacted.svg") no-repeat center / contain;
+              mask: url("../img/icons/medium-clap-reacted.svg") no-repeat center / contain;
+            }
           }
 
           .gt-ico-text {
             margin-left: 0.25em;
-            color: #6b6b6b;
+            color: $metaText;
           }
         }
         .gt-comment-reply {
-          color: #232323;
+          color: $darkText;
           text-decoration: none;
 
           .gt-ico-reply {
@@ -2909,7 +2999,7 @@ img.linen-emoji {
           }
         }
         .gt-comment-edit {
-          color: #232323;
+          color: $darkText;
           text-decoration: none;
 
           .gt-ico-edit {
@@ -2942,7 +3032,7 @@ img.linen-emoji {
           color: $accent;
           font-weight: 500;
           text-decoration: underline;
-          text-decoration-color: rgba(168, 69, 46, 0.32);
+          text-decoration-color: $accentUnderline;
           text-underline-offset: 0.2em;
           text-decoration-thickness: 1px;
           transition:
@@ -2980,6 +3070,7 @@ img.linen-emoji {
       .gt-btn {
         border-color: $darkText;
         background-color: $darkText;
+        color: $bg;
         border-radius: $radiusMd;
         transition:
           background-color 180ms $easeOut,
@@ -2993,6 +3084,22 @@ img.linen-emoji {
       .gt-comment-username {
         color: $darkText;
       }
+      .gt-container .gt-popup {
+        background-color: $bgElevated;
+        border-color: $borderColor;
+        color: $darkText;
+        box-shadow: 0 8px 24px $shadowColor;
+      }
+      .gt-container .gt-popup .gt-action {
+        color: $darkText;
+        &.is--active::before {
+          background-color: $accent;
+        }
+      }
+      .gt-container .gt-popup .gt-copyright {
+        border-top-color: $borderSubtle;
+        color: $metaText;
+      }
       .gt-container .gt-popup .gt-action-login,
       .gt-container .gt-popup .gt-link-project {
         color: $darkText;
@@ -3003,6 +3110,19 @@ img.linen-emoji {
         &:hover {
           color: $accent;
         }
+      }
+      .gt-container .gt-header-preview {
+        background-color: $surface;
+        border-color: $borderColor;
+        color: $darkText;
+      }
+      .gt-container .gt-user .gt-ico svg,
+      .gt-container .gt-svg svg {
+        fill: $metaText;
+      }
+      .gt-container .gt-user .gt-user-name,
+      .gt-container .gt-counts {
+        color: $grayerText;
       }
       .gt-header-avatar,
       .gt-comment-avatar {
@@ -3069,6 +3189,10 @@ img.linen-emoji {
         border: none;
         border-radius: 0;
         background-color: transparent;
+        color: $darkText;
+        &::placeholder {
+          color: $moreGrayText;
+        }
         &:focus-visible {
           outline: none;
         }
@@ -3343,8 +3467,9 @@ img.linen-emoji {
       display: inline-block;
       width: 13px;
       height: 13px;
-      background-image: url("../img/icons/shelf.svg");
-      background-size: cover;
+      background-color: currentColor;
+      -webkit-mask: url("../img/icons/shelf.svg") no-repeat center / contain;
+      mask: url("../img/icons/shelf.svg") no-repeat center / contain;
       margin-right: 0.5em;
       opacity: 0.72;
     }
@@ -3366,7 +3491,7 @@ img.linen-emoji {
     background-color: $bg;
     border-radius: $radiusSheet $radiusSheet 0 0;
     border-top: 1px solid $borderColor;
-    box-shadow: 0 -10px 32px rgba(34, 33, 31, 0.14);
+    box-shadow: 0 -10px 32px $shadowStrong;
     z-index: 1000;
     padding: 10px 0 0;
     transform: translateY(125%);
@@ -3380,7 +3505,7 @@ img.linen-emoji {
       width: 36px;
       height: 4px;
       border-radius: 999px;
-      background-color: rgba(34, 33, 31, 0.16);
+      background-color: $handleColor;
       margin: 0 auto 10px;
       flex: 0 0 auto;
     }
@@ -3403,14 +3528,16 @@ img.linen-emoji {
       }
       .close-series-popup-icon-wrap {
         padding: 0 $commonPadding;
+        color: $metaText;
       }
       .close-series-popup-icon {
         display: block;
         width: 22px;
         height: 22px;
-        background-image: url("../img/icons/arrow-down.svg");
-        background-size: cover;
-        opacity: 0.72;
+        background-color: currentColor;
+        -webkit-mask: url("../img/icons/arrow-down.svg") no-repeat center / contain;
+        mask: url("../img/icons/arrow-down.svg") no-repeat center / contain;
+        opacity: 0.78;
       }
       .details-link {
         font-size: 13.5px;
@@ -3508,6 +3635,7 @@ img.linen-emoji {
       width: auto;
       align-self: flex-start;
       opacity: 0.85;
+      filter: var(--linen-icon-invert);
       transition: opacity 0.3s ease;
       &:hover {
         opacity: 1;
@@ -3628,7 +3756,7 @@ img.linen-emoji {
               width: 18px;
               height: 18px;
               border-radius: 50%;
-              background-color: rgba(0, 0, 0, 0.05);
+              background-color: $surface;
               color: $moreGrayText;
               font-size: 11px;
               transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -3653,12 +3781,12 @@ img.linen-emoji {
               width: 280px;
               max-width: calc(100vw - 32px);
               padding: 12px 14px;
-              background-color: $bg;
+              background-color: $bgElevated;
               border: 1px solid $borderColor;
               border-radius: $radiusLg;
               box-shadow:
-                0 6px 24px rgba(34, 33, 31, 0.09),
-                0 2px 6px rgba(34, 33, 31, 0.03);
+                0 6px 24px $shadowColor,
+                0 2px 6px $borderSubtle;
               z-index: 100;
               pointer-events: none;
               opacity: 0;
@@ -3709,9 +3837,9 @@ img.linen-emoji {
                 transform: rotate(45deg);
                 width: 8px;
                 height: 8px;
-                background-color: #ffffff;
-                border-right: 1px solid rgba(0, 0, 0, 0.08);
-                border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+                background-color: $bgElevated;
+                border-right: 1px solid $borderColor;
+                border-bottom: 1px solid $borderColor;
               }
             }
 
@@ -3759,7 +3887,7 @@ img.linen-emoji {
         .footerDesc {
           font-size: 12px;
           margin: 0;
-          border-left: 1px solid rgba(0, 0, 0, 0.08);
+          border-left: 1px solid $borderColor;
           padding-left: 12px;
           line-height: 1.2;
         }
@@ -3819,8 +3947,8 @@ img.linen-emoji {
     font-size: 14px;
     font-weight: 500;
     color: $grayerText;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    background-color: #fff;
+    border: 1px solid $borderSubtle;
+    background-color: $bgElevated;
     transition: all 0.2s ease;
     text-decoration: none;
     box-sizing: border-box;
@@ -3847,19 +3975,19 @@ img.linen-emoji {
 
   .page-number.current {
     background-color: $accent;
-    color: #fff;
+    color: $onAccent;
     border-color: $accent;
     font-weight: bold;
-    box-shadow: 0 3px 10px rgba(168, 69, 46, 0.22);
+    box-shadow: 0 3px 10px $accentBorder;
     cursor: default;
 
     @media (max-width: 768px) {
-      box-shadow: 0 2px 6px rgba(168, 69, 46, 0.18);
+      box-shadow: 0 2px 6px $accentSoftStrong;
     }
 
     &:hover {
       background-color: $accent;
-      color: #fff;
+      color: $onAccent;
       border-color: $accent;
       transform: none;
     }
@@ -3940,8 +4068,9 @@ img.linen-emoji {
       display: inline-block;
       width: 18px;
       height: 18px;
-      background-image: url("../img/icons/toc.svg");
-      background-size: cover;
+      background-color: currentColor;
+      -webkit-mask: url("../img/icons/toc.svg") no-repeat center / contain;
+      mask: url("../img/icons/toc.svg") no-repeat center / contain;
       vertical-align: middle;
       margin-bottom: 4px;
       opacity: 0.78;
@@ -4071,8 +4200,9 @@ img.linen-emoji {
       display: inline-block;
       width: 13px;
       height: 13px;
-      background-image: url("../img/icons/shelf.svg");
-      background-size: cover;
+      background-color: currentColor;
+      -webkit-mask: url("../img/icons/shelf.svg") no-repeat center / contain;
+      mask: url("../img/icons/shelf.svg") no-repeat center / contain;
       vertical-align: middle;
       margin-bottom: 3px;
       opacity: 0.72;
@@ -4163,7 +4293,7 @@ img.linen-emoji {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: $maskColor;
   z-index: 99;
   pointer-events: none;
   transition: all ease 0.3s;
@@ -4261,10 +4391,10 @@ html[lang="zh-CN"] {
     cursor: default;
     pointer-events: none;
     padding: 8px;
-    background: $bg;
+    background: $bgElevated;
     border: 1px solid $borderColor;
     border-radius: $radiusLg;
-    box-shadow: 0 12px 32px rgba(34, 33, 31, 0.14);
+    box-shadow: 0 12px 32px $shadowStrong;
     .qr-code {
       width: 240px;
       height: 240px;
@@ -4280,7 +4410,7 @@ html[lang="zh-CN"] {
     }
   }
   &:active {
-    background-color: rgba(168, 69, 46, 0.14);
+    background-color: $accentSoftStrong;
   }
 }
 
@@ -4348,8 +4478,9 @@ html[lang="zh-CN"] {
     display: inline-block;
     width: 13px;
     height: 13px;
-    background-image: url("../img/icons/tag.svg");
-    background-size: cover;
+    background-color: currentColor;
+    -webkit-mask: url("../img/icons/tag.svg") no-repeat center / contain;
+    mask: url("../img/icons/tag.svg") no-repeat center / contain;
     margin-right: 4px;
     margin-bottom: -1px;
   }
@@ -4365,8 +4496,7 @@ html[lang="zh-CN"] {
     overflow: hidden;
     border-radius: $radiusMd;
     border: 1px solid $borderColor;
-    background:
-      linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(247, 245, 240, 0.94)), $surface;
+    background: var(--linen-travel-panel-bg);
   }
 
   .travel-map-copy {
@@ -4438,12 +4568,12 @@ html[lang="zh-CN"] {
       display: block;
       width: 18px;
       height: 18px;
-      border: 3px solid rgba(255, 255, 255, 0.95);
+      border: 3px solid $bgElevated;
       border-radius: 50%;
       background: $accent;
       box-shadow:
-        rgba(34, 33, 31, 0.14) 0 4px 10px,
-        rgba(168, 69, 46, 0.24) 0 0 0 6px;
+        $shadowStrong 0 4px 10px,
+        $accentBorder 0 0 0 6px;
       transition:
         transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
         box-shadow 0.25s $easeOut,
@@ -4458,13 +4588,13 @@ html[lang="zh-CN"] {
       height: 15px;
       padding: 0 4px;
       border-radius: 999px;
-      background: #fff;
+      background: $bgElevated;
       color: $accent;
       font-weight: bold;
       font-size: 10px;
       line-height: 15px;
       text-align: center;
-      box-shadow: rgba(34, 33, 31, 0.16) 0 2px 6px;
+      box-shadow: $shadowStrong 0 2px 6px;
     }
     &.active {
       span {
@@ -4473,8 +4603,8 @@ html[lang="zh-CN"] {
         transform: translate(-2px, -2px) scale(1.1);
         background: $accentDark;
         box-shadow:
-          rgba(34, 33, 31, 0.2) 0 8px 18px,
-          rgba(168, 69, 46, 0.34) 0 0 0 8px;
+          $shadowStrong 0 8px 18px,
+          $accentUnderline 0 0 0 8px;
       }
     }
   }
@@ -4492,7 +4622,7 @@ html[lang="zh-CN"] {
     &:not(:first-child) {
       margin-top: 8px;
       padding-top: 8px;
-      border-top: 1px solid rgba(0, 0, 0, 0.08);
+      border-top: 1px solid $borderSubtle;
     }
     .travel-map-popup-cover {
       width: 44px;
@@ -4500,8 +4630,8 @@ html[lang="zh-CN"] {
       object-fit: cover;
       border-radius: 4px;
       flex-shrink: 0;
-      background-color: #edf1ef;
-      border: 1px solid rgba(0, 0, 0, 0.05);
+      background-color: $surfaceAlt;
+      border: 1px solid $borderSubtle;
     }
     .travel-map-popup-content {
       flex: 1;
@@ -4541,14 +4671,14 @@ html[lang="zh-CN"] {
 
   .leaflet-control-attribution {
     @include defaultFont;
-    background: rgba(255, 255, 255, 0.75) !important;
+    background: $bgTranslucent !important;
     backdrop-filter: blur(8px);
     color: $moreGrayText !important;
     font-size: 10px !important;
     padding: 2px 6px !important;
     border-radius: 6px 0 0 0 !important;
-    border-top: 1px solid rgba(0, 0, 0, 0.04) !important;
-    border-left: 1px solid rgba(0, 0, 0, 0.04) !important;
+    border-top: 1px solid $borderSubtle !important;
+    border-left: 1px solid $borderSubtle !important;
 
     a {
       color: $moreGrayText !important;
@@ -4564,8 +4694,8 @@ html[lang="zh-CN"] {
   .leaflet-bar {
     border: none !important;
     box-shadow:
-      0 6px 16px rgba(0, 0, 0, 0.08),
-      0 1px 4px rgba(0, 0, 0, 0.02) !important;
+      0 6px 16px $shadowColor,
+      0 1px 4px $borderSubtle !important;
     border-radius: 6px !important;
     overflow: hidden;
 
@@ -4573,9 +4703,9 @@ html[lang="zh-CN"] {
       width: 32px !important;
       height: 32px !important;
       line-height: 32px !important;
-      background-color: #ffffff !important;
+      background-color: $bgElevated !important;
       color: $darkText !important;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+      border-bottom: 1px solid $borderSubtle !important;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
       font-size: 16px !important;
       font-weight: 500 !important;
@@ -4591,8 +4721,8 @@ html[lang="zh-CN"] {
       }
 
       &.leaflet-disabled {
-        background-color: #f9f9f9 !important;
-        color: #cccccc !important;
+        background-color: $surface !important;
+        color: $grayb !important;
         cursor: not-allowed !important;
         pointer-events: none !important;
       }
@@ -4601,14 +4731,17 @@ html[lang="zh-CN"] {
 
   .leaflet-popup-content-wrapper {
     border-radius: $radiusLg !important;
+    background-color: $bgElevated !important;
+    color: $darkText !important;
     box-shadow:
-      0 10px 30px rgba(0, 0, 0, 0.08),
-      0 1px 8px rgba(0, 0, 0, 0.02) !important;
-    border: 1px solid rgba(0, 0, 0, 0.04) !important;
+      0 10px 30px $shadowColor,
+      0 1px 8px $borderSubtle !important;
+    border: 1px solid $borderSubtle !important;
   }
 
   .leaflet-popup-tip {
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+    background-color: $bgElevated !important;
+    box-shadow: 0 10px 30px $shadowColor !important;
   }
 
   .leaflet-popup-content {
@@ -4622,14 +4755,14 @@ html[lang="zh-CN"] {
   }
 
   .maplibregl-ctrl-group {
-    border: 1px solid rgba(34, 33, 31, 0.06) !important;
+    border: 1px solid $borderSubtle !important;
     border-radius: 8px !important;
-    background: rgba(255, 255, 255, 0.92) !important;
+    background: $bgTranslucent !important;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     box-shadow:
-      0 6px 18px rgba(34, 33, 31, 0.1),
-      0 1px 3px rgba(34, 33, 31, 0.04) !important;
+      0 6px 18px $shadowColor,
+      0 1px 3px $borderSubtle !important;
     overflow: hidden;
 
     button {
@@ -4637,8 +4770,12 @@ html[lang="zh-CN"] {
       height: 32px !important;
       transition: background-color 180ms $easeOut !important;
 
+      .maplibregl-ctrl-icon {
+        filter: var(--linen-icon-invert);
+      }
+
       & + button {
-        border-top: 1px solid rgba(34, 33, 31, 0.06) !important;
+        border-top: 1px solid $borderSubtle !important;
       }
 
       &:hover,
@@ -4650,11 +4787,23 @@ html[lang="zh-CN"] {
 
   .maplibregl-ctrl-attrib {
     @include defaultFont;
-    background: rgba(255, 255, 255, 0.78) !important;
+    background: $bgTranslucent !important;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     color: $moreGrayText !important;
     font-size: 10px !important;
+    line-height: 20px;
+
+    .maplibregl-ctrl-attrib-button {
+      background-color: transparent !important;
+      background-position: center !important;
+      filter: var(--linen-icon-invert);
+      transition: opacity 180ms $easeOut;
+
+      &:hover {
+        opacity: 0.75;
+      }
+    }
 
     a {
       color: $moreGrayText !important;
@@ -4670,10 +4819,24 @@ html[lang="zh-CN"] {
     border-radius: $radiusLg !important;
     padding: 12px 14px !important;
     box-shadow:
-      0 10px 30px rgba(34, 33, 31, 0.1),
-      0 1px 8px rgba(34, 33, 31, 0.04) !important;
-    border: 1px solid rgba(34, 33, 31, 0.06) !important;
-    background: $bg !important;
+      0 10px 30px $shadowColor,
+      0 1px 8px $borderSubtle !important;
+    border: 1px solid $borderSubtle !important;
+    background: $bgElevated !important;
+    color: $darkText !important;
+  }
+
+  .maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+    border-top-color: $bgElevated !important;
+  }
+  .maplibregl-popup-anchor-top .maplibregl-popup-tip {
+    border-bottom-color: $bgElevated !important;
+  }
+  .maplibregl-popup-anchor-left .maplibregl-popup-tip {
+    border-right-color: $bgElevated !important;
+  }
+  .maplibregl-popup-anchor-right .maplibregl-popup-tip {
+    border-left-color: $bgElevated !important;
   }
 
   .maplibregl-popup-close-button {
@@ -4712,7 +4875,7 @@ html[lang="zh-CN"] {
     &.active,
     &:hover {
       border-color: $accentBorder;
-      box-shadow: rgba(100, 97, 88, 0.12) 0 12px 26px;
+      box-shadow: $shadowColor 0 12px 26px;
       transform: translateY(-1px);
     }
   }
@@ -4724,7 +4887,7 @@ html[lang="zh-CN"] {
     aspect-ratio: 1;
     min-height: 132px;
     overflow: hidden;
-    background-color: #edf1ef;
+    background-color: $surfaceAlt;
     background-position: center;
     background-size: cover;
     .cover-img,
@@ -4765,6 +4928,9 @@ html[lang="zh-CN"] {
   }
 
   .travel-place-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     min-width: 0;
     padding: 10px 16px 10px;
   }
@@ -4777,10 +4943,10 @@ html[lang="zh-CN"] {
     z-index: 2;
     min-width: 28px;
     padding: 4px 6px;
-    background: rgba(255, 255, 255, 0.86);
+    background: $bgTranslucent;
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
-    color: #a8452e;
+    color: $accent;
     font-size: 12px;
     line-height: 1;
     text-align: center;
@@ -5081,7 +5247,6 @@ html[lang="zh-CN"] {
     overscroll-behavior-inline: contain;
     scroll-snap-type: x mandatory;
     scroll-padding-inline: 0;
-    -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
 
     .grid-item {
@@ -5203,10 +5368,10 @@ html[lang="zh-CN"] {
         left: 4px;
         width: calc((100% - 8px) / var(--switcher-item-count, 1));
         border-radius: $radiusSm;
-        background: $bg;
+        background: $bgElevated;
         box-shadow:
-          0 1px 2px rgba(34, 33, 31, 0.08),
-          0 0 0 1px rgba(34, 33, 31, 0.04);
+          0 1px 2px $shadowColor,
+          0 0 0 1px $borderSubtle;
         opacity: 0;
         transform: translateX(calc(var(--switcher-active-index, 0) * 100%));
         transition: transform 0.42s $easeOut;
@@ -5256,7 +5421,7 @@ html[lang="zh-CN"] {
   }
 }
 
-details {
+details:not(.maplibregl-ctrl-attrib) {
   border-radius: $radiusMd;
   border: 1px solid $borderSubtle;
   margin-bottom: 0.75em;
@@ -5298,8 +5463,9 @@ details {
       transition: transform 0.2s $easeOut;
       width: 1em;
       height: 1em;
-      background-image: url("../img/icons/collapsed.svg");
-      background-size: 100% 100%;
+      background-color: $metaText;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E") no-repeat center / contain;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E") no-repeat center / contain;
     }
   }
 
