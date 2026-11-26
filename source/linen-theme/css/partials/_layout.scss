@@ -222,6 +222,18 @@
             margin-left: auto;
             margin-right: auto;
           }
+          > a:has(> .shared-link) {
+            display: block;
+          }
+          > .github-link,
+          > a:has(> .github-link) {
+            display: block;
+            margin-left: max(
+              0px,
+              calc((100% - var(--linen-prose-width, #{$proseMaxWidth})) / 2)
+            );
+            margin-right: auto;
+          }
           > .image-grid,
           > .lazyload-outer-wrap,
           > .table-wrap,
@@ -241,6 +253,8 @@
             ) {
             max-width: 100%;
           }
+          > p:has(.shared-link),
+          > p:has(.github-link),
           > .no-breakout {
             max-width: var(--linen-prose-width, #{$proseMaxWidth});
           }

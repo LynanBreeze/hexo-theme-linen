@@ -290,6 +290,7 @@
   width: 100%;
   max-width: 100%;
   display: inline-block;
+  margin-bottom: 1.2rem;
   background-color: var(--linen-surface, #f4f2ec);
   border: 1px solid var(--linen-border, rgba(34, 33, 31, 0.11));
   border-radius: var(--linen-radius-md, 4px);
@@ -357,4 +358,8 @@
   .github-link {
     width: 450px;
   }
+}
+
+p > .github-link {
+  margin-bottom: 0;
 }
