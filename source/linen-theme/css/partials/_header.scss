@@ -105,16 +105,20 @@
           }
           &.zh-CN {
             background-image: url("../img/icons/chinese.svg");
-            background-size: cover;
-            width: 25px;
-            height: 25px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            width: 22px;
+            height: 22px;
             filter: var(--linen-icon-invert);
           }
           &.en {
             background-image: url("../img/icons/english.svg");
-            background-size: cover;
-            width: 25px;
-            height: 25px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            width: 22px;
+            height: 22px;
             filter: var(--linen-icon-invert);
           }
           &.rss {
@@ -194,10 +198,9 @@
               inset: 0;
               background: linear-gradient(
                 135deg,
-                #ff2d55 0%,
-                #ff8a00 34%,
-                #00c7be 70%,
-                #2979ff 100%
+                #c85a32 0%,
+                #d9822b 48%,
+                #e4b14b 100%
               );
               -webkit-mask: url("../img/icons/hdr.svg") no-repeat center;
               mask: url("../img/icons/hdr.svg") no-repeat center;
@@ -211,10 +214,9 @@
               @supports (color: color(display-p3 1 0 0)) {
                 background: linear-gradient(
                   135deg,
-                  color(display-p3 1 0.16 0.36) 0%,
-                  color(display-p3 1 0.56 0) 34%,
-                  color(display-p3 0 0.84 0.78) 70%,
-                  color(display-p3 0.12 0.48 1) 100%
+                  color(display-p3 0.84 0.36 0.2) 0%,
+                  color(display-p3 0.92 0.56 0.18) 48%,
+                  color(display-p3 0.95 0.74 0.3) 100%
                 );
               }
             }
@@ -243,7 +245,7 @@
               filter: none;
               &::before {
                 opacity: 1;
-                filter: drop-shadow(0 0 3px rgba(255, 94, 58, 0.28));
+                filter: drop-shadow(0 0 3px rgba(217, 130, 43, 0.28));
               }
               &::after {
                 opacity: 0;
