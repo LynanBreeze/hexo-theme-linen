@@ -153,17 +153,17 @@ const travelPlacesJson = encodeURIComponent(JSON.stringify(travelPlaces));
   </div>
   <div class="travel-place-list">
     <% travelPlaces.forEach((place, index) => { %>
-    <article class="travel-place-card" data-travel-place="<%=place.id%>" href="<%=place.path%>" onclick="onclickPostItem(this)">
-      <a href="<%=place.path%>" class="travel-place-cover" aria-label="<%=place.title%>" onclick="event.stopPropagation()">
+    <article class="travel-place-card" data-travel-place="<%=place.id%>">
+      <div class="travel-place-cover" aria-hidden="true">
         <span class="travel-place-index"><%=String(travelPlaces.length - index).padStart(2, '0')%></span>
         <% if (place.cover) { %>
         <div class="cover-img">
           <img src="<%=place.cover%>" alt="" loading="lazy" />
         </div>
         <% } %>
-      </a>
+      </div>
       <div class="travel-place-body">
-        <a class="travel-place-title" href="<%=place.path%>" onclick="event.stopPropagation()"><%=place.title%><% if (place.subTitle) { %><span class="sub-title"><%=place.subTitle%></span><% } %></a>
+        <a class="travel-place-title" href="<%=place.path%>"><%=place.title%><% if (place.subTitle) { %><span class="sub-title"><%=place.subTitle%></span><% } %></a>
         <div class="travel-place-meta"><%=place.location%><% if (place.date) { %><span><%=place.date%></span><% } %></div>
         <div class="travel-place-excerpt"><%-place.excerpt%></div>
       </div>

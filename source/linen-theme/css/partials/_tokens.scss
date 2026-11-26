@@ -1,0 +1,82 @@
+@use "../vars.scss" as *;
+
+$font-version: "__LINEN_FONT_VERSION__";
+
+:root {
+  color-scheme: light;
+  @include linenLightPalette;
+  --linen-radius-sm: #{$radiusSm};
+  --linen-radius-md: #{$radiusMd};
+  --linen-radius-lg: #{$radiusLg};
+  --linen-radius-sheet: #{$radiusSheet};
+  --linen-ease: #{$easeOut};
+  --linen-prose-width: #{$proseMaxWidth};
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    @include linenDarkPalette;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  @include linenDarkPalette;
+}
+
+@font-face {
+  font-family: "source han serif cn";
+  src:
+    local("STSongti-SC-Regular"),
+    local("Songti SC Regular"),
+    local("STSong"),
+    local("Source Han Serif SC"),
+    local("Source Han Serif CN"),
+    url("../fonts/SourceHanSerifSC-Regular.woff2?v=#{$font-version}") format("woff2");
+
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+4E00-9FFF, U+3000-303F, U+FF00-FFEF;
+}
+
+@font-face {
+  font-family: "source han serif cn";
+  src:
+    local("STSongti-SC-Bold"),
+    local("Songti SC Bold"),
+    local("SongtiSC-Bold"),
+    local("Source Han Serif SC Bold"),
+    local("Source Han Serif CN Bold"),
+    url("../fonts/SourceHanSerifSC-Bold.woff2?v=#{$font-version}") format("woff2");
+  
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+4E00-9FFF, U+3000-303F, U+FF00-FFEF;
+}
+@font-face {
+  font-family: "source han serif cn";
+  src:
+    local("STSongti-SC-Black"),
+    local("Songti SC Black"),
+    local("SongtiSC-Black"),
+    local("Source Han Serif SC Heavy"),
+    local("Source Han Serif SC Bold"),
+    local("Source Han Serif CN Bold"),
+    url("../fonts/SourceHanSerifSC-Bold.woff2?v=#{$font-version}") format("woff2");
+
+  font-weight: 800 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+4E00-9FFF, U+3000-303F, U+FF00-FFEF;
+}
+@font-face {
+  font-family: "source-serif";
+  src: url("../fonts/SourceSerif4-Regular.ttf.woff2?v=#{$font-version}") format("woff2");
+  unicode-range:
+    U+0-7F, U+A0, U+B7, U+200A, U+2014, U+2018, U+2019, U+201C, U+201D, U+2022, U+2026, U+00B0,
+    U+0043;
+  font-display: swap;
+}

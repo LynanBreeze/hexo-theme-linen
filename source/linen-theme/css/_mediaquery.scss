@@ -6,7 +6,7 @@
   #post .footnotes li {
     scroll-margin-top: calc(#{$navbarMinHeight} + 24px);
   }
-  .nav-header-pleaceholder {
+  .nav-header-placeholder {
     display: block;
   }
   .nav-header.is-post {
@@ -356,7 +356,7 @@
           color: $moreGrayText;
           padding-left: 0;
         }
-        .site-statisc.site-statisc {
+        .site-stats.site-stats {
           grid-column: 1 / -1;
           margin-top: 14px !important;
           padding-top: 12px;
@@ -724,7 +724,7 @@
   .post-series {
     display: none;
   }
-  .nav-header-pleaceholder {
+  .nav-header-placeholder {
     display: none;
   }
   .nav-header.nav-header {

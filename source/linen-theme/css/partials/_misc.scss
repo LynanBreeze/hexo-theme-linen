@@ -1,0 +1,99 @@
+@use "../vars.scss" as *;
+
+details:not(.maplibregl-ctrl-attrib) {
+  border-radius: $radiusMd;
+  border: 1px solid $borderSubtle;
+  margin-bottom: 0.75em;
+  overflow: hidden;
+  p {
+    margin-left: 12px;
+    margin-right: 12px;
+    &:first-of-type {
+      margin-top: 0.6em;
+    }
+    &:last-of-type {
+      margin-bottom: 0;
+    }
+  }
+  summary {
+    border-radius: 0;
+    list-style: none;
+    cursor: pointer;
+    position: relative;
+    padding: 7px 10px 7px calc(1.3em + 10px);
+    background-color: $surface;
+    font-weight: 500;
+    transition: background-color 180ms $easeOut;
+
+    &:hover {
+      background-color: $surfaceAlt;
+    }
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      transition: transform 0.2s $easeOut;
+      width: 1em;
+      height: 1em;
+      background-color: $metaText;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E") no-repeat center / contain;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E") no-repeat center / contain;
+    }
+  }
+
+  &[open] {
+    padding-bottom: 0.65em;
+    background-color: $bg;
+    summary {
+      margin-bottom: 4px;
+      border-bottom: 1px solid $borderSubtle;
+      &::before {
+        transform: translateY(-50%) rotate(90deg);
+      }
+    }
+  }
+}
+
+ul {
+  li {
+    &::marker {
+      color: $grayb;
+    }
+  }
+}
+
+.katex {
+  font-size: 1.08em;
+}
+
+.katex-display {
+  margin: 1.1em 0;
+  padding: 0.35em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.post-item .excerpt .katex-display {
+  margin: 0.5em 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

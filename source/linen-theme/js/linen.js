@@ -253,18 +253,6 @@ window.addEventListener("resize", function () {
   }, 200);
 });
 
-function onclickPostItem(element) {
-  const selection = window.getSelection();
-  const text = selection ? selection.toString().trim() : "";
-  if (text.length > 0) {
-    return;
-  }
-  const href = element.getAttribute("href");
-  if (href) {
-    location.href = href;
-  }
-}
-
 function setBodyScrollLocked(locked) {
   var body = document.body;
   var html = document.documentElement;
@@ -394,6 +382,8 @@ function handleClick(e) {
         tocElement.classList.remove("visible");
         maskElement.classList.remove("visible");
         setBodyScrollLocked(false);
+        var tocBtn = document.getElementById("toc-toggle");
+        if (tocBtn) tocBtn.setAttribute("aria-expanded", "false");
       }
       const firstTocLink = tocElement
         ? tocElement.querySelector(".toc-item-link")
@@ -458,10 +448,13 @@ function handleClick(e) {
         tocElement.classList.remove("visible");
         maskElement.classList.remove("visible");
         setBodyScrollLocked(false);
+        var tocBtn = document.getElementById("toc-toggle");
+        if (tocBtn) tocBtn.setAttribute("aria-expanded", "false");
       } else {
         tocElement.classList.add("visible");
         maskElement.classList.add("visible");
         setBodyScrollLocked(true);
+        target.setAttribute("aria-expanded", "true");
       }
       return;
     } else if (
@@ -491,6 +484,8 @@ function handleClick(e) {
       seriesElement?.classList?.remove("visible");
       maskElement.classList.remove("visible");
       setBodyScrollLocked(false);
+      var tocToggleBtn = document.getElementById("toc-toggle");
+      if (tocToggleBtn) tocToggleBtn.setAttribute("aria-expanded", "false");
       return;
     } else if (target?.className?.includes("fold-toggle")) {
       const parentElement = target.parentElement;

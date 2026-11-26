@@ -8,7 +8,7 @@ const showThemeToggle = (theme?.themeToggle ?? config?.theme_config?.themeToggle
 %>
 
 <% if (is_post()) { %>
-<div class="nav-header-pleaceholder"></div>
+<div class="nav-header-placeholder"></div>
 <% } %>
 <div class="nav-header<%=is_post() ? ' is-post': ''%>">
   <div class="header-inner">
@@ -21,7 +21,7 @@ const showThemeToggle = (theme?.themeToggle ?? config?.theme_config?.themeToggle
       </div>
       <div class="buttonSet">
         <% if (page.hdrSwitch) { %>
-        <span class="button hdr-switch" title="Switch HDR/SDR content"></span>
+        <button type="button" class="button hdr-switch" title="Switch HDR/SDR content" aria-label="Switch HDR/SDR content"></button>
         <script>
           if (window.innerWidth >= 500 && window.matchMedia && window.matchMedia("(dynamic-range: high)").matches && typeof CSS !== "undefined" && CSS.supports && CSS.supports("dynamic-range-limit: no-limit")) {
             var hdrBtn = document.currentScript && document.currentScript.previousElementSibling;
@@ -30,13 +30,13 @@ const showThemeToggle = (theme?.themeToggle ?? config?.theme_config?.themeToggle
         </script>
         <% } %>
         <% if (hasTranslatation) { %>
-        <a class="button language <%=targetLanguage%>" href="<%=targetLanguagePath%>" target="_self" title="switch language"></a>
+        <a class="button language <%=targetLanguage%>" href="<%=targetLanguagePath%>" target="_self" title="switch language" aria-label="Switch language"></a>
         <% } %>
         <% if (theme?.info?.github) { %>
-        <a class="button github" href="<%=theme?.info?.github || ''%>" target="_blank" title="github"></a>
+        <a class="button github" href="<%=theme?.info?.github || ''%>" target="_blank" rel="noopener noreferrer" title="GitHub" aria-label="GitHub"></a>
         <% } %>
         <% if (rssPath) { %>
-          <a class="button rss" href="<%=url_for(rssPath)%>" target="_blank" title="rss"></a>
+          <a class="button rss" href="<%=url_for(rssPath)%>" target="_blank" rel="noopener noreferrer" title="RSS" aria-label="RSS"></a>
         <% } %>
         <% if (showThemeToggle) { %>
         <button
@@ -56,7 +56,15 @@ const showThemeToggle = (theme?.themeToggle ?? config?.theme_config?.themeToggle
         </button>
         <% } %>
         <% if (hasTocs) { %>
-        <div id="toc-toggle" class="button toc"></div>
+        <button
+          type="button"
+          id="toc-toggle"
+          class="button toc"
+          title="<%=__('common.toc')%>"
+          aria-label="<%=__('common.toc')%>"
+          aria-controls="toc"
+          aria-expanded="false"
+        ></button>
         <% } %>
       </div>
     </div>
