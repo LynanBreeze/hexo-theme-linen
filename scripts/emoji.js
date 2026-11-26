@@ -18,10 +18,10 @@ const SKIP_TAGS = new Set([
   "title",
 ]);
 
-// Match full emoji sequences (including modifiers & ZWJ sequences) so compound
-// emojis are never partially replaced.
+// Match full emoji sequences (including keycaps, modifiers & ZWJ sequences) so
+// compound emojis are never partially replaced.
 const EMOJI_REGEX =
-  /\p{Extended_Pictographic}(?:\uFE0F|\uFE0E)?(?:\p{Emoji_Modifier})?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F|\uFE0E)?(?:\p{Emoji_Modifier})?)*/gu;
+  /[0-9#*]\uFE0F?\u20E3|\p{Extended_Pictographic}(?:\uFE0F|\uFE0E)?(?:\p{Emoji_Modifier})?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F|\uFE0E)?(?:\p{Emoji_Modifier})?)*/gu;
 
 const HTML_TOKEN_REGEX = /<!--[\s\S]*?-->|<\/?[a-zA-Z][^>]*>|[^<]+/g;
 
