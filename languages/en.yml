@@ -41,6 +41,7 @@ common:
   navigation: "Navigation"
   subscribe: "Subscribe"
   allCategories: "Categories"
+  allSeries: "Series"
   allYears: "Years"
   relatedTags: "Related Tags"
   viewAll: "All"

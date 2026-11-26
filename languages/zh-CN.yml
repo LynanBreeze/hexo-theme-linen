@@ -41,6 +41,7 @@ common:
   navigation: "导航"
   subscribe: "订阅"
   allCategories: "全部分类"
+  allSeries: "全部系列"
   allYears: "所有年份"
   relatedTags: "关联标签"
   viewAll: "全部"

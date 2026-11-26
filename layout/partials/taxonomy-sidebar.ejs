@@ -53,4 +53,23 @@
     </ul>
   </div>
 </aside>
+<% } else if (type === 'series' && items && items.length) { %>
+<aside class="taxonomy-sidebar" aria-label="<%=__('common.allSeries')%>">
+  <div class="taxonomy-sidebar-block">
+    <div class="taxonomy-sidebar-header">
+      <span class="taxonomy-sidebar-title"><%=__('common.allSeries')%></span>
+      <a class="taxonomy-sidebar-all" href="<%=url_for('/archives/#series')%>"><%=__('common.archives')%> →</a>
+    </div>
+    <ul class="taxonomy-category-list">
+      <% items.forEach(item => { %>
+      <li>
+        <a class="taxonomy-category-link<%= item.name === current ? ' active' : '' %>" href="<%=url_for(`/series/${item.name}/`)%>">
+          <span class="name"><%=item.name%></span>
+          <span class="count"><%=item.count%></span>
+        </a>
+      </li>
+      <% }) %>
+    </ul>
+  </div>
+</aside>
 <% } %>

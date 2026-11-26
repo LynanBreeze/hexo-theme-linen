@@ -1,5 +1,22 @@
 <%
 const isTravelSeries = ['旅行', 'Travel'].includes(page.series);
+const seriesPosts = page.seriesPosts || (page.posts ? (Array.isArray(page.posts) ? page.posts : page.posts.toArray()) : []);
+const currentSeriesPosts = page.posts ? (Array.isArray(page.posts) ? page.posts : page.posts.toArray()) : seriesPosts;
+const totalCount = seriesPosts.length;
+const years = seriesPosts
+  .map(p => (p.date && p.date.year ? p.date.year() : (p.date ? new Date(p.date).getFullYear() : null)))
+  .filter(y => y && y > 1970);
+const minYear = years.length ? Math.min(...years) : null;
+const maxYear = years.length ? Math.max(...years) : null;
+const yearRange = minYear && maxYear ? (minYear === maxYear ? `${minYear}` : `${minYear} — ${maxYear}`) : '';
+const seriesCountMap = new Map();
+site.posts.forEach(post => {
+  if (!post.series) return;
+  seriesCountMap.set(post.series, (seriesCountMap.get(post.series) || 0) + 1);
+});
+const seriesList = Array.from(seriesCountMap.entries())
+  .map(([name, count]) => ({ name, count }))
+  .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 const parseMapCoordinate = (post) => {
   if (post?.mapPlace?.coordinate?.length === 2) {
     return { lat: Number(post.mapPlace.coordinate[0]), lng: Number(post.mapPlace.coordinate[1]) };
@@ -87,10 +104,15 @@ const travelPlacesJson = encodeURIComponent(JSON.stringify(travelPlaces));
   <% } %>
 </div>
 <% } else if (!isTravelSeries) { %>
-<h1><%=__('common.series') + ': ' + page.series %></h1>
-<% if (page?.seriesInfo?.description) { %>
-<div class="series-description"><%=page.seriesInfo.description||''%> <i class="post-count-icon"></i><%=__('common.total')%> <%=page?.seriesPosts?.length%> <%=__('common.seriesPostCount')%></div>
-<% } %>
+<%-partial('partials/taxonomy-header', {
+  type: 'series',
+  title: page.series,
+  count: totalCount,
+  yearRange,
+  description: page?.seriesInfo?.description || '',
+  kindLabel: __('common.series'),
+  kindUrl: url_for('/archives/#series')
+})%>
 <% } %>
 
 <% if (isTravelSeries && travelPlaces.length) { %>
@@ -463,11 +485,15 @@ const travelPlacesJson = encodeURIComponent(JSON.stringify(travelPlaces));
 <div class="posts-info-layout">
   <div class="posts-wrap">
     <div id="recent-posts">
-      <% page.seriesPosts.forEach(post => { %>
+      <% currentSeriesPosts.forEach(post => { %>
       <%-partial('partials/post-item', { post: post })%> <% }) %>
     </div>
+    <%-partial('partials/paginator')%>
   </div>
-  <div class="info-wrap"><%-partial('partials/site-info')%></div>
+  <div class="info-wrap">
+    <%-partial('partials/site-info')%>
+    <%-partial('partials/taxonomy-sidebar', { type: 'series', items: seriesList, current: page.series })%>
+  </div>
 </div>
 <% } %>
 </div>
