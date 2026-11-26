@@ -1050,6 +1050,18 @@ img.linen-emoji {
         color: $darkText;
       }
 
+      .table-wrap {
+        width: 100%;
+        max-width: 100%;
+        margin: 1.6em auto;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+
+        > table:not(:where(.highlight table)) {
+          margin: 0;
+        }
+      }
+
       table:not(:where(.highlight table)) {
         width: 100%;
         margin: 1.6em auto;
@@ -1272,6 +1284,14 @@ img.linen-emoji {
         h4 {
           margin: 1.4em auto 0.65em;
           font-size: 1.02em;
+        }
+
+        .table-wrap {
+          margin: 1.35em auto;
+
+          > table:not(:where(.highlight table)) {
+            margin: 0;
+          }
         }
 
         table:not(:where(.highlight table)) {
@@ -1563,6 +1583,17 @@ img.linen-emoji {
   }
   .pswp-caption-content {
     display: none;
+  }
+  .table-wrap {
+    width: 100%;
+    max-width: 100%;
+    margin: 1.6em 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    > table:not(:where(.highlight table)) {
+      margin: 0;
+    }
   }
   table:not(:where(.highlight table)) {
     width: 100%;

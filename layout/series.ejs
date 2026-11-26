@@ -34,7 +34,7 @@ const travelPlaces = isTravelSeries ? page.seriesPosts.map((post, index) => {
     date: post.date && !date(post.date).startsWith('1970') ? getPostDate(post) : '',
     location: post?.mapPlace?.location || post?.coverInfo?.location || post.title,
     excerpt: post?.excerpt || '',
-    cover: post.thumbnail || post.cover || '',
+    cover: (post.thumbnail || post.cover) ? url_for(post.thumbnail || post.cover) : '',
     mapUrl: post?.mapPlace?.url || post?.coverInfo?.url || '',
     lat: coordinate.lat,
     lng: coordinate.lng,
@@ -45,7 +45,7 @@ const travelPlacesJson = encodeURIComponent(JSON.stringify(travelPlaces));
 
 <div class="series-layout<%=isTravelSeries && travelPlaces.length ? ' travel-series-layout' : ''%>">
   <% if (page.seriesInfo?.cover && !isTravelSeries) { %>
-  <div class="series-cover-img-wrap" style="<%=page.seriesInfo?.coverPlaceholder ? `background-image: url(${page.seriesInfo?.coverPlaceholder})`: ''%>">
+  <div class="series-cover-img-wrap" style="<%=page.seriesInfo?.coverPlaceholder ? `background-image: url(${url_for(page.seriesInfo.coverPlaceholder)})`: ''%>">
     <div class="series-cover-img-placeholder"></div>
     <script>
       const coverImgStartTime = Date.now();
@@ -64,7 +64,7 @@ const travelPlacesJson = encodeURIComponent(JSON.stringify(travelPlaces));
         }
       }
     </script>
-    <img id="seriesCoverImg" class="cover-img" src="<%=page.seriesInfo.cover%>" alt="" onload="onseriesCoverImgLoaded(this)" />
+    <img id="seriesCoverImg" class="cover-img" src="<%=url_for(page.seriesInfo.cover)%>" alt="" onload="onseriesCoverImgLoaded(this)" />
     <div class="cover-info">
       <div class="series-info">
         <h1 class="series-name"><%=__('common.series') + ': ' + page.series %></h1>

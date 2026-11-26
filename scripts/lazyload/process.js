@@ -464,6 +464,15 @@ module.exports.processPost = function (data) {
   return data;
 };
 
+function stripNoLazyFromMediaTag(tag) {
+  return tag
+    .replace(/\s+no-lazy\b(?=\s|>|\/)/gi, "")
+    .replace(/(\balt\s*=\s*["'])([^"']*)(["'])/gi, (_, open, altVal, close) => {
+      const cleaned = altVal.replace(/(?:^|\s+)\$?no-lazy\b/gi, "").trim();
+      return `${open}${cleaned}${close}`;
+    });
+}
+
 module.exports.processCovers = function (str, data) {
   try {
     const imgs = readAllImgs(path.join(this.base_dir, "assets-db/imgs"));
@@ -480,7 +489,7 @@ module.exports.processCovers = function (str, data) {
       /<div class="cover-img">\s*(<img\b[^>]*\bsrc="([^"]+)"[^>]*>)\s*<\/div>/gi,
       (coverStr, imgStr, src) => {
         if (/no-lazy/gi.test(imgStr)) {
-          return coverStr.replace(/\s+\$?no-lazy\b/i, "");
+          return coverStr.replace(imgStr, stripNoLazyFromMediaTag(imgStr));
         }
 
         const imgData = imgs.find((item) => isUrlEqual(item.url, src || ""));
@@ -495,7 +504,7 @@ module.exports.processCovers = function (str, data) {
         }></span></span></div>`;
       }
     );
-    str = str.replace(/\s+\$?no-lazy\b/gi, "");
+    str = str.replace(/<(?:img|iframe|video)\b[^>]*>/gi, stripNoLazyFromMediaTag);
   } catch (error) {
     console.log(error);
     return str;

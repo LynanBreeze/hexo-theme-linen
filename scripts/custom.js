@@ -337,6 +337,19 @@ function processCodeBlock(content) {
   );
 }
 
+function processTables(content) {
+  if (!content) return content;
+  return content.replace(
+    /(<figure\b[^>]*class="[^"]*\bhighlight\b[^"]*"[^>]*>[\s\S]*?<\/figure>)|(<div\b[^>]*class="[^"]*\btable-wrap\b[^"]*"[^>]*>[\s\S]*?<\/div>)|(<table\b[^>]*>[\s\S]*?<\/table>)/gi,
+    (match, highlightBlock, wrappedTable, tableHtml) => {
+      if (highlightBlock || wrappedTable) {
+        return match;
+      }
+      return `<div class="table-wrap">${tableHtml}</div>`;
+    },
+  );
+}
+
 function process(content) {
   if (!content) return "";
   const h2Regex = /(<h2[^>]*>.*?<\/h2>)/g;
@@ -364,6 +377,7 @@ hexo.extend.filter.register(
   "after_post_render",
   function (data) {
     data.content = processCodeBlock(data.content);
+    data.content = processTables(data.content);
     data.content = processTravelRoute(data.content, data);
     data.content = process.call(this, data.content);
     return data;

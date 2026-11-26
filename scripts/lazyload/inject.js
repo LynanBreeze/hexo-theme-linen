@@ -58,14 +58,73 @@ module.exports = function (hexo) {
     border-radius: 0.1em;
   }
   .lazyload-wrap .placeholder {
+    position: relative;
+    overflow: hidden;
     width: 100%;
     height: 0;
     display: block;
     padding-bottom: ${(100 / Number(placeholderRatio)).toFixed(5)}%;
-    background-size: 100% 100%;
+    background-size: cover;
+    background-position: center;
     background-repeat: no-repeat;
-    ${resolvedLoadingImage ? `background-image: ${placeholderImage};` : ""}
-    background-color: #fff;
+    background-color: #f4f2ed;
+    border-radius: inherit;
+  }
+  @keyframes linen-lazyload-shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  .lazyload-wrap .placeholder::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      rgba(255, 255, 255, 0) 20%,
+      rgba(255, 255, 255, 0.45) 50%,
+      rgba(255, 255, 255, 0) 80%
+    );
+    transform: translateX(-100%);
+    animation: linen-lazyload-shimmer 2.2s ease-in-out infinite;
+    pointer-events: none;
+  }
+  ${
+    resolvedLoadingImage
+      ? `.lazyload-wrap .placeholder::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: min(40px, 34%);
+    height: min(40px, 34%);
+    transform: translate(-50%, -50%);
+    background-image: ${placeholderImage};
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.75;
+    pointer-events: none;
+  }`
+      : ""
+  }
+  .lazyload-wrap .placeholder.loaded::before,
+  .lazyload-wrap .placeholder.loaded::after,
+  .lazyload-wrap .placeholder[style*="background-image"]::before,
+  .lazyload-wrap .placeholder[style*="background-image"]::after,
+  .lazyload-wrap .placeholder:has(canvas)::before,
+  .lazyload-wrap .placeholder:has(canvas)::after {
+    display: none;
+    animation: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lazyload-wrap .placeholder::before {
+      display: none;
+      animation: none;
+    }
   }
   .lazyload-wrap .placeholder canvas{
     position: absolute;
@@ -186,14 +245,18 @@ module.exports = function (hexo) {
     };
     if (/<\/body>/gi.test(htmlContent)) {
       htmlContent = appendToHead(settingsContent, htmlContent);
-      htmlContent = appendToHead(
-        `<link rel="preload" as="image" href="${resolvedLoadingImage}" />`,
-        htmlContent,
-      );
-      htmlContent = appendToHead(
-        `<link rel="preload" as="image" href="${resolvedErrorTipImage}" />`,
-        htmlContent,
-      );
+      if (resolvedLoadingImage) {
+        htmlContent = appendToHead(
+          `<link rel="preload" as="image" href="${resolvedLoadingImage}" />`,
+          htmlContent,
+        );
+      }
+      if (resolvedErrorTipImage) {
+        htmlContent = appendToHead(
+          `<link rel="preload" as="image" href="${resolvedErrorTipImage}" />`,
+          htmlContent,
+        );
+      }
       injectExtraScript(lazyLoadPath);
       injectExtraStyles(injectedStyles);
       htmlContent = htmlContent.replace(

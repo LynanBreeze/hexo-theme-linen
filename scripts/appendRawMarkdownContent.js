@@ -15,5 +15,5 @@ hexo.extend.filter.register('after_render:html', function (html, data) {
 
   const block = `<div id="raw-markdown-block">\n${codeHtml}\n</div>`;
 
-  return html.replace('<div id="page-content-end"></div>', block)
+  return html.replace('<div id="page-content-end"></div>', () => block)
 }, 10);

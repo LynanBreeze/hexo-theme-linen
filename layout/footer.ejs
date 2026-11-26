@@ -31,7 +31,7 @@
           <% } %>
         </div>
         <div class="footerLinkCol footerMetaCol">
-          <h4><a href="<%=url_for('/explorers-guide')%>"><%= __('common.aboutThisSite') %></a></h4>
+          <h4><% if (theme?.info?.about) { %><a href="<%=url_for(theme.info.about)%>"<%- /^(https?:)?\/\//i.test(theme.info.about) ? ' target="_blank" rel="noopener noreferrer"' : '' %>><%= __('common.aboutThisSite') %></a><% } else { %><%= __('common.aboutThisSite') %><% } %></h4>
           <span class="footerMetaText copyright">
             <span class="copyright-popover-container">
               <span class="copyright-trigger" tabindex="0" aria-haspopup="true">©</span>
@@ -43,7 +43,7 @@
                   </svg>
                   <span class="copyright-popover-title"><%=__('common.copyrightTitle')%></span>
                 </span>
-                <span class="copyright-popover-text"><%=__('common.copyright')%></span>
+                <span class="copyright-popover-text"><%= theme?.info?.copyright || __('common.copyright') %></span>
               </span>
             </span>&nbsp;<%=date(Date.now(), 'YYYY')+' '+config.author%>
           </span>

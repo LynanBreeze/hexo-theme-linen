@@ -224,10 +224,16 @@
   .nav-header {
     padding: 0;
   }
-  #post {
-    .post-title {
-      margin-top: 0.4em;
+  #content-outer.post-outer {
+    #post {
+      padding-top: $commonPadding;
+
+      h1.post-title:first-child {
+        margin-top: -0.18em;
+      }
     }
+  }
+  #post {
     h1 {
       font-size: 1.5em;
     }

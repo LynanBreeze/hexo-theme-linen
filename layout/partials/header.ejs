@@ -11,7 +11,7 @@ const rssPath = config?.feed?.path || theme?.feed?.path;
 <% } %>
 <div class="nav-header<%=is_post() ? ' is-post': ''%>">
   <div class="header-inner">
-    <a class="title" href="<%=url_for('/')%>" title="index" style="<%=[logoSrc ? `background-image: url(${logoSrc})`: '', logoWidth && logoHeight ? `aspect-ratio: ${logoWidth}/${logoHeight}` : ''].filter(v => v).join(';')%>"><%=logoText||''%></a>
+    <a class="title" href="<%=url_for('/')%>" title="index" style="<%=[logoSrc ? `background-image: url(${url_for(logoSrc)})`: '', logoWidth && logoHeight ? `aspect-ratio: ${logoWidth}/${logoHeight}` : ''].filter(v => v).join(';')%>"><%=logoText||''%></a>
     <div class="right">
       <div class="navItems">
         <% (theme?.navItems || []).forEach(({ name, path }) => { %>
