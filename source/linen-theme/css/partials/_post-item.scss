@@ -28,21 +28,28 @@
     display: block;
   }
   .title {
+    display: block;
     color: $darkText;
     font-weight: bold;
     font-size: 23px;
     line-height: 1.38;
     text-decoration: none;
-    white-space: wrap;
+    white-space: normal;
     transition: color 180ms $easeOut;
+    &:visited,
+    &:active {
+      color: $darkText;
+    }
     &::after {
       content: "";
       position: absolute;
       inset: 0;
       z-index: 1;
     }
-    &:hover {
-      color: $accent;
+    @media (hover: hover) {
+      &:hover {
+        color: $accent;
+      }
     }
     .sub-title {
       @include subTitle;

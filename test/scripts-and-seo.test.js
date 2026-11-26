@@ -216,4 +216,33 @@ describe("SEO, Date Helper, HoverTexts, ImageGrid & Archive Fixes", () => {
     assert.ok(noscriptCss.includes("#theme-toggle"));
     assert.ok(noscriptCss.includes("#search-toggle"));
   });
+
+  it("font-version.js hashes both letters.txt and site font files and replaces CSS placeholder", () => {
+    const os = require("os");
+    const tmpBase = fs.mkdtempSync(path.join(os.tmpdir(), "linen-fontver-"));
+    try {
+      fs.mkdirSync(path.join(tmpBase, "custom-scripts/font"), { recursive: true });
+      fs.mkdirSync(path.join(tmpBase, "source/linen-theme/fonts"), { recursive: true });
+      fs.writeFileSync(path.join(tmpBase, "custom-scripts/font/letters.txt"), "abc");
+      fs.writeFileSync(path.join(tmpBase, "source/linen-theme/fonts/a.woff2"), "font-v1");
+
+      const mockHexo = createMockHexo({ base_dir: tmpBase });
+      loadHexoScript("scripts/font-version.js", mockHexo);
+
+      mockHexo._filters.before_generate[0]();
+      const css1 = mockHexo._filters["after_render:css"][0](
+        'url("../fonts/a.woff2?v=__LINEN_FONT_VERSION__")',
+      );
+      assert.match(css1, /\?v=[a-f0-9]{8}"\)$/);
+
+      fs.writeFileSync(path.join(tmpBase, "source/linen-theme/fonts/a.woff2"), "font-v2");
+      mockHexo._filters.before_generate[0]();
+      const css2 = mockHexo._filters["after_render:css"][0](
+        'url("../fonts/a.woff2?v=__LINEN_FONT_VERSION__")',
+      );
+      assert.notEqual(css1, css2, "Font file changes should bust version hash");
+    } finally {
+      fs.rmSync(tmpBase, { recursive: true, force: true });
+    }
+  });
 });

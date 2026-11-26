@@ -501,6 +501,22 @@
   }
   #recent-posts {
     .post-item {
+      padding: 15px 0;
+      .cover-img {
+        width: 30%;
+        margin-left: 12px;
+      }
+      .title-excerpt {
+        .title {
+          font-size: 18px;
+          line-height: 1.34;
+        }
+        .excerpt {
+          margin: 6px 0 7px;
+          font-size: 13.5px;
+          line-height: 1.56;
+        }
+      }
       .post-meta {
         font-size: 12px;
       }

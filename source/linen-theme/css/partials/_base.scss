@@ -22,10 +22,10 @@ html {
 a {
   text-decoration: none;
   color: $linkColor;
-  &:visited,
-  &:active {
-    color: $linkColor;
-  }
+}
+
+:where(a:visited, a:active) {
+  color: $linkColor;
 }
 
 #back-to-top {

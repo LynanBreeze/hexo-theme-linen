@@ -10,16 +10,42 @@ const FONT_VERSION_PLACEHOLDER = "__LINEN_FONT_VERSION__";
 let cachedFontVersion = null;
 
 function computeFontVersion(hexoInstance) {
-  const lettersFilePath = hexoInstance?.base_dir
-    ? path.join(hexoInstance.base_dir, "custom-scripts/font/letters.txt")
-    : "";
+  const baseDir = hexoInstance?.base_dir || "";
+  if (baseDir) {
+    const hash = crypto.createHash("md5");
+    let hasInput = false;
 
-  if (lettersFilePath && fs.existsSync(lettersFilePath)) {
-    try {
-      const content = fs.readFileSync(lettersFilePath);
-      return crypto.createHash("md5").update(content).digest("hex").slice(0, 8);
-    } catch (error) {
-      // Fall back to theme version if letters.txt cannot be read
+    const lettersFilePath = path.join(baseDir, "custom-scripts/font/letters.txt");
+    if (fs.existsSync(lettersFilePath)) {
+      try {
+        hash.update(fs.readFileSync(lettersFilePath));
+        hasInput = true;
+      } catch (error) {
+        // Ignore unreadable letters.txt
+      }
+    }
+
+    const targetDir = path.join(baseDir, "source/linen-theme/fonts");
+    const backupDir = path.join(baseDir, "source/fonts");
+    const fontDir = fs.existsSync(targetDir) ? targetDir : backupDir;
+
+    if (fs.existsSync(fontDir)) {
+      try {
+        const files = fs.readdirSync(fontDir).sort();
+        for (const file of files) {
+          if (file.endsWith(".woff2") || file.endsWith(".ttf")) {
+            hash.update(file);
+            hash.update(fs.readFileSync(path.join(fontDir, file)));
+            hasInput = true;
+          }
+        }
+      } catch (error) {
+        // Ignore unreadable font directory
+      }
+    }
+
+    if (hasInput) {
+      return hash.digest("hex").slice(0, 8);
     }
   }
 

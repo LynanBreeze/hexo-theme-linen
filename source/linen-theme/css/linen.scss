@@ -15,27 +15,3 @@
 @use "./partials/misc";
 
 @include mq.rules;
-
-@media (max-width: 900px) {
-  .post-item {
-    .title-row {
-      display: inline;
-    }
-    .title {
-      display: inline !important;
-    }
-    .tags {
-      display: inline !important;
-      white-space: normal !important;
-      overflow: visible !important;
-      margin: 0 0 0 8px !important;
-      vertical-align: middle;
-
-      .tag-item {
-        display: inline-block !important;
-        margin-bottom: 4px !important;
-        vertical-align: middle;
-      }
-    }
-  }
-}
