@@ -376,7 +376,7 @@
           color: $darkText !important;
           blockquote {
             color: $grayerText;
-            border-left-color: $borderStrong;
+            border-left: 3px solid $borderSubtle;
           }
           code {
             background-color: $surfaceAlt;
@@ -585,6 +585,10 @@
         background-color: $surface;
         border-color: $borderColor;
         color: $darkText;
+        blockquote {
+          color: $grayerText;
+          border-left: 3px solid $borderSubtle;
+        }
       }
       .gt-container .gt-svg svg {
         fill: $metaText;

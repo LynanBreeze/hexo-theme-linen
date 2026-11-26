@@ -402,7 +402,15 @@ html[lang="en"] {
     @include sourceSansProFont;
   }
   .gt-comment-body {
-    @include sourceSansProFont;
+    font-family:
+      "source-serif",
+      "source han serif cn",
+      Georgia,
+      "Times New Roman",
+      "Songti SC",
+      "Noto Serif SC",
+      "SimSun",
+      serif;
   }
 }
 
