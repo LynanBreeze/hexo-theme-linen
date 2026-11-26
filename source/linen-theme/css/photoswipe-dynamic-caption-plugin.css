@@ -217,7 +217,7 @@
   position: absolute;
   left: 50%;
   top: unset;
-  bottom: 6px;
+  bottom: 12px;
   transform: translateX(-50%);
   text-align: center;
 }
@@ -272,7 +272,7 @@
 @supports (padding-bottom: constant(safe-area-inset-bottom)) or
   (padding-bottom: env(safe-area-inset-bottom)) {
   .pswp__custom-caption:not(.mobile) {
-    bottom: calc(6px + constant(safe-area-inset-bottom));
-    bottom: calc(6px + env(safe-area-inset-bottom));
+    bottom: calc(12px + constant(safe-area-inset-bottom));
+    bottom: calc(12px + env(safe-area-inset-bottom));
   }
 }

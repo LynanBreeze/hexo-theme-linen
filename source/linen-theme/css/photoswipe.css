@@ -427,6 +427,11 @@ div.pswp__img--placeholder,
 	background: var(--pswp-placeholder-bg);
 }
 
+img.pswp__img--placeholder {
+	object-fit: cover;
+	background: var(--pswp-placeholder-bg);
+}
+
 .pswp__top-bar {
 	position: absolute;
 	left: 0;

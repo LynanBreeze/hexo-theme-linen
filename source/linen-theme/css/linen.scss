@@ -4411,6 +4411,7 @@ html[lang="zh-CN"] {
     position: absolute;
     top: -12px;
     left: 50%;
+    z-index: 50;
     transform: translate(-50%, calc(-100% - 14px));
     cursor: default;
     pointer-events: none;
@@ -4431,6 +4432,14 @@ html[lang="zh-CN"] {
       transform: translate(-50%, -100%);
       opacity: 1;
       pointer-events: all;
+    }
+    &.placement-bottom {
+      top: auto;
+      bottom: -12px;
+      transform: translate(-50%, calc(100% + 14px));
+      &.visible {
+        transform: translate(-50%, 100%);
+      }
     }
   }
   &:active {

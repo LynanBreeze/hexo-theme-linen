@@ -388,6 +388,46 @@ function setBodyScrollLocked(locked) {
   }
 }
 
+function positionDonateModal(trigger, modal) {
+  var buttonRect = trigger.getBoundingClientRect();
+  var modalHeight = modal.offsetHeight || 258;
+  var gap = 12;
+  var edgePadding = 16;
+
+  var safeTop = edgePadding;
+  var header = document.querySelector(".nav-header");
+  if (header && !header.classList.contains("hide")) {
+    var headerStyle = window.getComputedStyle(header);
+    if (headerStyle.position === "fixed" || headerStyle.position === "sticky") {
+      var headerRect = header.getBoundingClientRect();
+      if (headerRect.bottom > 0) {
+        safeTop = Math.max(safeTop, headerRect.bottom + 12);
+      }
+    }
+  }
+
+  var viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+  var spaceAbove = buttonRect.top - safeTop;
+  var spaceBelow = viewportHeight - buttonRect.bottom - edgePadding;
+  var requiredSpace = modalHeight + gap;
+
+  var openBelow = spaceAbove < requiredSpace && spaceBelow >= spaceAbove;
+  modal.classList.toggle("placement-bottom", openBelow);
+
+  if (!openBelow && spaceAbove < requiredSpace) {
+    var scrollDeltaUp = buttonRect.top - requiredSpace - safeTop;
+    if (scrollDeltaUp < 0) {
+      window.scrollBy({ top: scrollDeltaUp, behavior: "smooth" });
+    }
+  } else if (openBelow && spaceBelow < requiredSpace) {
+    var scrollDeltaDown =
+      buttonRect.bottom + requiredSpace - (viewportHeight - edgePadding);
+    if (scrollDeltaDown > 0) {
+      window.scrollBy({ top: scrollDeltaDown, behavior: "smooth" });
+    }
+  }
+}
+
 function handleClick(e) {
   try {
     var target = e.target;
@@ -572,13 +612,21 @@ function handleClick(e) {
       }
       return;
     } else if (target.id === "page-donates") {
-      target?.children?.[0]?.classList?.add("visible");
+      var modal = donateModal || target?.children?.[0];
+      if (!modal) return;
+      if (modal.classList.contains("visible")) {
+        modal.classList.remove("visible");
+        return;
+      }
+      positionDonateModal(target, modal);
+      void modal.offsetHeight;
+      modal.classList.add("visible");
       return;
     } else {
       if (
         donateModal &&
         donateModal.classList.contains("visible") &&
-        target.tagName !== "IMG"
+        !target.closest("#donate-modal")
       ) {
         donateModal.classList.remove("visible");
       }
