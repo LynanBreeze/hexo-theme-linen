@@ -2,9 +2,13 @@
 
 #content-outer.post-outer {
   .content-inner {
+    min-width: 0;
+    max-width: 100%;
     background-color: $bg;
   }
   #post {
+    min-width: 0;
+    max-width: 100%;
     margin: 0 auto;
     padding: clamp(22px, 3vw, 34px) $commonPadding 0;
     h1:first-child {

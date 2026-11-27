@@ -73,6 +73,11 @@ describe("Stylesheets & Templates Smoke Tests", () => {
             !res.css.includes("52.07100592%"),
           "linen.scss should use CSS Grid and 16:9 covers for #top-posts",
         );
+        assert.ok(
+          res.css.includes("overflow-x:clip") &&
+            res.css.includes("max-width:min(100%,max(1000px"),
+          "linen.scss should guard against mobile horizontal overflow on html/body and #content-outer",
+        );
       }
       if (rel.endsWith("post.scss")) {
         assert.ok(

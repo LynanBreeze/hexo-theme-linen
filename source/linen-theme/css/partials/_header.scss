@@ -49,10 +49,19 @@
     }
     .right {
       flex: 1 1 auto;
+      min-width: 0;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 10px;
       .navItems {
+        min-width: 0;
+        overflow-x: auto;
+        white-space: nowrap;
+        scrollbar-width: none;
+        &::-webkit-scrollbar {
+          display: none;
+        }
         .navItem {
           text-decoration: none;
           font-size: 15px;

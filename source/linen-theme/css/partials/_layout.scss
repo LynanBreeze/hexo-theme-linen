@@ -5,9 +5,11 @@
   align-items: flex-start;
   .posts-wrap {
     width: 75%;
+    min-width: 0;
   }
   .info-wrap {
     width: 25%;
+    min-width: 0;
     @media (min-width: 729px) {
       position: sticky;
       top: 84px;
@@ -133,8 +135,9 @@
 #content-outer {
   order: 2;
   width: 100%;
+  min-width: 0;
   flex: 0 0 auto;
-  max-width: $siteMaxWidth;
+  max-width: min(100%, #{$siteMaxWidth});
   margin: 0 auto;
   @include pageXPadding;
   &.series-outer {

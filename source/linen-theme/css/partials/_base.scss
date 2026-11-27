@@ -4,6 +4,7 @@ html {
   min-width: 320px;
   scroll-behavior: smooth;
   overscroll-behavior: auto none;
+  overflow-x: clip;
   &.no-scroll {
     overflow: hidden !important;
   }
@@ -116,7 +117,7 @@ body {
   line-height: 1.5;
   @include defaultFont;
   overscroll-behavior-y: none;
-  overflow-x: hidden;
+  overflow-x: clip;
   font-size: 16px;
   &.ios {
     #back-to-top {

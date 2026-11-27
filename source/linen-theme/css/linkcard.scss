@@ -106,6 +106,13 @@ a:has(> .shared-link) {
       overflow: hidden;
       text-overflow: ellipsis;
       transition: color 180ms var(--linen-ease, cubic-bezier(0.22, 1, 0.36, 1));
+
+      .sub-title {
+        font-size: 78%;
+        font-weight: 400;
+        color: var(--linen-ink-subtle, #716c64);
+        margin-left: 0.25em;
+      }
     }
 
     .link-desc {

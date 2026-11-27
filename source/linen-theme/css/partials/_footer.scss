@@ -6,6 +6,7 @@
   border-top: 1px solid $borderSubtle;
   padding: 40px 0;
   margin-top: 48px;
+  overflow-x: clip;
 
   .footerInner {
     max-width: $siteMaxWidth;

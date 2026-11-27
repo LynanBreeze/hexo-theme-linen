@@ -1,4 +1,8 @@
 const { url_for, full_url_for } = require("hexo-util");
+const {
+  buildInternalPostIndex,
+  resolveSharedLinkPlaceholders,
+} = require("./shared-link");
 
 if (
   hexo?.theme?.config?.feed === false ||
@@ -473,6 +477,11 @@ hexo.extend.generator.register("rss", function (locals) {
   const latestPostDate =
     posts.map((post) => toRfc822Date(post.date)).find(Boolean) || "";
   const lastBuildDate = latestPostDate || new Date().toUTCString();
+  const sharedLinkIndex = buildInternalPostIndex(
+    allPosts,
+    locals.pages,
+    config.root,
+  );
 
   const feed = `<?xml version="1.0" encoding="UTF-8" ?>
 <?xml-stylesheet type="text/xsl" href="${escape(cssUrl)}"?>
@@ -512,8 +521,13 @@ hexo.extend.generator.register("rss", function (locals) {
       let rawHtml = "";
 
       if (typeof snapshotHtml === "string") {
-        rawHtml = sanitizeHtmlForRss(
+        const resolvedSnapshot = resolveSharedLinkPlaceholders(
           snapshotHtml,
+          sharedLinkIndex,
+          config.root,
+        );
+        rawHtml = sanitizeHtmlForRss(
+          resolvedSnapshot,
           siteUrl,
           config.root,
           config.url,
@@ -521,8 +535,13 @@ hexo.extend.generator.register("rss", function (locals) {
           replacements,
         );
       } else if (typeof post.content === "string" && post.content.trim()) {
-        rawHtml = sanitizeHtmlForRss(
+        const resolvedContent = resolveSharedLinkPlaceholders(
           post.content,
+          sharedLinkIndex,
+          config.root,
+        );
+        rawHtml = sanitizeHtmlForRss(
+          resolvedContent,
           siteUrl,
           config.root,
           config.url,
