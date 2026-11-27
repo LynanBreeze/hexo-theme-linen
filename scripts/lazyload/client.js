@@ -391,7 +391,15 @@
         errorWrap.appendChild(errorTip);
         var button = document.createElement("button");
         button.type = "button";
-        button.innerText = "Retry";
+        var docLang =
+          (document.documentElement && document.documentElement.lang) || "";
+        var defaultRetryText = /^zh[-_]?(?:tw|hk|mo|hant)\b/i.test(docLang)
+          ? "重試"
+          : /^zh\b/i.test(docLang)
+            ? "重试"
+            : "Retry";
+        button.textContent =
+          (window.$lazyload && window.$lazyload.retryText) || defaultRetryText;
         button.classList.add("retry-btn");
         button.onclick = retry;
         errorWrap.appendChild(button);
