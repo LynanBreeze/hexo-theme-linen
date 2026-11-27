@@ -75,6 +75,8 @@
 
   .travel-map-canvas {
     position: relative;
+    z-index: 0;
+    isolation: isolate;
     min-height: 360px;
     background: $surface;
   }

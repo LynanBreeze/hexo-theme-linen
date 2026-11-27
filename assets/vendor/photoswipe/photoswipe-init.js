@@ -1,5 +1,4 @@
 import PhotoSwipeLightbox from "./photoswipe/photoswipe-lightbox.esm.min.js";
-import PhotoSwipe from "./photoswipe/photoswipe.esm.min.js";
 import PhotoSwipeDynamicCaption from "./photoswipe/photoswipe-dynamic-caption-plugin.esm.js";
 
 const initScriptEl = document.getElementById("linen-photoswipe-init");
@@ -41,7 +40,7 @@ const lightbox = new PhotoSwipeLightbox({
   gallery: "#post",
   children: "a.gallery-item",
   bgOpacity: 1,
-  pswpModule: PhotoSwipe,
+  pswpModule: () => import("./photoswipe/photoswipe.esm.min.js"),
   arrowPrevSVG:
     '<svg aria-hidden="true" class="pswp__icn" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
   arrowNextSVG:

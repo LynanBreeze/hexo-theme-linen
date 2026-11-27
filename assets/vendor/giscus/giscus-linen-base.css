@@ -230,13 +230,11 @@ main .gsc-loading-image {
   font-weight: 500;
 }
 
-/* Editorial serif prose for comment bodies & previews */
+/* Editorial serif prose for comment bodies & previews (cross-origin iframe uses system serif stack) */
 .gsc-comment-content,
 .gsc-reply-content,
 .gsc-comment-box-preview {
   font-family:
-    "source-serif",
-    "source han serif cn",
     Georgia,
     "Times New Roman",
     "Songti SC",
@@ -246,6 +244,14 @@ main .gsc-loading-image {
   font-size: 15.5px;
   line-height: 1.72;
   color: var(--color-fg-default);
+}
+
+html[lang^="en"] .gsc-comment-content,
+html[lang^="en"] .gsc-reply-content,
+html[lang^="en"] .gsc-comment-box-preview {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  line-height: 1.65;
 }
 
 .gsc-comment-content {

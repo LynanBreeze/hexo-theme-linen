@@ -21,11 +21,12 @@ const currentPath = `/${page.path || ''}`.replace(/\/index\.html$/, '/');
       <nav class="navItems" aria-label="<%=__('common.navigation')%>">
         <% (theme?.navItems || []).forEach(({ name, path }) => {
           const normalizedItemPath = path === '/' ? '/' : (path.startsWith('/') ? path : `/${path}`);
+          const cleanItemPath = normalizedItemPath.replace(/\/+$/, '');
           const isNavActive = normalizedItemPath === '/'
             ? (currentPath === '/' || is_home())
-            : currentPath.startsWith(normalizedItemPath);
+            : (currentPath === normalizedItemPath || currentPath === `${cleanItemPath}/` || currentPath.startsWith(`${cleanItemPath}/`));
         %>
-        <a class="navItem<%=isNavActive ? ' active' : ''%>" href="<%=url_for(path)%>"><%=name%></a>
+        <a class="navItem<%=isNavActive ? ' active' : ''%>"<%-isNavActive ? ' aria-current="page"' : ''%> href="<%=url_for(path)%>"><%=name%></a>
         <% }); %>
       </nav>
       <div class="buttonSet">

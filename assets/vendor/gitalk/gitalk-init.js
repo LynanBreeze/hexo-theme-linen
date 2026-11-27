@@ -120,7 +120,21 @@
       };
 
       normalizeMentions();
-      var mentionObserver = new MutationObserver(normalizeMentions);
+      var mentionScheduled = false;
+      var scheduleNormalizeMentions = function () {
+        if (mentionScheduled) return;
+        mentionScheduled = true;
+        var run = function () {
+          mentionScheduled = false;
+          normalizeMentions();
+        };
+        if (typeof window.requestAnimationFrame === "function") {
+          window.requestAnimationFrame(run);
+        } else {
+          setTimeout(run, 16);
+        }
+      };
+      var mentionObserver = new MutationObserver(scheduleNormalizeMentions);
       mentionObserver.observe(container, { childList: true, subtree: true });
     };
 
@@ -130,14 +144,22 @@
   window.loadGitalk = loadGitalk;
 
   function initObserver() {
-    var observer = new IntersectionObserver(function (entries, obs) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          loadGitalk();
-          obs.unobserve(entry.target);
+    if (typeof IntersectionObserver !== "function") {
+      loadGitalk();
+      return;
+    }
+    var observer = new IntersectionObserver(
+      function (entries, obs) {
+        for (var i = 0; i < entries.length; i++) {
+          if (entries[i].isIntersecting) {
+            loadGitalk();
+            obs.disconnect();
+            return;
+          }
         }
-      });
-    });
+      },
+      { rootMargin: "200px 0px" },
+    );
     var target = document.getElementById("gitalk-initiator");
     var gitalkContainer = document.getElementById("gitalk-container");
     if (target) {

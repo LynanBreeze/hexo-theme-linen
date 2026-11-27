@@ -239,15 +239,62 @@ describe("Series Template, Lazyload Pipeline & LaTeX Config Fixes", () => {
     assert.ok(clientCode.includes("!showTransition || !inViewport"));
     assert.ok(clientCode.includes("isOversizedVisible"));
 
-    const injectScript = require("../scripts/lazyload/inject")(createMockHexo());
+    const injectScript = require("../scripts/lazyload/inject")(
+      createMockHexo({ config: { root: "/blog/" }, themeConfig: { version: "1.2.3" } }),
+    );
     const noImgHtml = injectScript("<html><head></head><body><p>Plain</p></body></html>", { page: {} });
     assert.ok(!noImgHtml.includes("$lazyload"), "Must skip injecting $lazyload on pages without .lazyload-wrap");
+    assert.ok(!noImgHtml.includes("lazyload.css"), "Must skip lazyload.css on pages without .lazyload-wrap");
+    assert.ok(!noImgHtml.includes("lazyload.js"), "Must skip lazyload.js on pages without .lazyload-wrap");
     const withImgHtml = injectScript(
-      '<html><head></head><body><span class="lazyload-wrap"></span></body></html>',
+      '<html><head><noscript><link rel="stylesheet" href="/blog/linen-theme/css/noscript.css" /></noscript></head><body><span class="lazyload-wrap"></span></body></html>',
       { page: {} },
     );
     assert.ok(withImgHtml.includes("var $lazyload = {"));
+    assert.ok(
+      withImgHtml.includes('<link rel="stylesheet" href="/blog/linen-theme/css/lazyload.css?v=1.2.3" />'),
+      "Must inject lazyload.css with subpath root when .lazyload-wrap is present",
+    );
+    assert.ok(
+      withImgHtml.indexOf("lazyload.css") < withImgHtml.indexOf("noscript.css"),
+      "lazyload.css must precede noscript.css in <head>",
+    );
+    assert.ok(
+      withImgHtml.includes('<script src="/blog/linen-theme/js/lazyload.js?v=1.2.3" defer></script></body>'),
+      "Must inject deferred lazyload.js before </body> when .lazyload-wrap is present",
+    );
     assert.ok(!withImgHtml.includes("error-tip.svg"), "Must not preload error-tip.svg");
+
+    const pswpInit = fs.readFileSync(
+      path.join(ROOT_DIR, "assets/vendor/photoswipe/photoswipe-init.js"),
+      "utf8",
+    );
+    assert.ok(
+      !pswpInit.includes('import PhotoSwipe from "./photoswipe/photoswipe.esm.min.js"'),
+      "photoswipe-init.js must not eagerly import 188KB photoswipe.esm.min.js",
+    );
+    assert.ok(
+      pswpInit.includes('() => import("./photoswipe/photoswipe.esm.min.js")'),
+      "photoswipe-init.js should dynamically import PhotoSwipe core on open",
+    );
+
+    const travelMapJs = fs.readFileSync(
+      path.join(ROOT_DIR, "assets/vendor/map/travel-map.js"),
+      "utf8",
+    );
+    assert.ok(
+      travelMapJs.includes("unbindCardEvents"),
+      "travel-map.js should unbind card listeners when falling back from MapLibre to Leaflet",
+    );
+
+    const postJs = fs.readFileSync(
+      path.join(ROOT_DIR, "source/linen-theme/js/post.js"),
+      "utf8",
+    );
+    assert.ok(
+      postJs.includes("selection.isCollapsed"),
+      "post.js should skip heading anchor jump when user is selecting text",
+    );
 
     const lazyHexo = createMockHexo({ themeConfig: { lazyload: { enable: true } } });
     loadHexoScript("scripts/lazyload/index.js", lazyHexo);

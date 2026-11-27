@@ -323,6 +323,17 @@
         : null;
 
       if (headingEl && headingEl.id) {
+        var selection =
+          typeof window.getSelection === "function"
+            ? window.getSelection()
+            : null;
+        if (
+          selection &&
+          !selection.isCollapsed &&
+          String(selection.toString() || "").trim()
+        ) {
+          return;
+        }
         var newLocation = new URL(location.href);
         newLocation.hash = "#" + headingEl.id;
         history.replaceState(null, "", newLocation.href);
@@ -368,9 +379,6 @@
         return;
       } else if (tocLink) {
         e.preventDefault();
-        if (!window.$gitalkInitiated) {
-          typeof window.loadGitalk === "function" && window.loadGitalk();
-        }
         var targetId = tocLink.dataset.id;
         var anchor = document.getElementById(targetId);
         if (tocElement?.classList?.contains("visible")) {

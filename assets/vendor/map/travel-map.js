@@ -78,6 +78,11 @@
     };
 
     const bindCardEvents = (markers) => {
+      if (typeof unbindCardEvents === "function") {
+        unbindCardEvents();
+        unbindCardEvents = null;
+      }
+      const cleanups = [];
       items.forEach((item) => {
         const id = item.dataset.travelPlace;
         const getEl = markers.get(id);
@@ -86,17 +91,29 @@
           const el = getEl ? getEl() : null;
           if (el) el.classList.toggle("active", active);
         };
-        item.addEventListener("mouseenter", () => toggle(true));
-        item.addEventListener("mouseleave", () => toggle(false));
-        item.addEventListener("focusin", () => toggle(true));
-        item.addEventListener("focusout", () => toggle(false));
+        const onEnter = () => toggle(true);
+        const onLeave = () => toggle(false);
+        item.addEventListener("mouseenter", onEnter);
+        item.addEventListener("mouseleave", onLeave);
+        item.addEventListener("focusin", onEnter);
+        item.addEventListener("focusout", onLeave);
+        cleanups.push(() => {
+          item.removeEventListener("mouseenter", onEnter);
+          item.removeEventListener("mouseleave", onLeave);
+          item.removeEventListener("focusin", onEnter);
+          item.removeEventListener("focusout", onLeave);
+        });
       });
+      unbindCardEvents = () => {
+        cleanups.forEach((fn) => fn());
+      };
     };
 
     return { placeGroups, setActive, getPopupHtml, bindCardEvents };
   };
 
   let fallbackTriggered = false;
+  let unbindCardEvents = null;
 
   const showError = () => {
     mapEl.innerHTML = "";
@@ -258,6 +275,10 @@
     const cleanupMapLibre = () => {
       if (mapDestroyed) return;
       mapDestroyed = true;
+      if (typeof unbindCardEvents === "function") {
+        unbindCardEvents();
+        unbindCardEvents = null;
+      }
       window.removeEventListener("linen:themechange", syncMapTheme);
       if (darkMedia) {
         if (typeof darkMedia.removeEventListener === "function") {

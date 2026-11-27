@@ -6,11 +6,27 @@
   var isAnchoring = false;
   var anchoringTimer = null;
   var overlayClosers = [];
+  var cachedHeader = null;
+  var cachedBackToTop = null;
+
+  function getHeaderEl() {
+    if (!cachedHeader || !cachedHeader.isConnected) {
+      cachedHeader = document.querySelector(".nav-header");
+    }
+    return cachedHeader;
+  }
+
+  function getBackToTopEl() {
+    if (!cachedBackToTop || !cachedBackToTop.isConnected) {
+      cachedBackToTop = document.querySelector("#back-to-top");
+    }
+    return cachedBackToTop;
+  }
 
   function triggerAnchoring() {
     if (window.innerWidth > 1280) return;
     isAnchoring = true;
-    var header = document.querySelector(".nav-header");
+    var header = getHeaderEl();
     if (header) {
       header.classList.add("hide");
     }
@@ -18,7 +34,7 @@
     anchoringTimer = setTimeout(function () {
       isAnchoring = false;
       if (window.scrollY <= 60) {
-        var navHeader = document.querySelector(".nav-header");
+        var navHeader = getHeaderEl();
         if (navHeader) {
           navHeader.classList.remove("hide");
         }
@@ -29,7 +45,7 @@
   function clearAnchoring() {
     isAnchoring = false;
     clearTimeout(anchoringTimer);
-    var header = document.querySelector(".nav-header");
+    var header = getHeaderEl();
     if (header) {
       header.classList.remove("hide");
     }
@@ -43,17 +59,13 @@
   })();
 
   function onScroll() {
-    var backToTop = document.querySelector("#back-to-top");
-    var header = document.querySelector(".nav-header");
+    var backToTop = getBackToTopEl();
+    var header = getHeaderEl();
     if (!header) return;
 
     var rawScrollY = window.scrollY;
     var currentScrollY = Math.max(0, rawScrollY);
     var triggerHeight = window.innerHeight * 1.5;
-
-    if (!window.$gitalkInitiated && currentScrollY > window.innerHeight) {
-      typeof window.loadGitalk === "function" && window.loadGitalk();
-    }
 
     var isMobilePost =
       window.innerWidth <= 1280 && header.classList.contains("is-post");

@@ -268,6 +268,7 @@ describe("Template Bugfixes & Refactors", () => {
       theme: {
         navItems: [
           { name: "Home", path: "/" },
+          { name: "Arch", path: "/arch" },
           { name: "Archives", path: "/archives/" },
         ],
         logo: { text: "Linen Blog" },
@@ -293,7 +294,10 @@ describe("Template Bugfixes & Refactors", () => {
 
     assert.ok(archiveHtml.includes('aria-label="Linen Blog"'));
     assert.ok(archiveHtml.includes('<a class="navItem" href="/">Home</a>'));
-    assert.ok(archiveHtml.includes('<a class="navItem active" href="/archives/">Archives</a>'));
+    assert.ok(archiveHtml.includes('<a class="navItem" href="/arch">Arch</a>'));
+    assert.ok(
+      archiveHtml.includes('<a class="navItem active" aria-current="page" href="/archives/">Archives</a>'),
+    );
     assert.ok(!archiveHtml.includes('id="search-toggle"'));
 
     const homeWithSearchHtml = renderTemplate("layout/partials/header.ejs", {
@@ -303,7 +307,9 @@ describe("Template Bugfixes & Refactors", () => {
       is_home: () => true,
     });
 
-    assert.ok(homeWithSearchHtml.includes('<a class="navItem active" href="/">Home</a>'));
+    assert.ok(
+      homeWithSearchHtml.includes('<a class="navItem active" aria-current="page" href="/">Home</a>'),
+    );
     assert.ok(homeWithSearchHtml.includes('id="search-toggle"'));
   });
 
