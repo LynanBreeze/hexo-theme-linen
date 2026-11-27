@@ -117,6 +117,34 @@ describe("Series Template, Lazyload Pipeline & LaTeX Config Fixes", () => {
     assert.equal(parsedPlaces[0].excerpt, undefined);
     assert.equal(parsedPlaces[0].lat, 35.68);
     assert.ok(mappedHtml.includes("<h1>Places I have been</h1>"), "Travel map heading should use <h1>");
+    assert.ok(
+      mappedHtml.includes("<span>2</span>") && mappedHtml.includes("trips · 1 mapped"),
+      "Travel map stats should report total series post count alongside mapped count when some posts lack coordinates",
+    );
+
+    // 4. When all travel posts have coordinates, stats show the concise mapped label
+    const allMappedHtml = renderTemplate("layout/series.ejs", {
+      page: {
+        series: "旅行",
+        seriesInfo: { description: "Trips" },
+        seriesPosts: [mappedPost],
+        posts: [mappedPost],
+        language: "zh-CN",
+      },
+      config: { language: "zh-CN" },
+      theme: { version: "1.0.60" },
+      site: { posts: [mappedPost] },
+      isMapSeries: () => true,
+      url_for: (p) => p,
+      date: () => "2026-04-01",
+      getPostDate: () => "4 月 1 日，2026",
+      partial: () => "",
+      __: (k) => k,
+    });
+    assert.ok(
+      allMappedHtml.includes("<span>1</span>") && allMappedHtml.includes("次旅行足迹"),
+      "Chinese travel map stats should keep concise label when all posts are mapped",
+    );
   });
 
   it("lazyload process uses O(1) img index, omits href on no-link spans, and skips blurhash cover background-image", () => {
