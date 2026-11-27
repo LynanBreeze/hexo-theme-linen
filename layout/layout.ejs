@@ -91,6 +91,7 @@ const version = theme.version;
 
 <body class="<%- is_post() ? 'is-post' : '' %>">
   <div id="page-top"></div>
+  <a class="skip-to-content" href="#content-inner"><%=__('common.skipToContent')%></a>
   <%-partial('partials/header', {
       hasTocs: page?.toc ?? !!tocs?.length
     })%>
@@ -134,7 +135,7 @@ const version = theme.version;
           <% if (showYearDivider) { %>
           <div class="series-year-divider<%-itemYear === page?.date?.year() ? ' active': ''%>"><%=itemYear%></div>
           <% } %>
-          <a class="series-item-link<%-item.source === page.source ? ' active': ''%>" href="<%=url_for(item.path)%>"><%-`${item.title}`%><% if (item.subTitle) { %><span class="sub-title"><%=item.subTitle%></span><% } %></a>
+          <a class="series-item-link<%-item.source === page.source ? ' active': ''%>" href="<%=url_for(item.path)%>"><%=item.title%><% if (item.subTitle) { %><span class="sub-title"><%=item.subTitle%></span><% } %></a>
           <% }); %>
           <% if(series.length > 50) { %>
           <a class="series-item-link view-more" href="<%=url_for(`/series/${encodeURIComponent(page.series)}/`)%>"><%-`${__('common.total')} ${series.length} ${__('common.seriesPostCountShort')}`%></a>
@@ -185,7 +186,7 @@ const version = theme.version;
     </div>
   </div>
   <% } %>
-  <a id="back-to-top" href="#page-top" title="Back to top" aria-label="Back to top"></a>
+  <a id="back-to-top" href="#page-top" title="<%=__('common.backToTop')%>" aria-label="<%=__('common.backToTop')%>"></a>
   <% if(is_post()) { %>
   <script src="<%=url_for(`/linen-theme/js/toc.js?v=${version}`)%>" defer></script>
   <% } %>
@@ -201,13 +202,12 @@ const version = theme.version;
   <% if (is_post() || is_page()) { %>
   <script src="<%=url_for(`/linen-theme/js/post.js?v=${version}`)%>" defer></script>
   <% } %>
-  <% if (page.hdrAssetsPrefix) { %>
-  <script>
-    var hdrAssetsPrefix = "<%-page.hdrAssetsPrefix%>"
-  </script>
-  <% } %>
   <% if (page.hdrSwitch) { %>
-  <script src="<%=url_for(`/linen-theme/js/hdr.js?v=${version}`)%>"></script>
+  <script
+    id="linen-hdr-script"
+    src="<%=url_for(`/linen-theme/js/hdr.js?v=${version}`)%>"
+    data-hdr-assets-prefix="<%=page.hdrAssetsPrefix || ''%>"
+  ></script>
   <% } %>
   <% if (lazyloadEnabled) { %>
   <script src="<%=url_for(`/linen-theme/js/lazyload.js?v=${version}`)%>"></script>

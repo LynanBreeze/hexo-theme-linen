@@ -107,6 +107,7 @@ describe("Series Template, Lazyload Pipeline & LaTeX Config Fixes", () => {
     assert.equal(parsedPlaces.length, 1);
     assert.equal(parsedPlaces[0].excerpt, undefined);
     assert.equal(parsedPlaces[0].lat, 35.68);
+    assert.ok(mappedHtml.includes("<h1>Places I have been</h1>"), "Travel map heading should use <h1>");
   });
 
   it("lazyload process uses O(1) img index, omits href on no-link spans, and skips blurhash cover background-image", () => {
@@ -157,6 +158,31 @@ describe("Series Template, Lazyload Pipeline & LaTeX Config Fixes", () => {
       assert.ok(!postData.content.includes('<span class="gallery-item" href='));
       assert.ok(!postData.content.includes('target="_blank"'));
       assert.ok(!postData.content.includes("data-fancybox"));
+      assert.ok(
+        postData.content.includes('data-blurhash="blurhash:L6PZfSi_.AyE_3t7t7R**0o#DgR4"'),
+        "processPost should emit data-blurhash directly at build time",
+      );
+
+      const inlineBlurhashPost = {
+        content:
+          '<p><img src="https://cdn.example.com/photos/inline.jpg" data-placeholderimg="blurhash:LKO2?U%2Tw=w]~RBVZRi};RPxuwH" alt="inline"></p>',
+      };
+      processPost.call(ctx, inlineBlurhashPost);
+      assert.ok(
+        inlineBlurhashPost.content.includes('data-blurhash="blurhash:LKO2?U%2Tw=w]~RBVZRi};RPxuwH"'),
+      );
+      assert.ok(!inlineBlurhashPost.content.includes("data-placeholderimg"));
+
+      const coverListBlurhash = processCovers.call(
+        ctx,
+        '<div class="cover-img"><img src="https://cdn.example.com/photos/a.jpg" alt=""></div>',
+        { page: {} },
+      );
+      assert.ok(
+        coverListBlurhash.includes('data-blurhash="blurhash:L6PZfSi_.AyE_3t7t7R**0o#DgR4"'),
+        "processCovers should emit data-blurhash directly on .lazyload-wrap",
+      );
+      assert.ok(!coverListBlurhash.includes("data-placeholderimg"));
 
       const exifData = {
         content: '<p><img src="https://cdn.example.com/photos/b.jpg" alt="photo"></p>',
@@ -206,6 +232,8 @@ describe("Series Template, Lazyload Pipeline & LaTeX Config Fixes", () => {
     );
     assert.ok(!clientCode.includes('.replace("iframe>", "iframe>")'));
     assert.ok(clientCode.includes("getSharedObserver"));
+    assert.ok(clientCode.includes("new WeakSet()"), "client.js should track loading queue with WeakSet");
+    assert.ok(clientCode.includes("element.dataset.blurhash"), "client.js should fast-path build-time data-blurhash");
     assert.ok(clientCode.includes("width > 0"));
     assert.ok(clientCode.includes('getAttribute("data-keep-placeholder")'));
     assert.ok(clientCode.includes("!showTransition || !inViewport"));

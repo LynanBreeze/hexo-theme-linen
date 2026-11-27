@@ -58,3 +58,7 @@ common:
   close: "关闭"
   commentsLoading: "正在加载评论…"
   commentsLoadError: "评论加载失败，请稍后重试"
+  skipToContent: "跳至正文"
+  backToTop: "返回顶部"
+  switchLanguage: "切换语言"
+  switchHdr: "切换 HDR/SDR 显示"

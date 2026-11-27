@@ -26,6 +26,7 @@ const archivesList = Object.entries(visiblePosts.reduce((acc, post) => {
 
 <% if (is_year() === false) { %>
 <div id="archive">
+  <h1 class="sr-only"><%=__('common.archives')%></h1>
   <div class="two-columns">
     <% if(categoriesList.length) {%>
       <aside>

@@ -5,15 +5,68 @@ const path = require("path");
 const { resolveIsMapSeries } = require("./lib/site-data");
 
 const VENDOR_DIR = path.join(__dirname, "../assets/vendor");
+const FONTS_DIR = path.join(__dirname, "../assets/fonts");
+const CJK_RE = /[\u4e00-\u9fff]/;
+const CJK_FONT_FILES = [
+  "SourceHanSerifSC-Regular.woff2",
+  "SourceHanSerifSC-Bold.woff2",
+];
 
-function pushFile(assets, routePath, relPath) {
-  const fullPath = path.join(VENDOR_DIR, relPath);
+function pushAssetFile(assets, routePath, fullPath) {
   if (fs.existsSync(fullPath)) {
     assets.push({
       path: routePath,
       data: () => fs.createReadStream(fullPath),
     });
   }
+}
+
+function pushFile(assets, routePath, relPath) {
+  pushAssetFile(assets, routePath, path.join(VENDOR_DIR, relPath));
+}
+
+function pushCombinedFiles(assets, routePath, relPaths) {
+  const fullPaths = relPaths
+    .map((relPath) => path.join(VENDOR_DIR, relPath))
+    .filter((fullPath) => fs.existsSync(fullPath));
+  if (!fullPaths.length) return;
+  assets.push({
+    path: routePath,
+    data: () =>
+      fullPaths.map((fullPath) => fs.readFileSync(fullPath, "utf8")).join("\n"),
+  });
+}
+
+function siteNeedsCjkFonts(hexoInstance, posts, pages) {
+  const langs = []
+    .concat(hexoInstance?.config?.language || [])
+    .filter(Boolean);
+  if (langs.some((lang) => /^zh/i.test(String(lang)))) {
+    return true;
+  }
+
+  const configTexts = [
+    hexoInstance?.config?.title,
+    hexoInstance?.config?.subtitle,
+    hexoInstance?.config?.description,
+    hexoInstance?.config?.author,
+  ];
+  if (configTexts.some((t) => typeof t === "string" && CJK_RE.test(t))) {
+    return true;
+  }
+
+  for (const item of [...posts, ...pages]) {
+    if (
+      (typeof item?.language === "string" && /^zh/i.test(item.language)) ||
+      (typeof item?.title === "string" && CJK_RE.test(item.title)) ||
+      (typeof item?.subTitle === "string" && CJK_RE.test(item.subTitle)) ||
+      (typeof item?.content === "string" && CJK_RE.test(item.content)) ||
+      (typeof item?.raw === "string" && CJK_RE.test(item.raw))
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function pushDir(assets, routePrefix, relDir) {
@@ -92,11 +145,10 @@ function registerVendorAssets(hexoInstance) {
               "linen-theme/js/gitalk/gitalk.min.js",
               "gitalk/gitalk.min.js",
             );
-            pushFile(
-              assets,
-              "linen-theme/js/gitalk/gitalk.css",
+            pushCombinedFiles(assets, "linen-theme/js/gitalk/gitalk.css", [
               "gitalk/gitalk.css",
-            );
+              "gitalk/gitalk-linen.css",
+            ]);
           }
         }
       }
@@ -180,6 +232,23 @@ function registerVendorAssets(hexoInstance) {
         pushFile(assets, "linen-theme/js/hdr.js", "hdr/hdr.js");
       }
 
+      // 6. CJK Serif Webfonts (emit only for zh / CJK sites, without overwriting site overrides)
+      if (siteNeedsCjkFonts(hexoInstance, posts, pages)) {
+        const baseDir = hexoInstance?.base_dir || "";
+        for (const fontFile of CJK_FONT_FILES) {
+          const siteOverridePath = baseDir
+            ? path.join(baseDir, "source/linen-theme/fonts", fontFile)
+            : "";
+          if (!siteOverridePath || !fs.existsSync(siteOverridePath)) {
+            pushAssetFile(
+              assets,
+              `linen-theme/fonts/${fontFile}`,
+              path.join(FONTS_DIR, fontFile),
+            );
+          }
+        }
+      }
+
       return assets;
     },
   );
@@ -191,3 +260,4 @@ if (typeof hexo !== "undefined") {
 
 module.exports = registerVendorAssets;
 module.exports.resolveCommentProvider = resolveCommentProvider;
+module.exports.siteNeedsCjkFonts = siteNeedsCjkFonts;

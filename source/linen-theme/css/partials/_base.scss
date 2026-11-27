@@ -19,6 +19,35 @@ html {
   border-radius: $radiusSm;
 }
 
+.skip-to-content {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1300;
+  padding: 8px 14px;
+  border-radius: $radiusMd;
+  background-color: $bgElevated;
+  border: 1px solid $accentBorder;
+  color: $darkText;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 6px 18px $shadowStrong;
+  transform: translateY(-200%);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 180ms $easeOut,
+    opacity 180ms $easeOut;
+
+  &:focus,
+  &:focus-visible {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+    color: $accent;
+  }
+}
+
 a {
   text-decoration: none;
   color: $linkColor;

@@ -43,7 +43,13 @@ var siteRootUrl = full_url_for('/').replace(/\/index\.html$/, '/');
 var authorName = config.author || config.title || '';
 if (is_post()) {
   var datePublished = toIsoDate(page.date);
-  var dateModified = toIsoDate(page.updated) || datePublished;
+  var frontMatterMatch = typeof page.raw === 'string'
+    ? page.raw.match(/^(?:---\r?\n)?([\s\S]*?)\r?\n---(?:\r?\n|$)/)
+    : null;
+  var hasExplicitUpdated = typeof page.raw === 'string'
+    ? Boolean(frontMatterMatch && /(?:^|\r?\n)updated\s*:/m.test(frontMatterMatch[1]))
+    : Boolean(page.updated);
+  var dateModified = (hasExplicitUpdated ? toIsoDate(page.updated) : '') || datePublished;
   var postTags = (page?.tags?.data || []).map(function (t) { return t?.name; }).filter(Boolean);
   jsonLd = {
     '@context': 'https://schema.org',
@@ -58,7 +64,6 @@ if (is_post()) {
   if (dateModified) jsonLd.dateModified = dateModified;
   if (authorName) {
     jsonLd.author = { '@type': 'Person', name: authorName };
-    jsonLd.publisher = { '@type': 'Person', name: authorName };
   }
   if (ogImage) jsonLd.image = [ogImage];
   if (postTags.length) jsonLd.keywords = postTags.join(', ');

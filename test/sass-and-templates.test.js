@@ -33,6 +33,18 @@ describe("Stylesheets & Templates Smoke Tests", () => {
           res.css.includes("U+2103") && !res.css.includes("U+0043"),
           "source-serif unicode-range should use U+2103 instead of redundant U+0043",
         );
+        assert.ok(
+          res.css.includes(".skip-to-content"),
+          "linen.scss should include skip-to-content accessibility styles",
+        );
+        assert.ok(
+          !res.css.includes(".gt-comment"),
+          "linen.scss must not bundle Gitalk .gt-comment styles",
+        );
+        assert.ok(
+          !res.css.includes("#page-donates{") && !res.css.includes("#giscus-container{"),
+          "linen.scss must not bundle post-only widget styles",
+        );
       }
       if (rel.endsWith("post.scss")) {
         assert.ok(
@@ -46,6 +58,23 @@ describe("Stylesheets & Templates Smoke Tests", () => {
         assert.ok(
           res.css.includes(".footnote-anchor-wrap.anchor-highlight .footnote-href"),
           "post.scss should contain anchor highlight styles moved out of JS",
+        );
+        assert.ok(
+          res.css.includes("#toc{") &&
+            res.css.includes(".post-series{") &&
+            res.css.includes("#giscus-container") &&
+            res.css.includes("#gitalk-container"),
+          "post.scss should include post widgets and comment placeholders",
+        );
+        assert.ok(
+          !res.css.includes(".gt-comment"),
+          "post.scss must not bundle Gitalk .gt-comment overrides (loaded on demand with gitalk.css)",
+        );
+      }
+      if (rel.endsWith("series.scss")) {
+        assert.ok(
+          res.css.includes(".travel-map-copy h1"),
+          "series.scss should style .travel-map-copy h1",
         );
       }
     }

@@ -151,7 +151,7 @@ function formatAttributes(str, src, imgsIndex, language) {
     return percentage;
   };
 
-  const getPlaceholderImage = (returnStr) => {
+  const getRawPlaceholder = () => {
     let placeholderImage = attributesObj["data-placeholderimg"] || "";
     var placeholderImageRes = /placeholder=(\S+)=placeholder/gi.exec(attributesObj.alt);
     if (placeholderImageRes && placeholderImageRes[1]) {
@@ -162,17 +162,22 @@ function formatAttributes(str, src, imgsIndex, language) {
       placeholderImage = imgItem.placeholder;
     }
 
-    const isBlurHash = placeholderImage.startsWith("blurhash:");
+    return placeholderImage;
+  };
 
+  const rawPlaceholder = getRawPlaceholder();
+  const isBlurHashPlaceholder = rawPlaceholder.startsWith("blurhash:");
+
+  const getPlaceholderImage = (returnStr) => {
     if (returnStr) {
-      return isBlurHash ? "" : placeholderImage;
+      return isBlurHashPlaceholder ? "" : rawPlaceholder;
     }
 
-    return isBlurHash
+    return isBlurHashPlaceholder
       ? ""
-      : /http|data:image/.test(placeholderImage)
-        ? `url(${placeholderImage})`
-        : placeholderImage;
+      : /http|data:image/.test(rawPlaceholder)
+        ? `url(${rawPlaceholder})`
+        : rawPlaceholder;
   };
 
   const getAltText = () => {
@@ -225,6 +230,7 @@ function formatAttributes(str, src, imgsIndex, language) {
   res.aspectRatioStr = getAspectRatio(true);
   res.placeholderImage = getPlaceholderImage();
   res.placeholderImageStr = getPlaceholderImage(true);
+  res.blurhash = isBlurHashPlaceholder ? rawPlaceholder : "";
   res.isLink = getIsLink();
   res.keepPlaceholder = getKeepPlaceholder();
   res.style = styleAttr;
@@ -257,21 +263,22 @@ const getformatedStr = (str, attrs, placeholerStyle = "") => {
     .replace(/(\$)?no-lazy/, "")
     .replace(/(\$)?no-link/, "");
 
-  const { placeholderImageStr, aspectRatioStr, style } = attrs;
+  const { placeholderImageStr, blurhash, aspectRatioStr, style } = attrs;
   formatedStr = formatedStr.replace(/(\$)?no-link/, "");
 
-  if (placeholderImageStr) {
+  const placeholderToStrip = placeholderImageStr || blurhash;
+  if (placeholderToStrip) {
     if (/data-placeholderimg/.test(formatedStr)) {
-      formatedStr = formatedStr.replace(`data-placeholderimg="${placeholderImageStr}"`, "");
+      formatedStr = formatedStr.replace(`data-placeholderimg="${placeholderToStrip}"`, "");
       noScriptElementStr = noScriptElementStr.replace(
-        `data-placeholderimg="${placeholderImageStr}"`,
+        `data-placeholderimg="${placeholderToStrip}"`,
         ""
       );
     }
     if (/\$placeholder=/.test(formatedStr)) {
-      formatedStr = formatedStr.replace(`$placeholder=${placeholderImageStr}=placeholder`, "");
+      formatedStr = formatedStr.replace(`$placeholder=${placeholderToStrip}=placeholder`, "");
       noScriptElementStr = noScriptElementStr.replace(
-        `$placeholder=${placeholderImageStr}=placeholder`,
+        `$placeholder=${placeholderToStrip}=placeholder`,
         ""
       );
     }
@@ -365,10 +372,13 @@ function lazyProcess(htmlContent) {
         formatedAttributes.keepPlaceholder !== undefined
           ? ` data-keep-placeholder="${formatedAttributes.keepPlaceholder}"`
           : "";
+      const blurhashAttr = formatedAttributes.blurhash
+        ? ` data-blurhash="${escapeAttribute(formatedAttributes.blurhash)}"`
+        : "";
 
       return `<span class="lazyload-outer-wrap" style="width: 100%;"><${itemTag} class="gallery-item"${linkAttrs} ${pswpConfig} ${widthStyle}><noscript>${noScriptElementStr}</noscript><span class="lazyload-wrap" data-content="${encodeURIComponent(
         formatedStr
-      )}"${keepPlaceholderAttr} ${
+      )}"${blurhashAttr}${keepPlaceholderAttr} ${
         wrapStyle ? `style="${wrapStyle}"` : ""
       }><span class="placeholder" ${placeholerStyle}></span></span>${
         formatedAttributes.caption
@@ -418,9 +428,13 @@ function lazyProcess(htmlContent) {
           )}" target="_blank" rel="noopener" style="display: none;" aria-hidden="true"></a>`
         : "";
 
+      const blurhashAttr = formatedAttributes.blurhash
+        ? ` data-blurhash="${escapeAttribute(formatedAttributes.blurhash)}"`
+        : "";
+
       return `<span class="lazyload-outer-wrap" style="width: 100%;">${livePhotoGalleryItem}<span class="lazyload-wrap" data-content="${encodeURIComponent(
         formatedStr
-      )}" ${livePhotoThumbId ? `id="${livePhotoThumbId}"` : ""} ${
+      )}"${blurhashAttr} ${livePhotoThumbId ? `id="${livePhotoThumbId}"` : ""} ${
         wrapStyle ? `style="${wrapStyle}"` : ""
       }><span class="placeholder" ${placeholerStyle}></span></span><noscript>[This iframe content needs to be loaded by JavaScript.]</noscript></span>`;
     })
@@ -450,9 +464,13 @@ function lazyProcess(htmlContent) {
           : ""
       );
 
+      const blurhashAttr = formatedAttributes.blurhash
+        ? ` data-blurhash="${escapeAttribute(formatedAttributes.blurhash)}"`
+        : "";
+
       return `<span class="lazyload-outer-wrap" style="width: 100%;"><span class="lazyload-wrap" data-content="${encodeURIComponent(
         formatedStr
-      )}" ${
+      )}"${blurhashAttr} ${
         wrapStyle ? `style="${wrapStyle}"` : ""
       }><span class="placeholder" ${placeholerStyle}></span></span><noscript>${noScriptElementStr}</noscript></span>`;
     });
@@ -494,9 +512,15 @@ module.exports.processCovers = function (str, data) {
 
         const imgData = imgsIndex.findByUrl(src || "");
         const placeholder = imgData?.placeholder || "";
+        const isBlurHash = placeholder.startsWith("blurhash:");
         const cleanedImgStr = stripHidePlaceholderDirective(imgStr);
-        const contentImgStr = appendAttributeToTag(cleanedImgStr, "data-placeholderimg", placeholder);
+        const contentImgStr = isBlurHash
+          ? cleanedImgStr
+          : appendAttributeToTag(cleanedImgStr, "data-placeholderimg", placeholder);
         const placeholderStyle = getPlaceholderStyle(placeholder);
+        const blurhashAttr = isBlurHash
+          ? ` data-blurhash="${escapeAttribute(placeholder)}"`
+          : "";
         const keepPlaceholder =
           imgData?.hidePlaceholder === true ||
           imgData?.keepPlaceholder === false ||
@@ -511,7 +535,7 @@ module.exports.processCovers = function (str, data) {
 
         return `<div class="cover-img"><noscript>${cleanedImgStr}</noscript><span class="lazyload-wrap post-list-cover-lazy" data-content="${encodeURIComponent(
           contentImgStr
-        )}"${keepPlaceholderAttr}><span class="placeholder"${
+        )}"${blurhashAttr}${keepPlaceholderAttr}><span class="placeholder"${
           placeholderStyle ? ` style="${placeholderStyle}"` : ""
         }></span></span></div>`;
       }

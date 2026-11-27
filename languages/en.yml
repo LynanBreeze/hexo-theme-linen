@@ -58,3 +58,7 @@ common:
   close: "Close"
   commentsLoading: "Loading comments..."
   commentsLoadError: "Failed to load comments"
+  skipToContent: "Skip to content"
+  backToTop: "Back to top"
+  switchLanguage: "Switch language"
+  switchHdr: "Switch HDR/SDR content"

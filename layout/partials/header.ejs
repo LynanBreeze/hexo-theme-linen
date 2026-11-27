@@ -13,11 +13,11 @@ const currentPath = `/${page.path || ''}`.replace(/\/index\.html$/, '/');
 <% if (is_post()) { %>
 <div class="nav-header-placeholder"></div>
 <% } %>
-<div class="nav-header<%=is_post() ? ' is-post': ''%>">
+<header class="nav-header<%=is_post() ? ' is-post': ''%>">
   <div class="header-inner">
     <a class="title<%= !logoSrc ? ' default-logo' : '' %>" href="<%=url_for('/')%>" title="<%=logoTitle%>" aria-label="<%=logoTitle%>" style="<%=[logoSrc ? `background-image: url(${url_for(logoSrc)})`: '', logoWidth && logoHeight ? `aspect-ratio: ${logoWidth}/${logoHeight}` : ''].filter(v => v).join(';')%>"><%=logoText||''%></a>
     <div class="right">
-      <div class="navItems">
+      <nav class="navItems" aria-label="<%=__('common.navigation')%>">
         <% (theme?.navItems || []).forEach(({ name, path }) => {
           const normalizedItemPath = path === '/' ? '/' : (path.startsWith('/') ? path : `/${path}`);
           const isNavActive = normalizedItemPath === '/'
@@ -26,7 +26,7 @@ const currentPath = `/${page.path || ''}`.replace(/\/index\.html$/, '/');
         %>
         <a class="navItem<%=isNavActive ? ' active' : ''%>" href="<%=url_for(path)%>"><%=name%></a>
         <% }); %>
-      </div>
+      </nav>
       <div class="buttonSet">
         <% if (searchEnabled) { %>
         <button
@@ -40,7 +40,7 @@ const currentPath = `/${page.path || ''}`.replace(/\/index\.html$/, '/');
         ></button>
         <% } %>
         <% if (page.hdrSwitch) { %>
-        <button type="button" class="button hdr-switch" title="Switch HDR/SDR content" aria-label="Switch HDR/SDR content"></button>
+        <button type="button" class="button hdr-switch" title="<%=__('common.switchHdr')%>" aria-label="<%=__('common.switchHdr')%>"></button>
         <script>
           if (window.innerWidth >= 500 && window.matchMedia && window.matchMedia("(dynamic-range: high)").matches && typeof CSS !== "undefined" && CSS.supports && CSS.supports("dynamic-range-limit: no-limit")) {
             var hdrBtn = document.currentScript && document.currentScript.previousElementSibling;
@@ -49,7 +49,7 @@ const currentPath = `/${page.path || ''}`.replace(/\/index\.html$/, '/');
         </script>
         <% } %>
         <% if (hasTranslatation) { %>
-        <a class="button language <%=targetLanguage%>" href="<%=targetLanguagePath%>" target="_self" title="switch language" aria-label="Switch language"></a>
+        <a class="button language <%=targetLanguage%>" href="<%=targetLanguagePath%>" target="_self" title="<%=__('common.switchLanguage')%>" aria-label="<%=__('common.switchLanguage')%>"></a>
         <% } %>
         <% if (theme?.info?.github) { %>
         <a class="button github" href="<%=theme?.info?.github || ''%>" target="_blank" rel="noopener noreferrer" title="GitHub" aria-label="GitHub"></a>
@@ -88,4 +88,4 @@ const currentPath = `/${page.path || ''}`.replace(/\/index\.html$/, '/');
       </div>
     </div>
   </div>
-</div>
+</header>

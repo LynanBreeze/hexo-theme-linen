@@ -65,6 +65,50 @@ describe("SEO, Date Helper, HoverTexts, ImageGrid & Archive Fixes", () => {
     assert.equal(postLd.headline, "Hello");
     assert.equal(postLd.url, "https://example.com/2026/hello/");
     assert.deepEqual(postLd.image, ["https://example.com/img/cover.jpg"]);
+    assert.equal(postLd.publisher, undefined, "BlogPosting should not emit invalid Person publisher");
+
+    // CI clone mtime should not inflate dateModified when front-matter omits updated:
+    const ciCloneCtx = {
+      ...ctx,
+      config: { title: "Linen Blog", author: "Lynan", language: "en", description: "Fallback" },
+      page: {
+        ...ctx.page,
+        date: new Date("2025-01-10T00:00:00.000Z"),
+        updated: new Date("2026-11-27T00:00:00.000Z"),
+        raw: "---\ntitle: Hello\ndate: 2025-01-10\n---\nBody with updated: fake",
+      },
+    };
+    const ciHtml = renderTemplate("layout/partials/share-meta.ejs", {
+      ...ciCloneCtx,
+      getPageTitle: () => hexo._helpers.getPageTitle.call(ciCloneCtx),
+      getPageDescription: () => hexo._helpers.getPageDescription.call(ciCloneCtx),
+    });
+    const ciLd = JSON.parse(
+      ciHtml.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1],
+    );
+    assert.equal(ciLd.datePublished, "2025-01-10T00:00:00.000Z");
+    assert.equal(ciLd.dateModified, "2025-01-10T00:00:00.000Z");
+    assert.equal(ciLd.publisher, undefined);
+    assert.deepEqual(ciLd.author, { "@type": "Person", name: "Lynan" });
+
+    // Explicit updated: in front-matter should populate dateModified
+    const updatedCtx = {
+      ...ciCloneCtx,
+      page: {
+        ...ciCloneCtx.page,
+        raw: "---\ntitle: Hello\ndate: 2025-01-10\nupdated: 2026-06-01\n---\nBody",
+        updated: new Date("2026-06-01T00:00:00.000Z"),
+      },
+    };
+    const updatedHtml = renderTemplate("layout/partials/share-meta.ejs", {
+      ...updatedCtx,
+      getPageTitle: () => hexo._helpers.getPageTitle.call(updatedCtx),
+      getPageDescription: () => hexo._helpers.getPageDescription.call(updatedCtx),
+    });
+    const updatedLd = JSON.parse(
+      updatedHtml.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1],
+    );
+    assert.equal(updatedLd.dateModified, "2026-06-01T00:00:00.000Z");
 
     const homeCtx = {
       ...ctx,

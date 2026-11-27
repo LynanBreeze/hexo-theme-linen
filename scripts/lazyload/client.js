@@ -95,7 +95,20 @@
     return;
   }
   var lazyloadItems = document.querySelectorAll(".lazyload-wrap");
-  var loadingQueue = [];
+  var loadingQueue = typeof WeakSet !== "undefined" ? new WeakSet() : null;
+  var loadingFallback = loadingQueue ? null : [];
+  var hasQueued = function hasQueued(element) {
+    return loadingQueue
+      ? loadingQueue.has(element)
+      : loadingFallback.indexOf(element) !== -1;
+  };
+  var markQueued = function markQueued(element) {
+    if (loadingQueue) {
+      loadingQueue.add(element);
+    } else if (loadingFallback.indexOf(element) === -1) {
+      loadingFallback.push(element);
+    }
+  };
   var scheduleFrame = window.requestAnimationFrame || function (callback) {
     return window.setTimeout(callback, 16);
   };
@@ -189,9 +202,26 @@
     if (!element || !element.dataset || !element.dataset.content) {
       return;
     }
+    var rawContent = element.dataset.content;
+    var hasEncodedDirective =
+      rawContent.indexOf("%24placeholder%3D") !== -1 ||
+      rawContent.indexOf("%24aspect-ratio%3D") !== -1;
+    // Build-time emission already populates data-blurhash; skip expensive
+    // DOM parsing unless legacy placeholder directives remain in data-content.
+    if (
+      element.dataset.blurhash ||
+      (rawContent.indexOf("placeholder") === -1 && !hasEncodedDirective)
+    ) {
+      if (hasEncodedDirective) {
+        element.dataset.content = rawContent
+          .replace(/%24placeholder%3D(\S+)%3Dplaceholder/gi, "")
+          .replace(/%24aspect-ratio%3D(\S+)%3Daspect-ratio/gi, "");
+      }
+      return;
+    }
     var wrap = document.createElement("div");
     // prevent triggering load event
-    var contentStr = decodeURIComponent(element.dataset.content)
+    var contentStr = decodeURIComponent(rawContent)
       .replace("<img", "<div")
       .replace("<video", "<div")
       .replace("video>", "div>")
@@ -210,15 +240,13 @@
       // every image during page initialization can block the main thread.
       element.dataset.blurhash = placeholderImage;
     }
-    element.dataset.content = element.dataset.content
+    element.dataset.content = rawContent
       .replace(/%24placeholder%3D(\S+)%3Dplaceholder/gi, "")
       .replace(/%24aspect-ratio%3D(\S+)%3Daspect-ratio/gi, "");
   };
   var restoreContent = function restoreContent(element) {
-    if (loadingQueue.includes(element)) return;
-    if (!loadingQueue.includes(element)) {
-      loadingQueue.push(element);
-    }
+    if (hasQueued(element)) return;
+    markQueued(element);
     if (element.classList && element.classList.contains("loaded")) return;
     renderBlurHashPlaceholder(element);
     var contentStr = decodeURIComponent(element.dataset.content);

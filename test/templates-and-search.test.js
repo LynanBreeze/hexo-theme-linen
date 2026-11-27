@@ -628,17 +628,52 @@ describe("scripts/search.js & XSL / Print CSS", () => {
     assert.ok(printChunk.includes("color-scheme:light"));
   });
 
-  it("emits optional vendor assets strictly on demand via scripts/vendor-assets.js", () => {
+  it("emits optional vendor assets and CJK fonts strictly on demand via scripts/vendor-assets.js", () => {
+    const os = require("os");
     const registerVendorAssets = require("../scripts/vendor-assets");
 
-    // 1. Minimal site: no comments, no photoswipe, no map series, no search, no hdr
-    const minimalHexo = createMockHexo({});
+    // 1. Minimal pure-English site: no comments, no photoswipe, no map series, no search, no hdr, no CJK
+    const minimalHexo = createMockHexo({
+      config: { language: "en", title: "English Blog", author: "Alice" },
+    });
     registerVendorAssets(minimalHexo);
     const minimalAssets = minimalHexo._generators["linen-vendor-assets"]({
-      posts: [{ title: "Hello", series: "Notes" }],
+      posts: [{ title: "Hello World", content: "<p>English prose</p>", series: "Notes" }],
       pages: [],
     });
-    assert.deepEqual(minimalAssets, [], "Minimal site should emit zero vendor assets");
+    assert.deepEqual(minimalAssets, [], "Minimal pure-English site should emit zero vendor or CJK font assets");
+
+    // 1b. English site containing CJK text emits SourceHanSerifSC fonts on demand
+    const cjkContentAssets = minimalHexo._generators["linen-vendor-assets"]({
+      posts: [{ title: "Hello 世界", content: "<p>Mixed</p>" }],
+      pages: [],
+    }).map((a) => a.path);
+    assert.ok(cjkContentAssets.includes("linen-theme/fonts/SourceHanSerifSC-Regular.woff2"));
+    assert.ok(cjkContentAssets.includes("linen-theme/fonts/SourceHanSerifSC-Bold.woff2"));
+
+    // 1c. Site-level custom font in source/linen-theme/fonts/ is never overwritten
+    const tmpBase = fs.mkdtempSync(path.join(os.tmpdir(), "linen-font-override-"));
+    try {
+      const overrideDir = path.join(tmpBase, "source/linen-theme/fonts");
+      fs.mkdirSync(overrideDir, { recursive: true });
+      fs.writeFileSync(path.join(overrideDir, "SourceHanSerifSC-Regular.woff2"), "custom");
+      const zhOverrideHexo = createMockHexo({
+        base_dir: tmpBase,
+        config: { language: "zh-CN" },
+      });
+      registerVendorAssets(zhOverrideHexo);
+      const overridePaths = zhOverrideHexo._generators["linen-vendor-assets"]({
+        posts: [],
+        pages: [],
+      }).map((a) => a.path);
+      assert.ok(
+        !overridePaths.includes("linen-theme/fonts/SourceHanSerifSC-Regular.woff2"),
+        "Must not overwrite site-provided SourceHanSerifSC-Regular.woff2",
+      );
+      assert.ok(overridePaths.includes("linen-theme/fonts/SourceHanSerifSC-Bold.woff2"));
+    } finally {
+      fs.rmSync(tmpBase, { recursive: true, force: true });
+    }
 
     // 2. Giscus-only site must NOT emit 800KB Gitalk or Leaflet
     const giscusHexo = createMockHexo({
@@ -668,17 +703,18 @@ describe("scripts/search.js & XSL / Print CSS", () => {
     assert.ok(giscusPaths.includes("linen-theme/js/photoswipe-init.js"));
     assert.ok(giscusPaths.includes("linen-theme/js/photoswipe/photoswipe.esm.min.js"));
 
-    // 3. Gitalk + Travel map series emits Gitalk and Leaflet/travel-map
+    // 3. Gitalk + Travel map series emits Gitalk (with Linen CSS overrides concatenated) and Leaflet/travel-map
     const fullHexo = createMockHexo({
       themeConfig: {
         comment: { client_id: "cid" },
       },
     });
     registerVendorAssets(fullHexo);
-    const fullPaths = fullHexo._generators["linen-vendor-assets"]({
+    const fullAssets = fullHexo._generators["linen-vendor-assets"]({
       posts: [{ title: "Kyoto", series: "旅行" }],
       pages: [],
-    }).map((a) => a.path);
+    });
+    const fullPaths = fullAssets.map((a) => a.path);
     assert.ok(fullPaths.includes("linen-theme/js/gitalk/gitalk.min.js"));
     assert.ok(fullPaths.includes("linen-theme/js/gitalk-init.js"));
     assert.ok(!fullPaths.includes("linen-theme/js/giscus-init.js"));
@@ -686,5 +722,125 @@ describe("scripts/search.js & XSL / Print CSS", () => {
     assert.ok(fullPaths.includes("linen-theme/js/travel-map.js"));
     assert.ok(fullPaths.includes("linen-theme/css/leaflet.css"));
     assert.ok(fullPaths.includes("linen-theme/img/travel-map-fallback.svg"));
+
+    const gitalkCssAsset = fullAssets.find((a) => a.path === "linen-theme/js/gitalk/gitalk.css");
+    assert.ok(gitalkCssAsset, "gitalk.css should be emitted when Gitalk is enabled");
+    const gitalkCssText = gitalkCssAsset.data();
+    assert.ok(gitalkCssText.includes(".gt-container"), "Should include base Gitalk CSS");
+    assert.ok(
+      gitalkCssText.includes("#content-outer.post-outer #gitalk-container .gt-comments .gt-comment"),
+      "Should concatenate Linen Gitalk overrides",
+    );
+    assert.ok(
+      gitalkCssText.includes("../../img/icons/medium-clap.svg"),
+      "Gitalk icon URLs must resolve relative to /linen-theme/js/gitalk/gitalk.css",
+    );
+  });
+
+  it("enforces HTML semantics, A11y landmarks, XSS escaping, and IIFE hdr.js without inline globals", () => {
+    // 1. header.ejs uses semantic <header> and <nav aria-label> and localizes HDR/language buttons
+    const headerHtml = renderTemplate("layout/partials/header.ejs", {
+      page: { path: "index.html", hdrSwitch: true },
+      config: { title: "Test Site", language: "zh-CN" },
+      theme: { navItems: [{ name: "Home", path: "/" }] },
+      hasTocs: false,
+      is_post: () => false,
+      is_home: () => true,
+      url_for: (p) => p,
+      getTranslationPage: () => ({
+        hasTranslatation: true,
+        targetLanguagePath: "/en/",
+        targetLanguage: "en",
+      }),
+      __: (k) => `i18n:${k}`,
+    });
+    assert.ok(headerHtml.includes('<header class="nav-header">'));
+    assert.ok(headerHtml.includes("</header>"));
+    assert.ok(headerHtml.includes('<nav class="navItems" aria-label="i18n:common.navigation">'));
+    assert.ok(headerHtml.includes('aria-label="i18n:common.switchHdr"'));
+    assert.ok(headerHtml.includes('aria-label="i18n:common.switchLanguage"'));
+
+    // 2. index.ejs & archive.ejs include sr-only <h1>
+    const indexHtml = renderTemplate("layout/index.ejs", {
+      config: { title: "My Linen Site" },
+      is_home_first_page: () => true,
+      partial: () => "",
+      __: (k) => k,
+    });
+    assert.ok(indexHtml.includes('<h1 class="sr-only">My Linen Site</h1>'));
+
+    const archiveHtml = renderTemplate("layout/archive.ejs", {
+      page: {},
+      site: { posts: [], categories: { toArray: () => [] } },
+      is_year: () => false,
+      list_tags: () => "",
+      url_for: (p) => p,
+      __: (k) => `i18n:${k}`,
+    });
+    assert.ok(archiveHtml.includes('<h1 class="sr-only">i18n:common.archives</h1>'));
+
+    // 3. layout.ejs includes skip-link, escapes series item.title, passes data-hdr-assets-prefix safely
+    const layoutHtml = renderTemplate("layout/layout.ejs", {
+      page: {
+        path: "2026/a/",
+        source: "_posts/a.md",
+        series: "Notes",
+        date: { year: () => 2026 },
+        hdrSwitch: true,
+        hdrAssetsPrefix: 'https://cdn.example.com/hdr/"<script>',
+        content: "<p>hi</p>",
+      },
+      body: "<article></article>",
+      config: { title: "Site", language: "zh-CN" },
+      theme: { version: "1.0.65", stylesheets: [], scripts: [] },
+      site: {
+        posts: {
+          filter: () => ({
+            sort: () => [
+              {
+                title: '<img src=x onerror="alert(1)">',
+                source: "_posts/a.md",
+                path: "2026/a/",
+                date: { year: () => 2026 },
+              },
+            ],
+          }),
+        },
+      },
+      is_post: () => true,
+      is_page: () => false,
+      extractTocFromHtml: () => [],
+      getSeriesInfo: () => ({}),
+      getPostBreakoutConfig: () => ({ enable: false, proseWidth: "" }),
+      getPageTitle: () => "Post",
+      getPageDescription: () => "Desc",
+      getLatexCssUrl: () => "",
+      take: (arr) => arr,
+      partial: () => "",
+      url_for: (p) => p,
+      __: (k) => `i18n:${k}`,
+    });
+    assert.ok(layoutHtml.includes('<a class="skip-to-content" href="#content-inner">i18n:common.skipToContent</a>'));
+    assert.ok(layoutHtml.includes('aria-label="i18n:common.backToTop"'));
+    assert.ok(
+      !layoutHtml.includes('<img src=x onerror="alert(1)">'),
+      "Series item.title must be HTML-escaped",
+    );
+    assert.ok(layoutHtml.includes("&lt;img src=x onerror=&#34;alert(1)&#34;&gt;"));
+    assert.ok(!layoutHtml.includes("var hdrAssetsPrefix"), "Must not emit unescaped inline hdrAssetsPrefix script");
+    assert.ok(layoutHtml.includes('id="linen-hdr-script"'));
+    assert.ok(
+      layoutHtml.includes('data-hdr-assets-prefix="https://cdn.example.com/hdr/&#34;&lt;script&gt;"'),
+    );
+
+    // 4. hdr.js is wrapped in IIFE and reads data-hdr-assets-prefix while syncing window.hdrEnabled
+    const hdrCode = fs.readFileSync(
+      path.join(ROOT_DIR, "assets/vendor/hdr/hdr.js"),
+      "utf8",
+    );
+    assert.ok(hdrCode.trimStart().startsWith("(function () {"));
+    assert.ok(hdrCode.includes('"use strict";'));
+    assert.ok(hdrCode.includes("scriptEl.dataset.hdrAssetsPrefix"));
+    assert.ok(hdrCode.includes("window.hdrEnabled = targetState;"));
   });
 });
