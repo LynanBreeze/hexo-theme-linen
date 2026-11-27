@@ -23,7 +23,8 @@ const SKIP_TAGS = new Set([
 const EMOJI_REGEX =
   /[0-9#*]\uFE0F?\u20E3|\p{Extended_Pictographic}(?:\uFE0F|\uFE0E)?(?:\p{Emoji_Modifier})?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F|\uFE0E)?(?:\p{Emoji_Modifier})?)*/gu;
 
-const HTML_TOKEN_REGEX = /<!--[\s\S]*?-->|<\/?[a-zA-Z][^>]*>|[^<]+/g;
+const HTML_TOKEN_REGEX =
+  /<!--[\s\S]*?-->|<script\b[^>]*>[\s\S]*?<\/script>|<style\b[^>]*>[\s\S]*?<\/style>|<textarea\b[^>]*>[\s\S]*?<\/textarea>|<title\b[^>]*>[\s\S]*?<\/title>|<noscript\b[^>]*>[\s\S]*?<\/noscript>|<\/?[a-zA-Z][^>]*>|[^<]+/gi;
 
 function loadAvailableEmojis(emojiDir = EMOJI_DIR) {
   try {
@@ -107,6 +108,9 @@ function replaceEmojisInHtml(
     }
 
     if (token.startsWith("<")) {
+      if (/^<(?:script|style|textarea|title|noscript)\b/i.test(token) && /<\/(?:script|style|textarea|title|noscript)>$/i.test(token)) {
+        return token;
+      }
       const tagMatch = /^<(\/?)([a-zA-Z][a-zA-Z0-9-]*)/.exec(token);
       if (tagMatch) {
         const isClosing = tagMatch[1] === "/";
@@ -147,10 +151,10 @@ function replaceEmojisInHtml(
 }
 
 function isEmojiEnabled(hexoInstance) {
-  return (
-    hexoInstance?.theme?.config?.emoji?.enable !== false &&
-    hexoInstance?.config?.theme_config?.emoji?.enable !== false
-  );
+  const explicit =
+    hexoInstance?.theme?.config?.emoji?.enable ??
+    hexoInstance?.config?.theme_config?.emoji?.enable;
+  return explicit !== false;
 }
 
 function registerEmojiFilter(hexoInstance) {

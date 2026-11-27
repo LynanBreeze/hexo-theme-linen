@@ -77,22 +77,27 @@ describe("Series Template, Lazyload Pipeline & LaTeX Config Fixes", () => {
     assert.ok(fallbackHtml.includes('id="recent-posts"'));
     assert.ok(!fallbackHtml.includes('id="travel-map"'));
 
-    // 3. Map series WITH coordinates omits HTML excerpt from data-places JSON payload
+    // 3. Map series WITH coordinates omits HTML excerpt from data-places JSON payload and still lists unmapped posts
     const mappedPost = {
       ...basePost,
       mapPlace: { coordinate: [35.68, 139.76], location: "Tokyo" },
+    };
+    const unmappedPost = {
+      ...basePost,
+      title: "Packing Gear Guide",
+      path: "/2026/packing/",
     };
     const mappedHtml = renderTemplate("layout/series.ejs", {
       page: {
         series: "Travel",
         seriesInfo: { description: "Trips" },
-        seriesPosts: [mappedPost],
-        posts: [mappedPost],
+        seriesPosts: [mappedPost, unmappedPost],
+        posts: [mappedPost, unmappedPost],
         language: "en",
       },
       config: { language: "en" },
       theme: { version: "1.0.60" },
-      site: { posts: [mappedPost] },
+      site: { posts: [mappedPost, unmappedPost] },
       isMapSeries: () => true,
       url_for: (p) => p,
       date: () => "2026-04-01",
@@ -100,6 +105,10 @@ describe("Series Template, Lazyload Pipeline & LaTeX Config Fixes", () => {
       partial: () => "",
       __: (k) => k,
     });
+    assert.ok(
+      mappedHtml.includes("Packing Gear Guide"),
+      "Map series must still display unmapped posts in the card list",
+    );
 
     const dataPlacesMatch = mappedHtml.match(/data-places="([^"]+)"/);
     assert.ok(dataPlacesMatch, "data-places attribute should be present");

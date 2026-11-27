@@ -7,28 +7,61 @@
     if(post){ topPosts.push(post) } 
   }) 
   topPosts = getFirstFour(topPosts);
+  const decodeExcerpt = (raw) => {
+    const stripped = typeof strip_html === 'function'
+      ? strip_html(raw || '')
+      : String(raw || '').replace(/<[^>]+>/g, '');
+    return stripped
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(Number(dec)))
+      .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+      .replace(/&(amp|lt|gt|quot|apos|ldquo|rdquo|lsquo|rsquo|mdash|ndash|hellip);/gi, (_, name) => ({
+        amp: '&',
+        lt: '<',
+        gt: '>',
+        quot: '"',
+        apos: "'",
+        ldquo: '“',
+        rdquo: '”',
+        lsquo: '‘',
+        rsquo: '’',
+        mdash: '—',
+        ndash: '–',
+        hellip: '…',
+      })[name.toLowerCase()] || ' ')
+      .trim();
+  };
 %>
+<% if (topPosts.length > 0) { %>
 <div id="top-posts">
-  <% topPosts.forEach(post => {
+  <% topPosts.forEach((post, index) => {
       const coverImg = post.thumbnail || post.cover;
-      const excerptText = typeof strip_html === 'function'
-        ? strip_html(post?.excerpt || '').trim()
-        : String(post?.excerpt || '').replace(/<[^>]+>/g, '').trim();
+      const excerptText = decodeExcerpt(post?.excerpt);
+      const hasValidDate = Boolean(
+        post?.date && (typeof date !== 'function' || !date(post.date).startsWith('1970'))
+      );
+      const dateAttr = hasValidDate && typeof post.date.toJSON === 'function' ? post.date.toJSON() : '';
   %>
   <a class="post-item" href="<%=url_for(post.path)%>">
     <div class="item-body">
       <% if (coverImg) { %>
       <div class="cover-img">
+        <% if (index === 0) { %>
+        <img no-lazy src="<%=url_for(coverImg)%>" alt="" fetchpriority="high" />
+        <% } else { %>
         <img src="<%=url_for(coverImg)%>" alt="" loading="lazy" />
+        <% } %>
       </div>
       <% } %>
       <div class="title-excerpt">
         <div class="title"><%=post.title%><% if (post.subTitle) { %><span class="sub-title"><%=post.subTitle%></span><% } %></div>
         <div class="excerpt"><%=excerptText%></div>
         <div class="post-meta">
-          <time class="date" datetime="<%=post.date.toJSON()%>">
+          <% if (hasValidDate) { %>
+          <time class="date"<%- dateAttr ? ` datetime="${dateAttr}"` : '' %>>
             <%=getPostDate(post)%>
           </time>
+          <% } %>
           <span class="categories">
             <% (post?.categories || []).forEach(category => { %>
             <span class="category-item"><%=category.name%></span>
@@ -41,3 +74,4 @@
   </a>
   <% }); %>
 </div>
+<% } %>

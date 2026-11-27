@@ -45,11 +45,10 @@ const parseMapCoordinate = (post) => {
 
   return null;
 };
-const travelPlaces = isTravelSeries ? seriesPosts.map((post, index) => {
+const allTravelCards = isTravelSeries ? seriesPosts.map((post, index) => {
   const coordinate = parseMapCoordinate(post);
-  if (!coordinate) return null;
   return {
-    id: `travel-place-${index}`,
+    id: coordinate ? `travel-place-${index}` : '',
     title: post.title,
     subTitle: post.subTitle || '',
     path: url_for(post.path),
@@ -58,14 +57,16 @@ const travelPlaces = isTravelSeries ? seriesPosts.map((post, index) => {
     excerpt: post?.excerpt || '',
     cover: (post.thumbnail || post.cover) ? url_for(post.thumbnail || post.cover) : '',
     mapUrl: post?.mapPlace?.url || post?.coverInfo?.url || '',
-    lat: coordinate.lat,
-    lng: coordinate.lng,
+    lat: coordinate ? coordinate.lat : null,
+    lng: coordinate ? coordinate.lng : null,
+    hasCoordinate: Boolean(coordinate),
   };
-}).filter(Boolean) : [];
+}) : [];
+const travelPlaces = allTravelCards.filter(item => item.hasCoordinate);
 const showTravelMap = isTravelSeries && travelPlaces.length > 0;
 const travelPlacesJson = encodeURIComponent(
   JSON.stringify(
-    travelPlaces.map(({ excerpt, ...mapPlaceData }) => mapPlaceData)
+    travelPlaces.map(({ excerpt, hasCoordinate, ...mapPlaceData }) => mapPlaceData)
   )
 );
 %>
@@ -74,7 +75,7 @@ const travelPlacesJson = encodeURIComponent(
   <% if (page.seriesInfo?.cover && !showTravelMap) { %>
   <div class="series-cover-img-wrap" style="<%=page.seriesInfo?.coverPlaceholder ? `background-image: url(${url_for(page.seriesInfo.coverPlaceholder)})`: ''%>">
     <div class="series-cover-img-placeholder"></div>
-    <img id="seriesCoverImg" class="cover-img" src="<%=url_for(page.seriesInfo.cover)%>" alt="" />
+    <img id="seriesCoverImg" class="cover-img" src="<%=url_for(page.seriesInfo.cover)%>" alt="" fetchpriority="high" />
     <script>
       (function () {
         var img = document.getElementById('seriesCoverImg');
@@ -167,10 +168,10 @@ const travelPlacesJson = encodeURIComponent(
     </div>
   </div>
   <div class="travel-place-list">
-    <% travelPlaces.forEach((place, index) => { %>
-    <article class="travel-place-card" data-travel-place="<%=place.id%>">
+    <% allTravelCards.forEach((place, index) => { %>
+    <article class="travel-place-card"<%- place.id ? ` data-travel-place="${place.id}"` : '' %>>
       <div class="travel-place-cover" aria-hidden="true">
-        <span class="travel-place-index"><%=String(travelPlaces.length - index).padStart(2, '0')%></span>
+        <span class="travel-place-index"><%=String(allTravelCards.length - index).padStart(2, '0')%></span>
         <% if (place.cover) { %>
         <div class="cover-img">
           <img src="<%=place.cover%>" alt="" loading="lazy" />

@@ -2,7 +2,7 @@
 <div class="post-cover-img-wrap">
   <div class="post-cover-img-placeholder"></div>
   <div class="post-cover-img-placeholder-after"></div>
-  <img id="postCoverImg" class="cover-img" src="<%=url_for(page.cover)%>" alt="" />
+  <img id="postCoverImg" class="cover-img" src="<%=url_for(page.cover)%>" alt="" fetchpriority="high" />
   <script>
     (function () {
       var img = document.getElementById('postCoverImg');

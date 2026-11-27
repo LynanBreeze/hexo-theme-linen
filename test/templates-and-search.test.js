@@ -239,8 +239,17 @@ describe("Template Bugfixes & Refactors", () => {
       source: "_posts/no-cover.md",
       path: "2026/no-cover/",
       title: "No Cover",
-      excerpt: "<p>Hello <code>world</code></p>",
+      excerpt: "<p>&ldquo;Hello&rdquo; <code>world</code>&mdash;test</p>",
       date: new Date("2026-01-01"),
+      categories: [],
+    };
+    const heroPost = {
+      source: "_posts/hero.md",
+      path: "2026/hero/",
+      title: "Hero",
+      cover: "/img/hero.jpg",
+      excerpt: "<p>Hero excerpt</p>",
+      date: new Date("2026-02-01"),
       categories: [],
     };
 
@@ -253,6 +262,7 @@ describe("Template Bugfixes & Refactors", () => {
         },
       },
       url_for: makeUrlFor("/"),
+      date: () => "2026-01-01",
       getPostDate: () => "2026-01-01",
       partial: () => "<span>1 min read</span>",
       strip_html: (s) => String(s || "").replace(/<[^>]+>/g, ""),
@@ -260,7 +270,34 @@ describe("Template Bugfixes & Refactors", () => {
 
     assert.ok(!html.includes("cover-img"));
     assert.ok(!html.includes("undefined"));
-    assert.match(html, /<div class="excerpt">Hello world<\/div>/);
+    assert.match(html, /<div class="excerpt">“Hello” world—test<\/div>/);
+
+    const heroHtml = renderTemplate("layout/partials/top-posts.ejs", {
+      theme: { topArticles: ["_posts/hero.md"] },
+      site: {
+        posts: {
+          findOne: ({ source }) => (source === heroPost.source ? heroPost : null),
+        },
+      },
+      url_for: makeUrlFor("/"),
+      date: () => "2026-02-01",
+      getPostDate: () => "2026-02-01",
+      partial: () => "<span>1 min read</span>",
+      strip_html: (s) => String(s || "").replace(/<[^>]+>/g, ""),
+    });
+    assert.ok(heroHtml.includes('no-lazy src="/img/hero.jpg" alt="" fetchpriority="high"'));
+    assert.ok(!heroHtml.includes('loading="lazy"'));
+
+    const emptyHtml = renderTemplate("layout/partials/top-posts.ejs", {
+      theme: { topArticles: [] },
+      site: { posts: { findOne: () => null } },
+      url_for: makeUrlFor("/"),
+      date: () => "",
+      getPostDate: () => "",
+      partial: () => "",
+      strip_html: (s) => String(s || ""),
+    }).trim();
+    assert.equal(emptyHtml, "", "Empty topArticles must not render an empty #top-posts container");
   });
 
   it("header.ejs highlights Home only on home route, sets accessible logo labels, and gates search toggle", () => {

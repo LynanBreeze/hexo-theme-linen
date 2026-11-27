@@ -38,9 +38,28 @@ const relatedPosts = allSitePosts
   <div class="related-posts-title"><%=__('common.relatedPosts')%></div>
   <% relatedPosts.forEach(post => { 
       const coverImg = post.thumbnail || post.cover || '/linen-theme/img/related-post.jpg';
-      const excerptText = typeof strip_html === 'function'
-        ? strip_html(post?.excerpt || '').trim()
-        : String(post?.excerpt || '').replace(/<[^>]+>/g, '').trim();
+      const strippedExcerpt = typeof strip_html === 'function'
+        ? strip_html(post?.excerpt || '')
+        : String(post?.excerpt || '').replace(/<[^>]+>/g, '');
+      const excerptText = strippedExcerpt
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(Number(dec)))
+        .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+        .replace(/&(amp|lt|gt|quot|apos|ldquo|rdquo|lsquo|rsquo|mdash|ndash|hellip);/gi, (_, name) => ({
+          amp: '&',
+          lt: '<',
+          gt: '>',
+          quot: '"',
+          apos: "'",
+          ldquo: '“',
+          rdquo: '”',
+          lsquo: '‘',
+          rsquo: '’',
+          mdash: '—',
+          ndash: '–',
+          hellip: '…',
+        })[name.toLowerCase()] || ' ')
+        .trim();
       %>
   <a href="<%=url_for(post.path)%>">
     <div class="shared-link">
