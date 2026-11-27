@@ -209,7 +209,7 @@ const seriesInfo = getSeriesInfo(page?.series);
     errorText: __('common.commentsLoadError'),
   };
 %>
-<div id="giscus-container" class="giscus-container is-loading">
+<div id="giscus-container" class="giscus-container is-loading<%= String(giscusConfig.reactionsEnabled) === '0' ? ' no-reactions' : '' %>">
   <div class="giscus-loading" role="status" aria-live="polite">
     <span class="giscus-loading-spinner" aria-hidden="true"></span>
     <span class="giscus-loading-text"><%=__('common.commentsLoading')%></span>

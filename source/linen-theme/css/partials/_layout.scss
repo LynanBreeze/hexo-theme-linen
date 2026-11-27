@@ -275,20 +275,24 @@
       }
     }
     #giscus-container {
-      --giscus-placeholder-height: 320px;
+      --giscus-placeholder-height: 372px;
       position: relative;
       margin: 1.5em 0 0;
       padding: 1.25rem $commonPadding 0;
       background-color: $bg;
       border-top: 1px solid $borderSubtle;
-      min-height: var(--giscus-placeholder-height);
+      min-height: calc(var(--giscus-placeholder-height) + 1.25rem + 1px);
+
+      &.no-reactions {
+        --giscus-placeholder-height: 298px;
+      }
 
       .giscus-loading {
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 10px;
-        min-height: calc(var(--giscus-placeholder-height) - 1.25rem);
+        min-height: var(--giscus-placeholder-height);
         color: $metaText;
         font-size: 13.5px;
         letter-spacing: 0.01em;

@@ -17,6 +17,11 @@
   }
 
   var GISCUS_ORIGIN = "https://giscus.app";
+  // Giscus renders its own ~84px "Loading comments..." spinner before GraphQL
+  // resolves and the real comment box (>= 200px) renders. Wait for the real
+  // widget height so users never see two consecutive loading indicators.
+  var MIN_READY_HEIGHT = 180;
+  var IFRAME_LOAD_FALLBACK_MS = 8000;
   var loaded = false;
   var ready = false;
   var frameObserver = null;
@@ -113,8 +118,8 @@
     iframe.__linenLoadBound = true;
     if (typeof iframe.addEventListener === "function") {
       iframe.addEventListener("load", function () {
-        if (!ready) {
-          fallbackTimer = setTimeout(markReady, 400);
+        if (!ready && !fallbackTimer) {
+          fallbackTimer = setTimeout(markReady, IFRAME_LOAD_FALLBACK_MS);
         }
       });
     }
@@ -191,9 +196,15 @@
     }
     var payload = event.data.giscus;
     if (
-      (typeof payload.resizeHeight === "number" && payload.resizeHeight > 0) ||
-      payload.discussion !== undefined ||
-      payload.error !== undefined
+      typeof payload.resizeHeight === "number" &&
+      payload.resizeHeight >= MIN_READY_HEIGHT
+    ) {
+      markReady();
+      return;
+    }
+    if (
+      typeof payload.error === "string" &&
+      !payload.error.includes("Discussion not found")
     ) {
       markReady();
     }

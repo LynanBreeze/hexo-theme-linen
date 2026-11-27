@@ -482,11 +482,27 @@ describe("Template Bugfixes & Refactors", () => {
     assert.equal(appendedScripts[0].attrs["data-lang"], "zh-CN");
     assert.equal(mockContainer.classList.contains("is-loading"), true);
 
-    // Giscus resizeHeight message transitions container from loading -> loaded
+    // Giscus's internal ~84px loading spinner and "Discussion not found" must NOT reveal prematurely
     (windowListeners["message"] || []).forEach((fn) =>
       fn({
         origin: "https://giscus.app",
-        data: { giscus: { resizeHeight: 360 } },
+        data: { giscus: { resizeHeight: 84 } },
+      }),
+    );
+    (windowListeners["message"] || []).forEach((fn) =>
+      fn({
+        origin: "https://giscus.app",
+        data: { giscus: { error: "Discussion not found" } },
+      }),
+    );
+    assert.equal(mockContainer.classList.contains("is-loading"), true);
+    assert.equal(mockContainer.classList.contains("is-loaded"), false);
+
+    // Real rendered widget height (>= 180px) transitions container from loading -> loaded
+    (windowListeners["message"] || []).forEach((fn) =>
+      fn({
+        origin: "https://giscus.app",
+        data: { giscus: { resizeHeight: 372 } },
       }),
     );
     assert.equal(mockContainer.classList.contains("is-loading"), false);
