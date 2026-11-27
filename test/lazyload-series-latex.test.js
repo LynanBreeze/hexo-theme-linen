@@ -248,6 +248,14 @@ describe("Series Template, Lazyload Pipeline & LaTeX Config Fixes", () => {
     );
     assert.ok(withImgHtml.includes("var $lazyload = {"));
     assert.ok(!withImgHtml.includes("error-tip.svg"), "Must not preload error-tip.svg");
+
+    const lazyHexo = createMockHexo({ themeConfig: { lazyload: { enable: true } } });
+    loadHexoScript("scripts/lazyload/index.js", lazyHexo);
+    const lazyAssets = lazyHexo._generators["linen-lazyload-assets"]().map((a) => a.path);
+    assert.ok(lazyAssets.includes("linen-theme/img/lazyload/error-tip.svg"));
+
+    const tocJs = fs.readFileSync(path.join(ROOT_DIR, "source/linen-theme/js/toc.js"), "utf8");
+    assert.ok(tocJs.includes("isTocVisible"), "toc.js should skip scroll layout work when mobile drawer is hidden");
   });
 
   it("supports per-image hide-placeholder via alt directive, HTML attr, and assets-db, and hides blurhash canvas on load", () => {

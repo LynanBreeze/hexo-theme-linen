@@ -642,7 +642,7 @@ describe("scripts/search.js & XSL / Print CSS", () => {
         series: "Travel",
         excerpt: "<p>Excerpt <b>bold</b></p>",
         content:
-          '<p>Body text</p><span class="katex-mathml">hidden</span><script>alert(1)</script>',
+          '<p>Body text</p><figure class="highlight yaml"><table><tr><td class="gutter"><pre>1</pre></td><td class="code"><pre>editorialBreakout: true</pre></td></tr></table></figure><span class="katex-mathml">hidden</span><script>alert(1)</script>',
       },
       {
         title: "Hidden Archive",
@@ -686,7 +686,7 @@ describe("scripts/search.js & XSL / Print CSS", () => {
     assert.equal(parsed[0].date, "2026-05-01");
     assert.deepEqual(parsed[0].tags, ["Linen"]);
     assert.equal(parsed[0].excerpt, "Excerpt bold");
-    assert.equal(parsed[0].content, "Body text");
+    assert.equal(parsed[0].content, "Body text editorialBreakout: true");
   });
 
   it("uses Linen styling in RSS/Atom XSL files without third-party RSS.Beauty bloat", () => {

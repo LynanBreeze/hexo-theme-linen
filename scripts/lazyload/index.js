@@ -1,9 +1,16 @@
 "use strict";
 
+const fs = require("fs");
+const path = require("path");
 const {
   buildLazyloadStyles,
   getLazyloadClientScript,
 } = require("./assets");
+
+const ERROR_TIP_SVG_PATH = path.join(
+  __dirname,
+  "../../assets/img/lazyload/error-tip.svg",
+);
 
 if (
   !(
@@ -16,7 +23,7 @@ if (
 }
 
 hexo.extend.generator.register("linen-lazyload-assets", function () {
-  return [
+  const assets = [
     {
       path: "linen-theme/js/lazyload.js",
       data: getLazyloadClientScript(),
@@ -26,6 +33,13 @@ hexo.extend.generator.register("linen-lazyload-assets", function () {
       data: buildLazyloadStyles(hexo),
     },
   ];
+  if (fs.existsSync(ERROR_TIP_SVG_PATH)) {
+    assets.push({
+      path: "linen-theme/img/lazyload/error-tip.svg",
+      data: () => fs.createReadStream(ERROR_TIP_SVG_PATH),
+    });
+  }
+  return assets;
 });
 
 hexo.extend.filter.register(

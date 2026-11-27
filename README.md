@@ -57,16 +57,19 @@ post:
 # footer:
 #   logo: /img/custom-logo.svg
 
-# Comments: Giscus (recommended) or Gitalk
+# Comments: Giscus (recommended, ships with built-in Linen light/dark editorial themes) or Gitalk
 # comment:
+#   # Set enable: false to turn off comments globally and opt in per post via front-matter `comment: true`
+#   enable: true
 #   provider: giscus
 #   repo: owner/repo
 #   repo_id: R_kgDO...
 #   category: General
 #   category_id: DIC_kwDO...
 #   mapping: pathname
-#   light_theme: light
-#   dark_theme: dark_dimmed
+#   # Defaults to Linen's built-in Gitalk-matched themes on HTTPS (falls back to light/dark_dimmed on local HTTP)
+#   light_theme: linen
+#   dark_theme: linen
 ```
 
 You can also override `layoutStyle` and `editorialBreakout` / `proseWidth` in an individual post's front-matter, or create `source/404.md` with `layout: 404` and `permalink: /404.html` to enable the built-in 404 page.

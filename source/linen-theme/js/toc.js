@@ -136,10 +136,18 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 6. Apply the active state to the TOC DOM.
-  function updateActive() {
+  function isTocVisible() {
+    return window.innerWidth > 1280 || tocContainer.classList.contains("visible");
+  }
+
+  function updateActive(force) {
+    if (!force && !isTocVisible()) {
+      return;
+    }
+
     const { h2Id, h3Id } = determineActive();
 
-    if (lastActiveH2Id === h2Id && lastActiveH3Id === h3Id) {
+    if (!force && lastActiveH2Id === h2Id && lastActiveH3Id === h3Id) {
       return;
     }
 
@@ -188,17 +196,17 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("scroll", requestUpdate, { passive: true });
   window.addEventListener("resize", requestUpdate, { passive: true });
 
-  if ("IntersectionObserver" in window) {
-    const observer = new IntersectionObserver(
-      () => {
-        requestUpdate();
-      },
-      {
-        rootMargin: `-${TOP_OFFSET}px 0px 0px 0px`,
-        threshold: [0, 1],
-      },
-    );
-    headerElements.forEach((header) => observer.observe(header));
+  // Sync immediately when the mobile TOC drawer opens.
+  if (typeof MutationObserver === "function") {
+    const drawerObserver = new MutationObserver(() => {
+      if (tocContainer.classList.contains("visible")) {
+        updateActive(true);
+      }
+    });
+    drawerObserver.observe(tocContainer, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
   }
 
   // Run once on initialization.

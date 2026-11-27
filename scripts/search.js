@@ -8,7 +8,7 @@ function stripHtmlForSearch(html) {
     .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, " ")
     .replace(/<span class="katex-mathml">[\s\S]*?<\/span>/gi, " ")
     .replace(/<span class="pswp-caption-content">[\s\S]*?<\/span>/gi, " ")
-    .replace(/<figure\b[^>]*>[\s\S]*?<\/figure>/gi, " ")
+    .replace(/<td\b[^>]*\bclass="[^"]*\bgutter\b[^"]*"[^>]*>[\s\S]*?<\/td>/gi, " ")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
