@@ -74,24 +74,30 @@ const travelPlacesJson = encodeURIComponent(
   <% if (page.seriesInfo?.cover && !showTravelMap) { %>
   <div class="series-cover-img-wrap" style="<%=page.seriesInfo?.coverPlaceholder ? `background-image: url(${url_for(page.seriesInfo.coverPlaceholder)})`: ''%>">
     <div class="series-cover-img-placeholder"></div>
+    <img id="seriesCoverImg" class="cover-img" src="<%=url_for(page.seriesInfo.cover)%>" alt="" />
     <script>
-      const coverImgStartTime = Date.now();
-      setTimeout(() => {
-        const seriesCoverImg = document.getElementById('seriesCoverImg');
-        if (seriesCoverImg && !seriesCoverImg.classList.contains('loaded') && !seriesCoverImg.classList.contains('cached')) {
-          seriesCoverImg.classList.add('loading')
+      (function () {
+        var img = document.getElementById('seriesCoverImg');
+        if (!img) return;
+        var now = typeof performance !== 'undefined' && performance.now ? function () { return performance.now(); } : Date.now;
+        var start = now();
+        var finish = function (isError) {
+          img.classList.remove('loading');
+          if (!isError) img.classList.add(now() - start > 300 ? 'loaded' : 'cached');
+        };
+        if (img.complete) {
+          finish(img.naturalWidth === 0);
+          return;
         }
-      }, 100);
-
-      function onseriesCoverImgLoaded(img) {
-        if (Date.now() - coverImgStartTime > 300) {
-          img.classList.add('loaded')
-        } else {
-          img.classList.add('cached')
-        }
-      }
+        var timer = setTimeout(function () {
+          if (!img.classList.contains('loaded') && !img.classList.contains('cached')) {
+            img.classList.add('loading');
+          }
+        }, 100);
+        img.addEventListener('load', function () { clearTimeout(timer); finish(false); }, { once: true });
+        img.addEventListener('error', function () { clearTimeout(timer); finish(true); }, { once: true });
+      })();
     </script>
-    <img id="seriesCoverImg" class="cover-img" src="<%=url_for(page.seriesInfo.cover)%>" alt="" onload="onseriesCoverImgLoaded(this)" />
     <div class="cover-info">
       <div class="series-info">
         <h1 class="series-name"><%=__('common.series') + ': ' + page.series %></h1>

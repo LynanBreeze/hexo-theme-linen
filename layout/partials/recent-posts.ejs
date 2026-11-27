@@ -8,10 +8,13 @@
     if(post){ topPosts.push(post) } 
   }) 
   topPosts = getFirstFour(topPosts);
-  const isArchive = is_archive();
+  const hideArchived =
+    (typeof is_archive === 'function' && is_archive()) ||
+    (typeof is_category === 'function' && is_category()) ||
+    (typeof is_tag === 'function' && is_tag());
 %>
 <div id="recent-posts">
-  <% page.posts.filter(post=>is_home()?!(topPosts.map(v=>v.source)).includes(post.source): true).filter(v=>showHidden ? (isArchive ? !v?.hide?.archive : true) : !v?.hide?.recent).sort('date', -1).each(post => { %>
+  <% page.posts.filter(post=>is_home()?!(topPosts.map(v=>v.source)).includes(post.source): true).filter(v=>showHidden ? (hideArchived ? !v?.hide?.archive : true) : !v?.hide?.recent).sort('date', -1).each(post => { %>
   <%-partial('partials/post-item', { post: post })%>
   <% }); %>
 </div>

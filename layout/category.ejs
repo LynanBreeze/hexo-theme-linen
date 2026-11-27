@@ -1,6 +1,7 @@
 <%
 const currentCategory = site.categories.findOne({ name: page.category });
-const allPosts = currentCategory ? currentCategory.posts.toArray() : (page.posts ? page.posts.toArray() : []);
+const rawPosts = currentCategory ? currentCategory.posts.toArray() : (page.posts ? page.posts.toArray() : []);
+const allPosts = rawPosts.filter(p => !p?.hide?.archive);
 const totalCount = allPosts.length;
 const years = allPosts
   .map(p => (p.date && p.date.year ? p.date.year() : null))
@@ -10,7 +11,11 @@ const maxYear = years.length ? Math.max(...years) : null;
 const yearRange = minYear && maxYear ? (minYear === maxYear ? `${minYear}` : `${minYear} — ${maxYear}`) : '';
 const categoryInfo = getCategoryInfo(page.category);
 const categoriesList = site.categories.toArray()
-  .map(cat => ({ name: cat.name, path: cat.path, count: cat.length }))
+  .map(cat => ({
+    name: cat.name,
+    path: cat.path,
+    count: cat.posts ? cat.posts.filter(post => !post?.hide?.archive).length : cat.length
+  }))
   .filter(cat => cat.count > 0)
   .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 %>

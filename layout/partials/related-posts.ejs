@@ -1,20 +1,42 @@
-<% 
-const tags = (page?.tags?.data || []).map(tag=>tag.name);
-const relatedPosts = site.posts.filter(item=>item && item.source !== page.source && item.published !== false && !item?.hide?.archive && !item?.hide?.seo).filter((item) => {
-  let count = 0;
-  const itemTags = (item?.tags?.data || []).map(tag=>tag.name);
-  (tags).forEach((tag) => {
-    if(itemTags.includes(tag)){
-      count ++;
+<%
+const currentTags = new Set((page?.tags?.data || []).map(tag => tag?.name).filter(Boolean));
+const currentCats = new Set((page?.categories?.data || []).map(cat => cat?.name).filter(Boolean));
+const currentSeries = page?.series || '';
+const allSitePosts = [];
+if (site.posts && typeof site.posts.toArray === 'function') {
+  allSitePosts.push(...site.posts.toArray());
+} else if (Array.isArray(site.posts)) {
+  allSitePosts.push(...site.posts);
+} else if (site.posts && typeof site.posts.each === 'function') {
+  site.posts.each(p => allSitePosts.push(p));
+} else if (Array.isArray(site.posts?.data)) {
+  allSitePosts.push(...site.posts.data);
+}
+const minScore = currentTags.size >= 2 ? 3 : (currentTags.size === 1 ? 2 : 1);
+const relatedPosts = allSitePosts
+  .filter(item => item && item.source !== page.source && item.published !== false && !item?.hide?.archive && !item?.hide?.seo)
+  .map(item => {
+    const itemTags = (item?.tags?.data || []).map(tag => tag?.name).filter(Boolean);
+    const itemCats = (item?.categories?.data || []).map(cat => cat?.name).filter(Boolean);
+    let sharedTags = 0;
+    for (let i = 0; i < itemTags.length; i++) {
+      if (currentTags.has(itemTags[i])) sharedTags++;
     }
-  });
-  return count >=2;
-}).sort('date', -1).limit(3);
+    const sameCategory = currentCats.size > 0 && itemCats.some(c => currentCats.has(c));
+    const sameSeries = Boolean(currentSeries && item.series === currentSeries);
+    const score = sharedTags * 2 + (sameCategory ? 1 : 0) + (sameSeries ? 1 : 0);
+    const ts = item.date ? (typeof item.date.valueOf === 'function' ? item.date.valueOf() : new Date(item.date).getTime()) : 0;
+    return { post: item, score, ts: Number.isFinite(ts) ? ts : 0 };
+  })
+  .filter(entry => entry.score >= minScore)
+  .sort((a, b) => b.score - a.score || b.ts - a.ts)
+  .slice(0, 3)
+  .map(entry => entry.post);
 %>
 <% if (page?.showRelated !== false && relatedPosts.length > 0) { %>
 <div id="related-posts">
   <div class="related-posts-title"><%=__('common.relatedPosts')%></div>
-  <% relatedPosts.each(post => { 
+  <% relatedPosts.forEach(post => { 
       const coverImg = post.thumbnail || post.cover || '/linen-theme/img/related-post.jpg';
       const excerptText = typeof strip_html === 'function'
         ? strip_html(post?.excerpt || '').trim()

@@ -4,7 +4,8 @@ const { hasTranslatation, targetLanguagePath, targetLanguage } = getTranslationP
 const logoConfig = theme?.logo || {};
 const { src: logoSrc, text: logoText, width: logoWidth, height: logoHeight } = logoConfig;
 const logoTitle = logoText || config?.title || 'Home';
-const rssPath = config?.feed?.path || theme?.feed?.path;
+const feedDisabled = theme?.feed === false || config?.theme_config?.feed === false;
+const rssPath = feedDisabled ? '' : (config?.feed?.path || theme?.feed?.path || '/feed.xml');
 const showThemeToggle = (theme?.themeToggle ?? config?.theme_config?.themeToggle ?? true) !== false;
 const searchEnabled = Boolean(theme?.search?.enable ?? config?.theme_config?.search?.enable ?? false);
 const currentPath = `/${page.path || ''}`.replace(/\/index\.html$/, '/');

@@ -2,24 +2,30 @@
 <div class="post-cover-img-wrap">
   <div class="post-cover-img-placeholder"></div>
   <div class="post-cover-img-placeholder-after"></div>
+  <img id="postCoverImg" class="cover-img" src="<%=url_for(page.cover)%>" alt="" />
   <script>
-    const coverImgStartTime = performance.now();
-    setTimeout(() => {
-      const postCoverImg = document.getElementById('postCoverImg');
-      if (postCoverImg && !postCoverImg.classList.contains('loaded') && !postCoverImg.classList.contains('cached')) {
-        postCoverImg.classList.add('loading')
+    (function () {
+      var img = document.getElementById('postCoverImg');
+      if (!img) return;
+      var now = typeof performance !== 'undefined' && performance.now ? function () { return performance.now(); } : Date.now;
+      var start = now();
+      var finish = function (isError) {
+        img.classList.remove('loading');
+        if (!isError) img.classList.add(now() - start > 300 ? 'loaded' : 'cached');
+      };
+      if (img.complete) {
+        finish(img.naturalWidth === 0);
+        return;
       }
-    }, 100);
-
-    function onPostCoverImgLoaded(img) {
-      if (performance.now() - coverImgStartTime > 300) {
-        img.classList.add('loaded')
-      } else {
-        img.classList.add('cached')
-      }
-    }
+      var timer = setTimeout(function () {
+        if (!img.classList.contains('loaded') && !img.classList.contains('cached')) {
+          img.classList.add('loading');
+        }
+      }, 100);
+      img.addEventListener('load', function () { clearTimeout(timer); finish(false); }, { once: true });
+      img.addEventListener('error', function () { clearTimeout(timer); finish(true); }, { once: true });
+    })();
   </script>
-  <img id="postCoverImg" class="cover-img" src="<%=url_for(page.cover)%>" alt="" onload="onPostCoverImgLoaded(this)" />
   <% if(page.coverInfo) { %>
   <div class="cover-info">
     <% if(page.coverInfo.url) { %>

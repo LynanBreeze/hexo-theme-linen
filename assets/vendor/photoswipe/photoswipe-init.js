@@ -1082,13 +1082,20 @@ lightbox.on("close", () => {
 lightbox.init();
 
 document.addEventListener("pointerdown", (event) => {
-  if (event.target.closest(".pswp-live-photo-trigger")) {
+  if (
+    event.target &&
+    typeof event.target.closest === "function" &&
+    event.target.closest(".pswp-live-photo-trigger")
+  ) {
     event.stopPropagation();
   }
 });
 
 document.addEventListener("click", async (event) => {
-  const trigger = event.target.closest(".pswp-live-photo-trigger");
+  const trigger =
+    event.target && typeof event.target.closest === "function"
+      ? event.target.closest(".pswp-live-photo-trigger")
+      : null;
   if (!trigger) {
     return;
   }
@@ -1128,7 +1135,11 @@ document.addEventListener("click", async (event) => {
 document.addEventListener(
   "pause",
   (event) => {
-    if (event.target.matches(".pswp-live-photo-video")) {
+    if (
+      event.target &&
+      typeof event.target.matches === "function" &&
+      event.target.matches(".pswp-live-photo-video")
+    ) {
       const livePhotoWrap = event.target.closest(".pswp-live-photo-wrap");
       if (livePhotoWrap) {
         livePhotoWrap.classList.remove("is-playing");

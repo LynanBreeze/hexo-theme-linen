@@ -40,63 +40,106 @@ hexo.extend.filter.register(
         };
       };
 
-      const formatedContent = data.content.replace(
-        /:::image-grid(?:\s+([\w-]+))?([\s\S]*?):::/g,
-        (match, grid, content) => {
-          const gridClass = grid ? ` ${grid}` : "";
-          const lines = content
-            .split("\n")
-            .filter((v) => v)
-            .map((line) => line.trim());
+      const transformOutsideCodeFences = (source, transformer) => {
+        const lines = String(source || "").split("\n");
+        const out = [];
+        let buffer = [];
+        let inFence = false;
+        let fenceChar = "";
+        let fenceLen = 0;
 
-          if (grid === "switcher") {
-            const items = lines
-              .map((line, index) => {
-                const { label, imageMarkdown } = splitSwitcherLine(line);
-                const renderedLine = renderMarkdownLine(imageMarkdown);
-                const alt = getImageAlt(renderedLine);
+        const flushBuffer = () => {
+          if (!buffer.length) return;
+          out.push(transformer(buffer.join("\n")));
+          buffer = [];
+        };
 
-                return /<img|<iframe/.test(renderedLine)
-                  ? {
-                      label: label || alt || getFallbackLabel(renderedLine, index),
-                      content: renderedLine
-                    }
-                  : null;
-              })
-              .filter(Boolean);
-
-            if (!items.length) return match;
-
-            return `<span class="image-grid switcher">${items
-              .map(
-                (item, index) =>
-                  `<span class="grid-item${index === 0 ? " active" : ""}" data-switch-label="${escapeAttribute(
-                    item.label
-                  )}" role="tabpanel" aria-hidden="${index === 0 ? "false" : "true"}">${item.content}</span>`
-              )
-              .join(
-                ""
-              )}<span class="image-grid-switcher-controls is-ready" role="tablist" style="--switcher-item-count: ${
-              items.length
-            }; --switcher-active-index: 0;">${items
-              .map(
-                (item, index) =>
-                  `<button class="image-grid-switcher-button${index === 0 ? " active" : ""}" type="button" role="tab" aria-selected="${
-                    index === 0 ? "true" : "false"
-                  }">${escapeAttribute(item.label)}</button>`
-              )
-              .join("")}</span></span>`;
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          if (!inFence) {
+            const openMatch = line.match(/^[ \t]*(`{3,}|~{3,})(.*)$/);
+            if (openMatch && !(openMatch[1][0] === "`" && openMatch[2].includes("`"))) {
+              flushBuffer();
+              inFence = true;
+              fenceChar = openMatch[1][0];
+              fenceLen = openMatch[1].length;
+              out.push(line);
+              continue;
+            }
+            buffer.push(line);
+          } else {
+            out.push(line);
+            const closeRe = new RegExp(`^[ \\t]*\\${fenceChar}{${fenceLen},}[ \\t]*$`);
+            if (closeRe.test(line)) {
+              inFence = false;
+              fenceChar = "";
+              fenceLen = 0;
+            }
           }
-
-          return `<span class="image-grid${gridClass}">${lines
-            .map((line) => {
-              const renderedLine = renderMarkdownLine(line);
-              return /<img|<iframe/.test(renderedLine)
-                ? `<span class="grid-item">${renderedLine}</span>`
-                : renderedLine;
-            })
-            .join("")}</span>`;
         }
+        flushBuffer();
+        return out.join("\n");
+      };
+
+      const formatedContent = transformOutsideCodeFences(data.content, (chunk) =>
+        chunk.replace(
+          /:::image-grid(?:\s+([\w-]+))?([\s\S]*?):::/g,
+          (match, grid, content) => {
+            const gridClass = grid ? ` ${grid}` : "";
+            const lines = content
+              .split("\n")
+              .filter((v) => v)
+              .map((line) => line.trim());
+
+            if (grid === "switcher") {
+              const items = lines
+                .map((line, index) => {
+                  const { label, imageMarkdown } = splitSwitcherLine(line);
+                  const renderedLine = renderMarkdownLine(imageMarkdown);
+                  const alt = getImageAlt(renderedLine);
+
+                  return /<img|<iframe/.test(renderedLine)
+                    ? {
+                        label: label || alt || getFallbackLabel(renderedLine, index),
+                        content: renderedLine
+                      }
+                    : null;
+                })
+                .filter(Boolean);
+
+              if (!items.length) return match;
+
+              return `<span class="image-grid switcher">${items
+                .map(
+                  (item, index) =>
+                    `<span class="grid-item${index === 0 ? " active" : ""}" data-switch-label="${escapeAttribute(
+                      item.label
+                    )}" role="tabpanel" aria-hidden="${index === 0 ? "false" : "true"}">${item.content}</span>`
+                )
+                .join(
+                  ""
+                )}<span class="image-grid-switcher-controls is-ready" role="tablist" style="--switcher-item-count: ${
+                items.length
+              }; --switcher-active-index: 0;">${items
+                .map(
+                  (item, index) =>
+                    `<button class="image-grid-switcher-button${index === 0 ? " active" : ""}" type="button" role="tab" aria-selected="${
+                      index === 0 ? "true" : "false"
+                    }">${escapeAttribute(item.label)}</button>`
+                )
+                .join("")}</span></span>`;
+            }
+
+            return `<span class="image-grid${gridClass}">${lines
+              .map((line) => {
+                const renderedLine = renderMarkdownLine(line);
+                return /<img|<iframe/.test(renderedLine)
+                  ? `<span class="grid-item">${renderedLine}</span>`
+                  : renderedLine;
+              })
+              .join("")}</span>`;
+          }
+        )
       );
       data.content = formatedContent;
     } catch (error) {

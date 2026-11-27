@@ -188,6 +188,50 @@ describe("Template Bugfixes & Refactors", () => {
       strip_html: (s) => String(s || "").replace(/<[^>]+>/g, ""),
     });
     assert.equal(noTagsHtml.trim(), "");
+
+    // Ranks higher tag-overlap posts ahead of newer lower-overlap posts, and supports 1-tag posts
+    const scoredPosts = [
+      {
+        source: "_posts/newer-2tags.md",
+        path: "2026/newer/",
+        title: "Newer Two Tags",
+        tags: { data: [{ name: "a" }, { name: "b" }] },
+        date: new Date("2026-06-01"),
+      },
+      {
+        source: "_posts/older-3tags.md",
+        path: "2025/older/",
+        title: "Older Three Tags",
+        tags: { data: [{ name: "a" }, { name: "b" }, { name: "c" }] },
+        date: new Date("2025-01-01"),
+      },
+    ];
+    const rankedHtml = renderTemplate("layout/partials/related-posts.ejs", {
+      page: {
+        source: "_posts/cur.md",
+        tags: { data: [{ name: "a" }, { name: "b" }, { name: "c" }] },
+      },
+      site: { posts: makeQuery(scoredPosts) },
+      url_for: makeUrlFor("/"),
+      __: (k) => k,
+      strip_html: (s) => String(s || "").replace(/<[^>]+>/g, ""),
+    });
+    assert.ok(
+      rankedHtml.indexOf("Older Three Tags") < rankedHtml.indexOf("Newer Two Tags"),
+      "Higher tag overlap should rank above newer lower-overlap post",
+    );
+
+    const singleTagHtml = renderTemplate("layout/partials/related-posts.ejs", {
+      page: {
+        source: "_posts/solo.md",
+        tags: { data: [{ name: "c" }] },
+      },
+      site: { posts: makeQuery(scoredPosts) },
+      url_for: makeUrlFor("/"),
+      __: (k) => k,
+      strip_html: (s) => String(s || "").replace(/<[^>]+>/g, ""),
+    });
+    assert.ok(singleTagHtml.includes("Older Three Tags"), "Single-tag post should still match related posts");
   });
 
   it("top-posts.ejs omits cover-img when no cover/thumbnail and strips HTML from excerpt", () => {
@@ -275,12 +319,14 @@ describe("Template Bugfixes & Refactors", () => {
     const defaultHtml = renderTemplate("layout/footer.ejs", baseLocals);
     assert.match(defaultHtml, /src="\/linen-theme\/img\/logo_black\.svg"/);
     assert.match(defaultHtml, /alt="My Site"/);
+    assert.ok(defaultHtml.includes('href="/feed.xml"'), "Footer should default RSS link to /feed.xml when feed is enabled");
 
     const hiddenHtml = renderTemplate("layout/footer.ejs", {
       ...baseLocals,
-      theme: { navItems: [], footer: { logo: false }, info: { registration: "京ICP备123456号" } },
+      theme: { navItems: [], feed: false, footer: { logo: false }, info: { registration: "京ICP备123456号" } },
     });
     assert.ok(!hiddenHtml.includes("footerLogo"));
+    assert.ok(!hiddenHtml.includes("common.subscribe"), "Footer must omit empty subscribe column when feed is disabled");
     assert.ok(hiddenHtml.includes('href="https://beian.miit.gov.cn/"'));
   });
 
@@ -997,5 +1043,14 @@ describe("scripts/search.js & XSL / Print CSS", () => {
     assert.ok(searchJs.includes("trapFocus"));
     const mapJs = fs.readFileSync(path.join(ROOT_DIR, "assets/vendor/map/travel-map.js"), "utf8");
     assert.ok(mapJs.includes("fitBounds(bounds, { padding: [28, 28], maxZoom: 11 })"));
+
+    // 8. appendRawMarkdownContent emits <button class="copy-btn">; photoswipe-init guards Element methods; package.json drops moment
+    const rawMdScript = fs.readFileSync(path.join(ROOT_DIR, "scripts/appendRawMarkdownContent.js"), "utf8");
+    assert.ok(rawMdScript.includes('<button type="button" class="copy-btn"'));
+    const pswpInit = fs.readFileSync(path.join(ROOT_DIR, "assets/vendor/photoswipe/photoswipe-init.js"), "utf8");
+    assert.ok(pswpInit.includes('typeof event.target.closest === "function"'));
+    assert.ok(pswpInit.includes('typeof event.target.matches === "function"'));
+    const pkg = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "package.json"), "utf8"));
+    assert.equal(pkg.dependencies.moment, undefined, "moment dependency should be removed");
   });
 });

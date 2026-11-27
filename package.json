@@ -24,8 +24,7 @@
     "hexo-renderer-dartsass": "^1.1.0",
     "hexo-renderer-ejs": "^2.0.0",
     "hexo-util": "^4.0.0",
-    "katex": "^0.19.1",
-    "moment": "^2.30.1"
+    "katex": "^0.19.1"
   },
   "peerDependencies": {
     "hexo": ">=7.0.0"

@@ -1,10 +1,24 @@
-const moment = require("moment");
 const {
   getSiteData,
   resolvePostLayoutStyle,
   resolvePostBreakoutConfig,
   resolveIsMapSeries,
 } = require("../lib/site-data");
+
+const EN_SHORT_MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
 hexo.extend.helper.register("take", function (arr, n = 1) {
   return arr.slice(0, Math.max(0, n));
@@ -193,12 +207,28 @@ hexo.extend.helper.register("getPostDate", function (post, lang) {
 
   if (!rawDate) return "";
 
-  // 统一转成 moment，避免 generator 阶段是原生 Date
-  const date =
-    typeof rawDate === "string"
-      ? moment(new Date(rawDate))
-      : moment(rawDate);
-  if (!date.isValid()) return "";
+  let year;
+  let monthIndex;
+  let day;
+
+  if (
+    typeof rawDate === "object" &&
+    typeof rawDate.format === "function" &&
+    typeof rawDate.year === "function" &&
+    typeof rawDate.month === "function" &&
+    typeof rawDate.date === "function"
+  ) {
+    if (typeof rawDate.isValid === "function" && !rawDate.isValid()) return "";
+    year = rawDate.year();
+    monthIndex = rawDate.month();
+    day = rawDate.date();
+  } else {
+    const parsed = rawDate instanceof Date ? rawDate : new Date(rawDate);
+    if (Number.isNaN(parsed.getTime())) return "";
+    year = parsed.getFullYear();
+    monthIndex = parsed.getMonth();
+    day = parsed.getDate();
+  }
 
   const language =
     lang ||
@@ -208,10 +238,10 @@ hexo.extend.helper.register("getPostDate", function (post, lang) {
     this?.config?.language;
 
   if (language?.startsWith("zh")) {
-    return date.format("M 月 D 日，YYYY");
+    return `${monthIndex + 1} 月 ${day} 日，${year}`;
   }
 
-  return date.format("MMM D, YYYY");
+  return `${EN_SHORT_MONTHS[monthIndex]} ${day}, ${year}`;
 });
 
 hexo.extend.helper.register(

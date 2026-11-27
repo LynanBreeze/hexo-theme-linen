@@ -240,8 +240,14 @@ describe("Series Template, Lazyload Pipeline & LaTeX Config Fixes", () => {
     assert.ok(clientCode.includes("isOversizedVisible"));
 
     const injectScript = require("../scripts/lazyload/inject")(createMockHexo());
-    const injectedHtml = injectScript("<html><head></head><body></body></html>", { page: {} });
-    assert.ok(!injectedHtml.includes("error-tip.svg"), "Must not preload error-tip.svg");
+    const noImgHtml = injectScript("<html><head></head><body><p>Plain</p></body></html>", { page: {} });
+    assert.ok(!noImgHtml.includes("$lazyload"), "Must skip injecting $lazyload on pages without .lazyload-wrap");
+    const withImgHtml = injectScript(
+      '<html><head></head><body><span class="lazyload-wrap"></span></body></html>',
+      { page: {} },
+    );
+    assert.ok(withImgHtml.includes("var $lazyload = {"));
+    assert.ok(!withImgHtml.includes("error-tip.svg"), "Must not preload error-tip.svg");
   });
 
   it("supports per-image hide-placeholder via alt directive, HTML attr, and assets-db, and hides blurhash canvas on load", () => {

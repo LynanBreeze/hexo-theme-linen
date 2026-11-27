@@ -178,6 +178,22 @@ describe("SEO, Date Helper, HoverTexts, ImageGrid & Archive Fixes", () => {
       hexo._helpers.getPostDate.call(ctxEn, new Date("2026-05-03T00:00:00Z")),
       "May 3, 2026",
     );
+    // Moment-like objects (Hexo post.date) preserve timezone-aware year/month/date
+    const momentLike = {
+      format: () => "2026-12-01",
+      isValid: () => true,
+      year: () => 2026,
+      month: () => 11,
+      date: () => 1,
+    };
+    assert.equal(
+      hexo._helpers.getPostDate.call(ctxZh, { date: momentLike }),
+      "12 月 1 日，2026",
+    );
+    assert.equal(
+      hexo._helpers.getPostDate.call(ctxEn, { date: momentLike }),
+      "Dec 1, 2026",
+    );
     assert.equal(hexo._helpers.getPostDate.call(ctxZh, "not-a-date"), "");
   });
 
@@ -250,6 +266,31 @@ describe("SEO, Date Helper, HoverTexts, ImageGrid & Archive Fixes", () => {
     assert.ok(data.content.includes('src="/palace.jpg"'));
     assert.ok(data.content.includes('data-switch-label="Beijing | Palace"'));
     assert.ok(!data.content.includes("<br"));
+
+    // Must not transform :::image-grid inside fenced code blocks
+    const fencedData = {
+      content: [
+        "```markdown",
+        ":::image-grid",
+        "![a](/a.jpg)",
+        ":::",
+        "```",
+        "",
+        ":::image-grid",
+        "![b](/b.jpg)",
+        ":::",
+      ].join("\n"),
+    };
+    filter.call(hexo, fencedData);
+    assert.ok(
+      fencedData.content.includes("```markdown\n:::image-grid\n![a](/a.jpg)\n:::\n```"),
+      "Fenced code block containing :::image-grid must remain untouched",
+    );
+    assert.equal(
+      (fencedData.content.match(/class="image-grid"/g) || []).length,
+      1,
+      "Only the real :::image-grid outside code fence should be transformed",
+    );
   });
 
   it("site-info.ejs links to /archives/#archives and archive.ejs uses category.path while filtering hide.archive", () => {

@@ -1,6 +1,7 @@
 <%
 const currentTag = site.tags.findOne({ name: page.tag });
-const allPosts = currentTag ? currentTag.posts.toArray() : (page.posts ? page.posts.toArray() : []);
+const rawPosts = currentTag ? currentTag.posts.toArray() : (page.posts ? page.posts.toArray() : []);
+const allPosts = rawPosts.filter(p => !p?.hide?.archive);
 const totalCount = allPosts.length;
 const years = allPosts
   .map(p => (p.date && p.date.year ? p.date.year() : null))

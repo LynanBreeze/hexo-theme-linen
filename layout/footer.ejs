@@ -24,20 +24,21 @@
             <% }); %>
           <% } %>
         </div>
+        <%
+          const feedDisabled = theme?.feed === false || config?.theme_config?.feed === false;
+          const rssPath = feedDisabled ? '' : (config?.feed?.path || theme?.feed?.path || '/feed.xml');
+        %>
+        <% if (rssPath) { %>
         <div class="footerLinkCol">
           <h4><%= __('common.subscribe') %></h4>
-          <% 
-          const rssPath = config?.feed?.path || theme?.feed?.path;
-          if (rssPath) { 
-          %>
           <a href="<%=url_for(rssPath)%>" target="_blank" rel="noopener noreferrer" class="footerRssLink">
             <svg class="rssSvg" viewBox="0 0 24 24" width="14" height="14">
               <path fill="currentColor" d="M6.18,15.64A2.18,2.18,0,0,1,8.36,17.82a2.18,2.18,0,0,1-2.18,2.18A2.18,2.18,0,0,1,4,17.82,2.18,2.18,0,0,1,6.18,15.64M4,4.44A15.56,15.56,0,0,1,19.56,20h-2.8A12.76,12.76,0,0,0,4,7.24V4.44m0,5.6A9.96,9.96,0,0,1,13.96,20h-2.8A7.16,7.16,0,0,0,4,12.84V10.04Z" />
             </svg>
             <span>RSS</span>
           </a>
-          <% } %>
         </div>
+        <% } %>
         <div class="footerLinkCol footerMetaCol">
           <h4><% if (theme?.info?.about) { %><a href="<%=url_for(theme.info.about)%>"<%- /^(https?:)?\/\//i.test(theme.info.about) ? ' target="_blank" rel="noopener noreferrer"' : '' %>><%= __('common.aboutThisSite') %></a><% } else { %><%= __('common.aboutThisSite') %><% } %></h4>
           <span class="footerMetaText copyright">
