@@ -181,7 +181,8 @@ const seriesInfo = getSeriesInfo(page?.series);
 <div class="copyright-desc"><%=__('common.copyrightDesc')%></div>
 <% } %>
 
-<% if (theme.comment && page.comment !== false) {
+<% const commentEnabled = Boolean(theme.comment) && (page.comment === true || (page.comment !== false && theme.comment.enable !== false)); %>
+<% if (commentEnabled) {
   const rawCommentProvider = String(theme.comment.provider || '').trim().toLowerCase();
   const commentProvider =
     rawCommentProvider === 'giscus' ||

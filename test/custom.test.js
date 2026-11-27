@@ -122,5 +122,19 @@ describe("scripts/custom.js & scripts/folded-code-block.js", () => {
     }
     assert.ok(postWithComment.content.includes('<div id="gitalk-initiator"></div>'));
     assert.ok(!postCommentDisabled.content.includes("gitalk-initiator"));
+
+    // Opt-in mode: comment.enable === false allows per-post comment: true
+    const hexoOptIn = createMockHexo({
+      themeConfig: { comment: { enable: false, provider: "giscus", repo_id: "R1" } },
+    });
+    loadHexoScript("scripts/custom.js", hexoOptIn);
+    const defaultOffPost = { content: "<p>Off</p>" };
+    const optInPost = { comment: true, content: "<p>On</p>" };
+    for (const fn of hexoOptIn._filters.after_post_render) {
+      fn.call(hexoOptIn, defaultOffPost);
+      fn.call(hexoOptIn, optInPost);
+    }
+    assert.ok(!defaultOffPost.content.includes("gitalk-initiator"));
+    assert.ok(optInPost.content.includes('<div id="gitalk-initiator"></div>'));
   });
 });

@@ -451,7 +451,9 @@ function isCommentsEnabled(data, hexoInstance) {
   const commentConfig =
     hexoInstance?.theme?.config?.comment ??
     hexoInstance?.config?.theme_config?.comment;
-  return Boolean(commentConfig);
+  if (!commentConfig) return false;
+  if (data?.comment === true) return true;
+  return commentConfig.enable !== false;
 }
 
 hexo.extend.filter.register(

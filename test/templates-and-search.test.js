@@ -376,6 +376,29 @@ describe("Template Bugfixes & Refactors", () => {
     assert.ok(gitalkHtml.includes('id="gitalk-container"'));
     assert.ok(!gitalkHtml.includes('id="giscus-container"'));
 
+    // Respect comment.enable: false globally while allowing per-post comment: true opt-in
+    const optInTheme = {
+      version: "1.0.63",
+      comment: {
+        enable: false,
+        provider: "giscus",
+        repo: "owner/blog",
+        repo_id: "R_kgDO123",
+        category_id: "DIC_kwDO456",
+      },
+    };
+    const defaultOffHtml = renderTemplate("layout/post.ejs", {
+      ...basePostLocals,
+      theme: optInTheme,
+    });
+    assert.ok(!defaultOffHtml.includes('id="giscus-container"'));
+    const optInHtml = renderTemplate("layout/post.ejs", {
+      ...basePostLocals,
+      page: { ...basePostLocals.page, comment: true },
+      theme: optInTheme,
+    });
+    assert.ok(optInHtml.includes('id="giscus-container"'));
+
     // Execute giscus-init.js in a minimal VM sandbox to verify lazy load and theme sync
     const configMatch = giscusHtml.match(
       /<script id="linen-giscus-config" type="application\/json">([\s\S]*?)<\/script>/,
