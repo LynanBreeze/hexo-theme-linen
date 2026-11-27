@@ -29,8 +29,7 @@ hexo.extend.helper.register("getPageTitle", function () {
   }
   if (this.is_month()) {
     pageTitle += ": " + page.month + "/" + page.year;
-  }
-  if (this.is_year()) {
+  } else if (this.is_year()) {
     pageTitle += ": " + page.year;
   }
   if (this.is_home()) {
@@ -225,23 +224,32 @@ hexo.extend.helper.register(
       imgSec = 2,
     } = options;
 
-    // 移除 HTML 标签，保留文本
+    const safeText = String(text || "");
+    const safeContent = String(content || "");
 
-    // 匹配代码块内容 <pre><code>...</code></pre>
-    const codeBlocks = Array.from(content.matchAll(/<pre>[\s\S]*?<\/pre>/gi));
+    // Strip Hexo highlight line-number gutter cells before counting code tokens
+    const contentWithoutGutter = safeContent.replace(
+      /<td\b[^>]*\bclass="[^"]*\bgutter\b[^"]*"[^>]*>[\s\S]*?<\/td>/gi,
+      "",
+    );
+    const codeBlocks = Array.from(
+      contentWithoutGutter.matchAll(/<pre\b[^>]*>[\s\S]*?<\/pre>/gi),
+    );
     let codeWords = 0;
     if (codeBlocks.length) {
       codeBlocks.forEach((block) => {
-        const codeText = block[0].replace(/<[^>]+>/g, " ");
-        codeWords += codeText.trim().split(/\s+/).length;
+        const codeText = block[0].replace(/<[^>]+>/g, " ").trim();
+        if (codeText) {
+          codeWords += codeText.split(/\s+/).length;
+        }
       });
     }
 
     // 文本内容（去掉无关元素）
-    const englishWords = (text.match(/[a-zA-Z]+/g) || []).length;
+    const englishWords = (safeText.match(/[a-zA-Z]+/g) || []).length;
 
     // 匹配中文字符
-    const chineseChars = (text.match(/[\u4e00-\u9fff]/g) || []).length;
+    const chineseChars = (safeText.match(/[\u4e00-\u9fff]/g) || []).length;
 
     // 匹配图片 <img>
     const imgTime = (photos * imgSec) / 60; // 转成分钟
@@ -258,17 +266,18 @@ hexo.extend.helper.register(
 );
 
 hexo.extend.helper.register("extractTocFromHtml", function (htmlString) {
+  if (!htmlString || typeof htmlString !== "string") return [];
   // 匹配 h2 和 h3 的正则表达式，增加捕获 id 处理
-  const headingRegex = /<(h2|h3)(?:[^>]*?\s+id="([^"]*)")?[^>]*>(.*?)<\/\1>/gi;
+  const headingRegex = /<(h2|h3)(?:[^>]*?\sid=(?:"([^"]*)"|'([^']*)'))?[^>]*>([\s\S]*?)<\/\1>/gi;
 
   const toc = [];
   let currentH2 = null;
 
   let match;
   while ((match = headingRegex.exec(htmlString)) !== null) {
-    const tag = match[1]; // h2 或 h3
-    let id = match[2]; // 已存在的 id
-    let content = match[3].trim(); // 提取标签内容
+    const tag = match[1].toLowerCase(); // h2 或 h3
+    const id = match[2] ?? match[3]; // 已存在的 id
+    let content = match[4].trim(); // 提取标签内容
 
     // 移除 KaTeX 隐藏的 MathML，避免纯文本提取出现重复公式内容
     content = content.replace(/<span class="katex-mathml">[\s\S]*?<\/span>/g, "");

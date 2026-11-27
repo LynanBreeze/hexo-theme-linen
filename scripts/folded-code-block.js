@@ -44,7 +44,7 @@ hexo.extend.filter.register("after_post_render", function (data) {
       }
 
       if (/class="[^"]*folded/.test(newAttrs)) {
-        return `<figure${newAttrs}>${newInner}<div class="fold-toggle"></div></figure>`;
+        return `<figure${newAttrs}>${newInner}<button type="button" class="fold-toggle" aria-label="Toggle code block"></button></figure>`;
       } else {
         return `<figure${newAttrs}>${newInner}</figure>`;
       }

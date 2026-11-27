@@ -79,7 +79,8 @@ describe("scripts/custom.js & scripts/folded-code-block.js", () => {
 
     assert.ok(!data.content.includes('class="photo folded"'));
     assert.ok(data.content.includes('class="highlight js folded"'));
-    assert.ok(data.content.includes('<div class="fold-toggle"></div>'));
+    assert.ok(data.content.includes('<button type="button" class="fold-toggle"'));
+    assert.ok(data.content.includes('<button type="button" class="copy-btn"'));
     assert.equal((data.content.match(/class="copy-btn"/g) || []).length, 1);
   });
 

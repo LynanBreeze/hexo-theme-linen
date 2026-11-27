@@ -65,7 +65,9 @@ const version = theme.version;
     && theme.stylesheets.length > 0) { %>
   <% if (is_post() || is_page()) { %>
   <link rel="stylesheet" href="<%=url_for(`/linen-theme/css/post.css?v=${version}`)%>" />
+  <% if (typeof body === 'string' && /\b(?:shared-link|github-link|xhs-link|links-warp)\b/.test(body)) { %>
   <link rel="stylesheet" href="<%=url_for(`/linen-theme/css/linkcard.css?v=${version}`)%>" />
+  <% } %>
   <% } else if (page.series) { %>
   <link rel="stylesheet" href="<%=url_for(`/linen-theme/css/series.css?v=${version}`)%>" />
   <% } %>
@@ -187,7 +189,7 @@ const version = theme.version;
   </div>
   <% } %>
   <a id="back-to-top" href="#page-top" title="<%=__('common.backToTop')%>" aria-label="<%=__('common.backToTop')%>"></a>
-  <% if(is_post()) { %>
+  <% if (is_post() && page?.toc !== false && tocs?.length) { %>
   <script src="<%=url_for(`/linen-theme/js/toc.js?v=${version}`)%>" defer></script>
   <% } %>
   <% if (searchEnabled) { %>

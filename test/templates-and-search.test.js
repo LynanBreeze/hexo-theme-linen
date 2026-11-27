@@ -645,9 +645,9 @@ describe("scripts/search.js & XSL / Print CSS", () => {
 
   it("uses Linen styling in RSS/Atom XSL files without third-party RSS.Beauty bloat", () => {
     for (const rel of [
-      "source/linen-theme/css/rss-zh.xsl",
-      "source/linen-theme/css/rss-en.xsl",
-      "source/linen-theme/css/atom.xsl",
+      "assets/xsl/rss-zh.xsl",
+      "assets/xsl/rss-en.xsl",
+      "assets/xsl/atom.xsl",
     ]) {
       const content = fs.readFileSync(path.join(ROOT_DIR, rel), "utf8");
       assert.ok(content.includes("#fcfbf8"), `${rel} should use Linen light bg`);
@@ -678,16 +678,41 @@ describe("scripts/search.js & XSL / Print CSS", () => {
     const os = require("os");
     const registerVendorAssets = require("../scripts/vendor-assets");
 
-    // 1. Minimal pure-English site: no comments, no photoswipe, no map series, no search, no hdr, no CJK
+    // 1. Minimal pure-English site with custom avatar and feed disabled: emits zero optional assets
     const minimalHexo = createMockHexo({
       config: { language: "en", title: "English Blog", author: "Alice" },
+      themeConfig: { info: { avatar: "/img/me.jpg" }, feed: false },
     });
     registerVendorAssets(minimalHexo);
     const minimalAssets = minimalHexo._generators["linen-vendor-assets"]({
       posts: [{ title: "Hello World", content: "<p>English prose</p>", series: "Notes" }],
       pages: [],
     });
-    assert.deepEqual(minimalAssets, [], "Minimal pure-English site should emit zero vendor or CJK font assets");
+    assert.deepEqual(minimalAssets, [], "Minimal pure-English site with custom avatar and feed:false should emit zero optional assets");
+
+    // 1a. Default avatar + active feed XSL are emitted on demand only when needed
+    const defaultEnFeedHexo = createMockHexo({
+      config: { language: "en", title: "English Blog", author: "Alice" },
+    });
+    registerVendorAssets(defaultEnFeedHexo);
+    const defaultEnPaths = defaultEnFeedHexo._generators["linen-vendor-assets"]({
+      posts: [{ title: "Hello" }],
+      pages: [],
+    }).map((a) => a.path);
+    assert.deepEqual(defaultEnPaths.sort(), [
+      "linen-theme/css/rss-en.xsl",
+      "linen-theme/img/vue-color-avatar.png",
+    ]);
+
+    const atomHexo = createMockHexo({
+      config: { language: "en", title: "English Blog", feed: { path: "atom.xml" } },
+      themeConfig: { info: { avatar: "/img/me.jpg" } },
+    });
+    registerVendorAssets(atomHexo);
+    assert.deepEqual(
+      atomHexo._generators["linen-vendor-assets"]({ posts: [], pages: [] }).map((a) => a.path),
+      ["linen-theme/css/atom.xsl"],
+    );
 
     // 1b. English site containing CJK text emits SourceHanSerifSC fonts on demand
     const cjkContentAssets = minimalHexo._generators["linen-vendor-assets"]({
@@ -901,5 +926,76 @@ describe("scripts/search.js & XSL / Print CSS", () => {
     assert.ok(hdrCode.includes('"use strict";'));
     assert.ok(hdrCode.includes("scriptEl.dataset.hdrAssetsPrefix"));
     assert.ok(hdrCode.includes("window.hdrEnabled = targetState;"));
+
+    // 5. layout.ejs gates linkcard.css and toc.js on actual page usage
+    assert.ok(
+      !layoutHtml.includes("linkcard.css"),
+      "Post without link cards should not request linkcard.css",
+    );
+    assert.ok(
+      !layoutHtml.includes("toc.js"),
+      "Post with empty TOC should not request toc.js",
+    );
+    const layoutWithCardAndToc = renderTemplate("layout/layout.ejs", {
+      page: { path: "2026/b/", source: "_posts/b.md", content: "<h2>Hi</h2>" },
+      body: '<div class="shared-link">Card</div>',
+      config: { title: "Site", language: "zh-CN" },
+      theme: { version: "1.0.65", stylesheets: ["/linen-theme/css/linen.css"], scripts: [] },
+      site: { posts: { filter: () => ({ sort: () => [] }) } },
+      is_post: () => true,
+      is_page: () => false,
+      extractTocFromHtml: () => [{ id: "hi", title: "Hi", children: [] }],
+      getSeriesInfo: () => ({}),
+      getPostBreakoutConfig: () => ({ enable: false, proseWidth: "" }),
+      getPageTitle: () => "Post",
+      getPageDescription: () => "Desc",
+      getLatexCssUrl: () => "",
+      take: (arr) => arr,
+      partial: () => "",
+      url_for: (p) => p,
+      __: (k) => k,
+    });
+    assert.ok(layoutWithCardAndToc.includes("linkcard.css"));
+    assert.ok(layoutWithCardAndToc.includes("toc.js"));
+
+    // 6. site-info.ejs filters hidden-only categories and tags
+    const siteInfoHtml = renderTemplate("layout/partials/site-info.ejs", {
+      config: { author: "Lynan" },
+      theme: {},
+      site: {
+        posts: [
+          { hide: { archive: false } },
+          { hide: { archive: true } },
+        ],
+        categories: {
+          toArray: () => [
+            { posts: [{ hide: { archive: false } }] },
+            { posts: [{ hide: { archive: true } }] },
+          ],
+        },
+        tags: {
+          toArray: () => [
+            { posts: [{ hide: { archive: false } }] },
+            { posts: [{ hide: { archive: true } }] },
+          ],
+        },
+      },
+      is_home_first_page: () => true,
+      url_for: (p) => p,
+      __: (k) => k,
+    });
+    assert.ok(siteInfoHtml.includes("1 common.posts"));
+    assert.ok(siteInfoHtml.includes("1 common.categories"));
+    assert.ok(siteInfoHtml.includes("1 common.tags"));
+
+    // 7. linen.js preserves native series link navigation; search.js pre-normalizes & traps focus; travel-map.js caps Leaflet zoom
+    const linenJs = fs.readFileSync(path.join(ROOT_DIR, "source/linen-theme/js/linen.js"), "utf8");
+    assert.ok(!linenJs.includes("location.href = href"), "seriesItemLink must not hijack Cmd/Ctrl-click navigation");
+    const searchJs = fs.readFileSync(path.join(ROOT_DIR, "assets/vendor/search/search.js"), "utf8");
+    assert.ok(searchJs.includes('"use strict";'));
+    assert.ok(searchJs.includes("prepareIndexItem"));
+    assert.ok(searchJs.includes("trapFocus"));
+    const mapJs = fs.readFileSync(path.join(ROOT_DIR, "assets/vendor/map/travel-map.js"), "utf8");
+    assert.ok(mapJs.includes("fitBounds(bounds, { padding: [28, 28], maxZoom: 11 })"));
   });
 });

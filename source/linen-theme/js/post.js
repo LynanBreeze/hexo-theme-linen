@@ -49,28 +49,34 @@
     );
   }
 
+  var copyFeedbackTimers = typeof WeakMap !== "undefined" ? new WeakMap() : null;
+
   function copyToClipboard(text) {
     if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard
-        .writeText(text)
-        .then(function () {})
-        .catch(function (err) {
+      return navigator.clipboard.writeText(text).then(
+        function () {
+          return true;
+        },
+        function (err) {
           console.error("Copy failed:", err);
-        });
-    } else {
-      var textArea = document.createElement("textarea");
-      textArea.value = text;
-      textArea.style.position = "fixed";
-      textArea.style.opacity = "0";
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        document.execCommand("copy");
-      } catch (err) {
-        console.error("Copy failed:", err);
-      }
-      document.body.removeChild(textArea);
+          return false;
+        },
+      );
     }
+    var textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.opacity = "0";
+    document.body.appendChild(textArea);
+    textArea.select();
+    var ok = false;
+    try {
+      ok = Boolean(document.execCommand("copy"));
+    } catch (err) {
+      console.error("Copy failed:", err);
+    }
+    document.body.removeChild(textArea);
+    return Promise.resolve(ok);
   }
 
   function highlightAnchor(hash, highlightClass) {
@@ -309,15 +315,22 @@
         closestEl(target, ".fold-toggle") ||
         (hasClass(target, "fold-toggle") ? target : null);
 
-      if ((target.tagName === "H2" || target.tagName === "H3") && target.id) {
+      var headingEl = !closestEl(target, "a")
+        ? closestEl(target, "#post h2[id], #post h3[id], #page h2[id], #page h3[id]") ||
+          ((target.tagName === "H2" || target.tagName === "H3") && target.id
+            ? target
+            : null)
+        : null;
+
+      if (headingEl && headingEl.id) {
         var newLocation = new URL(location.href);
-        newLocation.hash = "#" + target.id;
+        newLocation.hash = "#" + headingEl.id;
         history.replaceState(null, "", newLocation.href);
-        target.scrollIntoView({
+        headingEl.scrollIntoView({
           behavior: "instant",
           block: "start",
         });
-        highlightAnchor(target.id);
+        highlightAnchor(headingEl.id);
         return;
       } else if (captionLink) {
         var href = captionLink.getAttribute("href");
@@ -328,11 +341,26 @@
       } else if (copyBtn) {
         try {
           var codeBlock = copyBtn.parentElement.querySelector(".code");
-          copyToClipboard(codeBlock.innerText);
-          copyBtn.classList.add("copied");
-          setTimeout(function () {
-            copyBtn.classList.remove("copied");
-          }, 500);
+          if (!codeBlock) return;
+          copyToClipboard(codeBlock.innerText).then(function (ok) {
+            if (!ok) return;
+            copyBtn.classList.add("copied");
+            if (copyFeedbackTimers) {
+              var prevTimer = copyFeedbackTimers.get(copyBtn);
+              if (prevTimer) clearTimeout(prevTimer);
+              copyFeedbackTimers.set(
+                copyBtn,
+                setTimeout(function () {
+                  copyBtn.classList.remove("copied");
+                  copyFeedbackTimers.delete(copyBtn);
+                }, 1500),
+              );
+            } else {
+              setTimeout(function () {
+                copyBtn.classList.remove("copied");
+              }, 1500);
+            }
+          });
           return;
         } catch (error) {}
       } else if (hasClass(target, "placeholder")) {

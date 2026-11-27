@@ -1,4 +1,6 @@
 (function () {
+  "use strict";
+
   var modal = document.getElementById("search-modal");
   var toggleBtn = document.getElementById("search-toggle");
   if (!modal) return;
@@ -99,15 +101,31 @@
     return (start > 0 ? "…" : "") + body.slice(start, end) + (end < body.length ? "…" : "");
   }
 
-  function scoreItem(item, terms) {
-    var title = (item.title || "").toLowerCase();
-    var subTitle = (item.subTitle || "").toLowerCase();
-    var meta = []
+  function prepareIndexItem(item) {
+    if (!item || typeof item !== "object") return null;
+    item._title = String(item.title || "").toLowerCase();
+    item._subTitle = String(item.subTitle || "").toLowerCase();
+    item._meta = []
       .concat(item.tags || [], item.categories || [], item.series ? [item.series] : [])
       .join(" ")
       .toLowerCase();
-    var excerpt = (item.excerpt || "").toLowerCase();
-    var content = (item.content || "").toLowerCase();
+    item._excerpt = String(item.excerpt || "").toLowerCase();
+    item._content = String(item.content || "").toLowerCase();
+    return item;
+  }
+
+  function scoreItem(item, terms) {
+    var title = item._title != null ? item._title : String(item.title || "").toLowerCase();
+    var subTitle = item._subTitle != null ? item._subTitle : String(item.subTitle || "").toLowerCase();
+    var meta =
+      item._meta != null
+        ? item._meta
+        : []
+            .concat(item.tags || [], item.categories || [], item.series ? [item.series] : [])
+            .join(" ")
+            .toLowerCase();
+    var excerpt = item._excerpt != null ? item._excerpt : String(item.excerpt || "").toLowerCase();
+    var content = item._content != null ? item._content : String(item.content || "").toLowerCase();
 
     var total = 0;
     for (var i = 0; i < terms.length; i++) {
@@ -241,7 +259,9 @@
         return res.json();
       })
       .then(function (data) {
-        indexData = Array.isArray(data) ? data : [];
+        indexData = Array.isArray(data)
+          ? data.map(prepareIndexItem).filter(Boolean)
+          : [];
         return indexData;
       })
       .catch(function () {
@@ -269,11 +289,37 @@
   }
 
   function closeModal() {
-    if (modal.hidden) return;
+    if (modal.hidden) return false;
     modal.hidden = true;
     setScrollLocked(false);
     if (previousFocus && typeof previousFocus.focus === "function") {
       previousFocus.focus();
+    }
+    return true;
+  }
+
+  if (
+    window.__linen &&
+    typeof window.__linen.registerOverlayCloser === "function"
+  ) {
+    window.__linen.registerOverlayCloser(closeModal);
+  }
+
+  function trapFocus(e) {
+    var focusable = modal.querySelectorAll(
+      'input:not([disabled]), button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+    );
+    if (!focusable.length) return;
+    var first = focusable[0];
+    var last = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first || !modal.contains(document.activeElement)) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else if (document.activeElement === last || !modal.contains(document.activeElement)) {
+      e.preventDefault();
+      first.focus();
     }
   }
 
@@ -317,7 +363,9 @@
 
     if (modal.hidden) return;
 
-    if (key === "Escape") {
+    if (key === "Tab") {
+      trapFocus(e);
+    } else if (key === "Escape") {
       e.preventDefault();
       closeModal();
     } else if (key === "ArrowDown") {

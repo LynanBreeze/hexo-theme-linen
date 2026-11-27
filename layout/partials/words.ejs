@@ -2,6 +2,7 @@
   const content = post?.content || "";
   const text = content
     .replace(/<figure[^>]*>.*?<\/figure>/gs, "")
+    .replace(/<pre\b[^>]*>[\s\S]*?<\/pre>/gi, "")
     .replace(/<span class="pswp-caption-content">.*?<\/span>/gs, "")
     .replace(/<span class="katex-mathml">.*?<\/span>/gs, "")
     .replace(/<noscript[^>]*>.*?<\/noscript>/gs, "")

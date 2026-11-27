@@ -127,6 +127,36 @@ describe("SEO, Date Helper, HoverTexts, ImageGrid & Archive Fixes", () => {
     );
     assert.ok(homeLdMatch, "Home share-meta should emit WebSite JSON-LD");
     assert.equal(JSON.parse(homeLdMatch[1])["@type"], "WebSite");
+
+    // Monthly archive page has both is_month() and is_year() true in Hexo — must not duplicate year
+    const monthTitle = hexo._helpers.getPageTitle.call({
+      ...ctx,
+      page: { month: 5, year: 2026 },
+      is_post: () => false,
+      is_archive: () => true,
+      is_month: () => true,
+      is_year: () => true,
+    });
+    assert.equal(monthTitle, "common.archives: 5/2026");
+
+    // estimateReadingTime skips Hexo highlight .gutter line numbers & empty <pre>
+    const gutterHtml =
+      '<figure class="highlight js"><table><tr><td class="gutter"><pre>' +
+      Array.from({ length: 300 }, (_, i) => i + 1).join("\n") +
+      '</pre></td><td class="code"><pre>const x = 1;</pre></td></tr></table></figure><pre>   </pre>';
+    assert.equal(
+      hexo._helpers.estimateReadingTime.call(ctx, "hello world", 0, gutterHtml),
+      1,
+      "Line numbers in .gutter must not inflate reading time",
+    );
+
+    // extractTocFromHtml supports multiline headings, uppercase tags, and single-quoted ids
+    const toc = hexo._helpers.extractTocFromHtml(
+      "<H2 id='sec-1'>Section\nOne</H2><h3 id=\"sub-1\">Sub</h3>",
+    );
+    assert.equal(toc.length, 1);
+    assert.equal(toc[0].id, "sec-1");
+    assert.equal(toc[0].children[0].id, "sub-1");
   });
 
   it("getPostDate accepts both post objects and raw date strings/Date values", () => {

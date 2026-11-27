@@ -401,7 +401,7 @@ function processCodeBlock(content) {
       if (inner.includes('class="copy-btn"')) {
         return match;
       }
-      return `<figure${attrs}>${inner}<div class="copy-btn"></div></figure>`;
+      return `<figure${attrs}>${inner}<button type="button" class="copy-btn" aria-label="Copy code" title="Copy code"></button></figure>`;
     },
   );
 }

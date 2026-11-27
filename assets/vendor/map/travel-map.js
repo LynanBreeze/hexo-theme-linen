@@ -178,7 +178,7 @@
     });
 
     if (bounds.length) {
-      map.fitBounds(bounds, { padding: [28, 28] });
+      map.fitBounds(bounds, { padding: [28, 28], maxZoom: 11 });
       map.setMinZoom(map.getZoom());
     }
 

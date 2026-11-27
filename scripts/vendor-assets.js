@@ -6,6 +6,8 @@ const { resolveIsMapSeries } = require("./lib/site-data");
 
 const VENDOR_DIR = path.join(__dirname, "../assets/vendor");
 const FONTS_DIR = path.join(__dirname, "../assets/fonts");
+const IMG_DIR = path.join(__dirname, "../assets/img");
+const XSL_DIR = path.join(__dirname, "../assets/xsl");
 const CJK_RE = /[\u4e00-\u9fff]/;
 const CJK_FONT_FILES = [
   "SourceHanSerifSC-Regular.woff2",
@@ -257,6 +259,40 @@ function registerVendorAssets(hexoInstance) {
             );
           }
         }
+      }
+
+      // 7. Default fallback avatar (emit only when no custom theme.info.avatar is configured)
+      const customAvatar =
+        themeConfig?.info?.avatar ??
+        hexoInstance?.config?.theme_config?.info?.avatar;
+      if (!customAvatar) {
+        pushAssetFile(
+          assets,
+          "linen-theme/img/vue-color-avatar.png",
+          path.join(IMG_DIR, "vue-color-avatar.png"),
+        );
+      }
+
+      // 8. Active Feed XSL stylesheet (emit only the single XSL used by the site's feed)
+      const feedDisabled =
+        themeConfig?.feed === false ||
+        hexoInstance?.config?.theme_config?.feed === false;
+      if (!feedDisabled) {
+        const feedPath = String(
+          hexoInstance?.config?.feed?.path || themeConfig?.feed?.path || "/feed.xml",
+        );
+        const isAtom = /\.atom$|atom\.xml$/i.test(feedPath);
+        const lang = String(hexoInstance?.config?.language || "");
+        const xslFile = isAtom
+          ? "atom.xsl"
+          : lang.startsWith("zh")
+            ? "rss-zh.xsl"
+            : "rss-en.xsl";
+        pushAssetFile(
+          assets,
+          `linen-theme/css/${xslFile}`,
+          path.join(XSL_DIR, xslFile),
+        );
       }
 
       return assets;

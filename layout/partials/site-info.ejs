@@ -1,5 +1,12 @@
 <%
-const series = Array.from(new Set(site.posts.filter(item=>item.series && !item?.hide?.archive).sort('date', -1).map(item=>item.series)))
+const visiblePosts = site.posts?.filter(post => !post?.hide?.archive) || [];
+const series = Array.from(new Set(visiblePosts.filter(item => item.series).map(item => item.series)));
+const visibleCategoriesCount = site.categories && typeof site.categories.toArray === 'function'
+  ? site.categories.toArray().filter(cat => (cat.posts ? cat.posts.filter(post => !post?.hide?.archive).length : cat.length) > 0).length
+  : (site.categories?.length || 0);
+const visibleTagsCount = site.tags && typeof site.tags.toArray === 'function'
+  ? site.tags.toArray().filter(tag => (tag.posts ? tag.posts.filter(post => !post?.hide?.archive).length : tag.length) > 0).length
+  : (site.tags?.length || 0);
 %>
 <div class="site-info<%=is_home_first_page() ? ' home' : ''%>">
   <div class="info-row">
@@ -12,11 +19,11 @@ const series = Array.from(new Set(site.posts.filter(item=>item.series && !item?.
     <div class="info-row description"><%=theme?.info?.site_desc%></div>
   <% } %>
   <div class="info-row site-stats">
-    <a href="<%=url_for('/archives/#archives')%>" target="_self"><%=site.posts?.filter(post=>!post?.hide?.archive).length%> <%=__('common.posts')%></a>
+    <a href="<%=url_for('/archives/#archives')%>" target="_self"><%=visiblePosts.length%> <%=__('common.posts')%></a>
     <span class="divider">/</span>
-    <a href="<%=url_for('/archives/#categories')%>" target="_self"><%=site.categories.length%> <%=__('common.categories')%></a>
+    <a href="<%=url_for('/archives/#categories')%>" target="_self"><%=visibleCategoriesCount%> <%=__('common.categories')%></a>
     <span class="divider">/</span>
-    <a href="<%=url_for('/archives/#tags')%>" target="_self"><%=site.tags.length%> <%=__('common.tags')%></a>
+    <a href="<%=url_for('/archives/#tags')%>" target="_self"><%=visibleTagsCount%> <%=__('common.tags')%></a>
     <% if (series.length) { %>
     <span class="divider">/</span>
     <a href="<%=url_for('/archives/#series')%>" target="_self"><%=series.length%> <%=__('common.series')%></a><% } %>

@@ -231,14 +231,9 @@
         donateModal?.classList?.remove("visible");
         setBodyScrollLocked(true);
       } else if (seriesItemLink) {
-        e.preventDefault();
         seriesElement?.classList?.remove("visible");
         maskElement?.classList?.remove("visible");
         setBodyScrollLocked(false);
-        var href = seriesItemLink.getAttribute("href");
-        if (href) {
-          location.href = href;
-        }
       } else if (target.id === "mask") {
         tocElement?.classList?.remove("visible");
         seriesElement?.classList?.remove("visible");
