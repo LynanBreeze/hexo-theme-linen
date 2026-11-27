@@ -63,6 +63,10 @@ function encodePathSegments(rawPath) {
     .join("/");
 }
 
+hexo.extend.helper.register("decodeHtmlEntities", function (str) {
+  return decodeHtmlEntities(str);
+});
+
 hexo.extend.helper.register("take", function (arr, n = 1) {
   return arr.slice(0, Math.max(0, n));
 });

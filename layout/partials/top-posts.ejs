@@ -11,25 +11,10 @@
     const stripped = typeof strip_html === 'function'
       ? strip_html(raw || '')
       : String(raw || '').replace(/<[^>]+>/g, '');
-    return stripped
-      .replace(/&nbsp;/gi, ' ')
-      .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(Number(dec)))
-      .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
-      .replace(/&(amp|lt|gt|quot|apos|ldquo|rdquo|lsquo|rsquo|mdash|ndash|hellip);/gi, (_, name) => ({
-        amp: '&',
-        lt: '<',
-        gt: '>',
-        quot: '"',
-        apos: "'",
-        ldquo: '“',
-        rdquo: '”',
-        lsquo: '‘',
-        rsquo: '’',
-        mdash: '—',
-        ndash: '–',
-        hellip: '…',
-      })[name.toLowerCase()] || ' ')
-      .trim();
+    const decoded = typeof decodeHtmlEntities === 'function'
+      ? decodeHtmlEntities(stripped)
+      : stripped;
+    return decoded.trim();
   };
 %>
 <% if (topPosts.length > 0) { %>

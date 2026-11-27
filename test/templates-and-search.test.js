@@ -29,6 +29,7 @@ describe("Template Bugfixes & Refactors", () => {
     const hexo = createMockHexo();
     loadHexoScript("scripts/helpers/tools.js", hexo);
     const estimateReadingTime = hexo._helpers.estimateReadingTime;
+    const decodeHtmlEntities = hexo._helpers.decodeHtmlEntities;
 
     const zhDict = {
       "common.approximately": "约",
@@ -56,6 +57,7 @@ describe("Template Bugfixes & Refactors", () => {
       readTime: true,
       __: (k) => enDict[k] || k,
       estimateReadingTime,
+      decodeHtmlEntities,
     }).trim();
 
     assert.equal(enHtml, "<span>About 1 min read</span> <small>(4 Words, 2 Photos)</small>");
@@ -85,6 +87,7 @@ describe("Template Bugfixes & Refactors", () => {
       readTime: true,
       __: (k) => enDict[k] || k,
       estimateReadingTime,
+      decodeHtmlEntities,
     }).trim();
 
     assert.equal(photoOnlyHtml, "<span>About 1 min read</span> <small>(2 Photos)</small>");
@@ -235,11 +238,15 @@ describe("Template Bugfixes & Refactors", () => {
   });
 
   it("top-posts.ejs omits cover-img when no cover/thumbnail and strips HTML from excerpt", () => {
+    const toolsHexo = createMockHexo();
+    loadHexoScript("scripts/helpers/tools.js", toolsHexo);
+    const decodeHtmlEntities = toolsHexo._helpers.decodeHtmlEntities;
+
     const postWithoutCover = {
       source: "_posts/no-cover.md",
       path: "2026/no-cover/",
       title: "No Cover",
-      excerpt: "<p>&ldquo;Hello&rdquo; <code>world</code>&mdash;test</p>",
+      excerpt: "<p>&ldquo;Hello&rdquo; <code>world</code>&mdash;test&#99999999;</p>",
       date: new Date("2026-01-01"),
       categories: [],
     };
@@ -266,6 +273,7 @@ describe("Template Bugfixes & Refactors", () => {
       getPostDate: () => "2026-01-01",
       partial: () => "<span>1 min read</span>",
       strip_html: (s) => String(s || "").replace(/<[^>]+>/g, ""),
+      decodeHtmlEntities,
     });
 
     assert.ok(!html.includes("cover-img"));
@@ -284,6 +292,7 @@ describe("Template Bugfixes & Refactors", () => {
       getPostDate: () => "2026-02-01",
       partial: () => "<span>1 min read</span>",
       strip_html: (s) => String(s || "").replace(/<[^>]+>/g, ""),
+      decodeHtmlEntities,
     });
     assert.ok(heroHtml.includes('no-lazy src="/img/hero.jpg" alt="" fetchpriority="high"'));
     assert.ok(!heroHtml.includes('loading="lazy"'));

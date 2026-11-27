@@ -20,7 +20,22 @@ hexo.extend.filter.register("after_post_render", function (data) {
 
             const hasFolded = /\bfolded\b/i.test(captionText);
 
-            captionText = captionText.replace(/\bfolded\b/gi, "").trim();
+            if (hasFolded) {
+              if (/class\s*=\s*"/i.test(newAttrs)) {
+                newAttrs = newAttrs.replace(/class\s*=\s*"(.*?)"/i, (clsMatch, g1) => {
+                  return /\bfolded\b/i.test(g1)
+                    ? clsMatch
+                    : `class="${g1} folded"`;
+                });
+              } else {
+                newAttrs += ' class="folded"';
+              }
+            }
+
+            captionText = captionText
+              .replace(/\bfolded\b/gi, "")
+              .replace(/<span[^>]*>\s*<\/span>/gi, "")
+              .trim();
 
             if (!captionText) return "";
 
@@ -28,22 +43,15 @@ hexo.extend.filter.register("after_post_render", function (data) {
               captionText = `<span>${captionText}</span>`;
             }
 
-            if (hasFolded) {
-              if (/class\s*=\s*"/i.test(newAttrs)) {
-                newAttrs = newAttrs.replace(/class\s*=\s*"(.*?)"/i, (m, g1) => {
-                  return `class="${g1} folded"`;
-                });
-              } else {
-                newAttrs += ' class="folded"';
-              }
-            }
-
             return `<figcaption${capAttrs}>${captionText}</figcaption>`;
           },
         );
       }
 
-      if (/class="[^"]*folded/.test(newAttrs)) {
+      if (
+        /class="[^"]*\bfolded\b/.test(newAttrs) &&
+        !newInner.includes('class="fold-toggle"')
+      ) {
         return `<figure${newAttrs}>${newInner}<button type="button" class="fold-toggle" aria-label="Toggle code block"></button></figure>`;
       } else {
         return `<figure${newAttrs}>${newInner}</figure>`;

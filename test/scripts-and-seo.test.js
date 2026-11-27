@@ -283,7 +283,7 @@ describe("SEO, Date Helper, HoverTexts, ImageGrid & Archive Fixes", () => {
     assert.ok(data.content.includes('data-switch-label="Beijing | Palace"'));
     assert.ok(!data.content.includes("<br"));
 
-    // Must not transform :::image-grid inside fenced code blocks
+    // Must not transform :::image-grid inside fenced code blocks (including inside blockquotes)
     const fencedData = {
       content: [
         "```markdown",
@@ -291,6 +291,12 @@ describe("SEO, Date Helper, HoverTexts, ImageGrid & Archive Fixes", () => {
         "![a](/a.jpg)",
         ":::",
         "```",
+        "",
+        "> ```markdown",
+        "> :::image-grid",
+        "> ![q](/q.jpg)",
+        "> :::",
+        "> ```",
         "",
         ":::image-grid",
         "![b](/b.jpg)",
@@ -301,6 +307,10 @@ describe("SEO, Date Helper, HoverTexts, ImageGrid & Archive Fixes", () => {
     assert.ok(
       fencedData.content.includes("```markdown\n:::image-grid\n![a](/a.jpg)\n:::\n```"),
       "Fenced code block containing :::image-grid must remain untouched",
+    );
+    assert.ok(
+      fencedData.content.includes("> ```markdown\n> :::image-grid\n> ![q](/q.jpg)\n> :::\n> ```"),
+      "Blockquoted fenced code block containing :::image-grid must remain untouched",
     );
     assert.equal(
       (fencedData.content.match(/class="image-grid"/g) || []).length,

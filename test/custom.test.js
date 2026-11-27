@@ -70,18 +70,26 @@ describe("scripts/custom.js & scripts/folded-code-block.js", () => {
 
     const data = {
       content: `<figure class="photo"><figcaption>folded photo</figcaption><img src="a.jpg"></figure>
-<figure class="highlight js"><figcaption>app.js folded</figcaption><table><tr><td class="code">1</td></tr></table></figure>`,
+<figure class="highlight js"><figcaption>app.js folded</figcaption><table><tr><td class="code">1</td></tr></table></figure>
+<figure class="highlight py"><figcaption><span>folded</span></figcaption><table><tr><td class="code">2</td></tr></table></figure>
+<figure class="highlight sh"><figcaption>folded</figcaption><table><tr><td class="code">3</td></tr></table></figure>`,
     };
 
+    for (const fn of hexo._filters.after_post_render) {
+      fn.call(hexo, data);
+    }
+    // Re-run to verify idempotency
     for (const fn of hexo._filters.after_post_render) {
       fn.call(hexo, data);
     }
 
     assert.ok(!data.content.includes('class="photo folded"'));
     assert.ok(data.content.includes('class="highlight js folded"'));
-    assert.ok(data.content.includes('<button type="button" class="fold-toggle"'));
-    assert.ok(data.content.includes('<button type="button" class="copy-btn"'));
-    assert.equal((data.content.match(/class="copy-btn"/g) || []).length, 1);
+    assert.ok(data.content.includes('class="highlight py folded"'));
+    assert.ok(data.content.includes('class="highlight sh folded"'));
+    assert.ok(!data.content.includes("<figcaption><span></span></figcaption>"));
+    assert.equal((data.content.match(/class="fold-toggle"/g) || []).length, 3);
+    assert.equal((data.content.match(/class="copy-btn"/g) || []).length, 3);
   });
 
   it("wraps standalone tables in .table-wrap while leaving highlight tables alone", () => {

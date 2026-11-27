@@ -1,6 +1,6 @@
 <%
   const content = post?.content || "";
-  const text = content
+  const rawText = content
     .replace(/<figure[^>]*>.*?<\/figure>/gs, "")
     .replace(/<pre\b[^>]*>[\s\S]*?<\/pre>/gi, "")
     .replace(/<span class="pswp-caption-content">.*?<\/span>/gs, "")
@@ -8,25 +8,10 @@
     .replace(/<noscript[^>]*>.*?<\/noscript>/gs, "")
     .replace(/<style[^>]*>.*?<\/style>/gs, "")
     .replace(/<script[^>]*>.*?<\/script>/gs, "")
-    .replace(/<\/?[^>]+(>|$)/g, "")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(Number(dec)))
-    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
-    .replace(/&(amp|lt|gt|quot|apos|ldquo|rdquo|lsquo|rsquo|mdash|ndash|hellip);/gi, (_, name) => ({
-      amp: "&",
-      lt: "<",
-      gt: ">",
-      quot: '"',
-      apos: "'",
-      ldquo: "“",
-      rdquo: "”",
-      lsquo: "‘",
-      rsquo: "’",
-      mdash: "—",
-      ndash: "–",
-      hellip: "…",
-    })[name.toLowerCase()] || " ")
-    .replace(/&[a-zA-Z]+;/g, " ");
+    .replace(/<\/?[^>]+(>|$)/g, "");
+  const text = (
+    typeof decodeHtmlEntities === "function" ? decodeHtmlEntities(rawText) : rawText
+  ).replace(/&[a-zA-Z]+;/g, " ");
 
   const currentLanguage = page?.language || config?.language || "";
   const isEnglish = /^en\b/i.test(String(currentLanguage));

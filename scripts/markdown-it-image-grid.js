@@ -56,8 +56,9 @@ hexo.extend.filter.register(
 
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i];
+          const cleanLine = line.replace(/\r$/, "");
           if (!inFence) {
-            const openMatch = line.match(/^[ \t]*(`{3,}|~{3,})(.*)$/);
+            const openMatch = cleanLine.match(/^(?:[ \t]*>[ \t]?)*[ \t]*(`{3,}|~{3,})(.*)$/);
             if (openMatch && !(openMatch[1][0] === "`" && openMatch[2].includes("`"))) {
               flushBuffer();
               inFence = true;
@@ -69,8 +70,8 @@ hexo.extend.filter.register(
             buffer.push(line);
           } else {
             out.push(line);
-            const closeRe = new RegExp(`^[ \\t]*\\${fenceChar}{${fenceLen},}[ \\t]*$`);
-            if (closeRe.test(line)) {
+            const closeRe = new RegExp(`^(?:[ \\t]*>[ \\t]?)*[ \\t]*\\${fenceChar}{${fenceLen},}[ \\t]*$`);
+            if (closeRe.test(cleanLine)) {
               inFence = false;
               fenceChar = "";
               fenceLen = 0;
