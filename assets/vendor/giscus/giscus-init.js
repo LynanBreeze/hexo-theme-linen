@@ -38,17 +38,48 @@
       : "light";
   }
 
-  function resolveGiscusTheme(scheme) {
+  function resolveLinenThemeCss(scheme) {
+    var relPath =
+      scheme === "dark" ? config.linenDarkCss : config.linenLightCss;
+    var fallback = scheme === "dark" ? "dark_dimmed" : "light";
+    if (!relPath) return fallback;
+    if (/^https:\/\//i.test(relPath)) return relPath;
+    // Giscus fetches custom CSS from https://giscus.app; browsers block http://
+    // stylesheets as mixed content, so fall back cleanly on local HTTP servers.
     if (
-      config.theme &&
-      config.theme !== "auto" &&
-      config.theme !== "preferred_color_scheme"
+      typeof window !== "undefined" &&
+      window.location &&
+      window.location.protocol === "https:"
     ) {
-      return config.theme;
+      try {
+        return new URL(relPath, window.location.href).href;
+      } catch (error) {
+        return fallback;
+      }
     }
-    return scheme === "dark"
-      ? config.darkTheme || "dark_dimmed"
-      : config.lightTheme || "light";
+    return fallback;
+  }
+
+  function resolveGiscusTheme(scheme) {
+    var explicit = config.theme;
+    if (
+      explicit &&
+      explicit !== "auto" &&
+      explicit !== "preferred_color_scheme" &&
+      explicit !== "linen"
+    ) {
+      return explicit;
+    }
+    var target =
+      explicit === "linen"
+        ? "linen"
+        : scheme === "dark"
+          ? config.darkTheme || "linen"
+          : config.lightTheme || "linen";
+    if (target === "linen") {
+      return resolveLinenThemeCss(scheme);
+    }
+    return target;
   }
 
   function normalizeLang(rawLang) {

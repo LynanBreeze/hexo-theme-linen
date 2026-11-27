@@ -456,6 +456,10 @@ describe("Template Bugfixes & Refactors", () => {
       },
     };
     const mockWindow = {
+      location: {
+        protocol: "https:",
+        href: "https://blog.example.com/2026/demo/",
+      },
       addEventListener: (type, fn) => {
         (windowListeners[type] ||= []).push(fn);
       },
@@ -471,6 +475,7 @@ describe("Template Bugfixes & Refactors", () => {
       window: mockWindow,
       document: mockDocument,
       IntersectionObserver: MockIntersectionObserver,
+      URL,
     });
 
     assert.equal(appendedScripts.length, 0, "Giscus script should wait for intersection");
@@ -478,7 +483,10 @@ describe("Template Bugfixes & Refactors", () => {
     assert.equal(appendedScripts.length, 1);
     assert.equal(appendedScripts[0].src, "https://giscus.app/client.js");
     assert.equal(appendedScripts[0].attrs["data-repo"], "owner/blog");
-    assert.equal(appendedScripts[0].attrs["data-theme"], "dark_dimmed");
+    assert.equal(
+      appendedScripts[0].attrs["data-theme"],
+      "https://blog.example.com/linen-theme/css/giscus-linen-dark.css?v=1.0.63",
+    );
     assert.equal(appendedScripts[0].attrs["data-lang"], "zh-CN");
     assert.equal(mockContainer.classList.contains("is-loading"), true);
 
@@ -515,8 +523,46 @@ describe("Template Bugfixes & Refactors", () => {
     assert.equal(postedMessages[0].origin, "https://giscus.app");
     assert.equal(
       JSON.stringify(postedMessages[0].msg),
-      JSON.stringify({ giscus: { setConfig: { theme: "light" } } }),
+      JSON.stringify({
+        giscus: {
+          setConfig: {
+            theme: "https://blog.example.com/linen-theme/css/giscus-linen-light.css?v=1.0.63",
+          },
+        },
+      }),
     );
+
+    // On local HTTP dev server, 'linen' falls back cleanly to built-in dark_dimmed/light to avoid mixed content
+    const httpScripts = [];
+    let httpObserverCb = null;
+    vm.runInNewContext(giscusInitCode, {
+      window: {
+        location: { protocol: "http:", href: "http://localhost:4000/2026/demo/" },
+        addEventListener: () => {},
+        matchMedia: () => ({ matches: false }),
+      },
+      document: {
+        ...mockDocument,
+        getElementById: (id) => {
+          if (id === "linen-giscus-config") return { textContent: configMatch[1] };
+          if (id === "giscus-container") {
+            return {
+              ...mockContainer,
+              appendChild: (node) => httpScripts.push(node),
+            };
+          }
+          return null;
+        },
+      },
+      IntersectionObserver: function (cb) {
+        httpObserverCb = cb;
+        this.observe = () => {};
+        this.disconnect = () => {};
+      },
+      URL,
+    });
+    httpObserverCb([{ isIntersecting: true }], { disconnect: () => {} });
+    assert.equal(httpScripts[0].attrs["data-theme"], "dark_dimmed");
   });
 
   it("page.ejs and 404.ejs render styled standalone markup", () => {
@@ -690,12 +736,25 @@ describe("scripts/search.js & XSL / Print CSS", () => {
       },
     });
     registerVendorAssets(giscusHexo);
-    const giscusPaths = giscusHexo._generators["linen-vendor-assets"]({
+    const giscusAssets = giscusHexo._generators["linen-vendor-assets"]({
       posts: [{ title: "Comment Demo", comment: true, hdrSwitch: true }],
       pages: [],
-    }).map((a) => a.path);
+    });
+    const giscusPaths = giscusAssets.map((a) => a.path);
 
     assert.ok(giscusPaths.includes("linen-theme/js/giscus-init.js"));
+    assert.ok(giscusPaths.includes("linen-theme/css/giscus-linen-light.css"));
+    assert.ok(giscusPaths.includes("linen-theme/css/giscus-linen-dark.css"));
+    const lightGiscusCss = giscusAssets
+      .find((a) => a.path === "linen-theme/css/giscus-linen-light.css")
+      .data();
+    const darkGiscusCss = giscusAssets
+      .find((a) => a.path === "linen-theme/css/giscus-linen-dark.css")
+      .data();
+    assert.ok(lightGiscusCss.includes("--color-canvas-default: #fcfbf8;"));
+    assert.ok(lightGiscusCss.includes(".gsc-comment > div"));
+    assert.ok(darkGiscusCss.includes("--color-canvas-default: #171614;"));
+    assert.ok(darkGiscusCss.includes(".gsc-comment > div"));
     assert.ok(!giscusPaths.some((p) => p.includes("gitalk")), "Must not emit Gitalk on Giscus site");
     assert.ok(!giscusPaths.some((p) => p.includes("leaflet")), "Must not emit Leaflet without map series");
     assert.ok(giscusPaths.includes("linen-theme/js/search.js"));

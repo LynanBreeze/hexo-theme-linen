@@ -1,0 +1,100 @@
+/*! Linen Light Theme for Giscus (Warm Linen Paper & Terracotta Editorial Palette) */
+main {
+  --linen-accent-dark: #8c3623;
+  --linen-accent-underline: rgba(168, 69, 46, 0.34);
+  --linen-shadow-color: rgba(34, 33, 31, 0.09);
+
+  /* Syntax highlighting (Linen Warm Paper) */
+  --color-prettylights-syntax-comment: #8c857b;
+  --color-prettylights-syntax-constant: #2e6472;
+  --color-prettylights-syntax-entity: #6d4c7d;
+  --color-prettylights-syntax-storage-modifier-import: #2f2d2a;
+  --color-prettylights-syntax-entity-tag: #3e6b52;
+  --color-prettylights-syntax-keyword: #a8452e;
+  --color-prettylights-syntax-string: #4b6b4c;
+  --color-prettylights-syntax-variable: #a65d28;
+  --color-prettylights-syntax-brackethighlighter-unmatched: #a83b2e;
+  --color-prettylights-syntax-invalid-illegal-text: #fcfbf8;
+  --color-prettylights-syntax-invalid-illegal-bg: #a83b2e;
+  --color-prettylights-syntax-carriage-return-text: #fcfbf8;
+  --color-prettylights-syntax-carriage-return-bg: #a8452e;
+  --color-prettylights-syntax-string-regexp: #3e6b52;
+  --color-prettylights-syntax-markup-list: #876326;
+  --color-prettylights-syntax-markup-heading: #2e6472;
+  --color-prettylights-syntax-markup-italic: #2f2d2a;
+  --color-prettylights-syntax-markup-bold: #22211f;
+  --color-prettylights-syntax-markup-deleted-text: #a83b2e;
+  --color-prettylights-syntax-markup-deleted-bg: rgba(168, 69, 46, 0.12);
+  --color-prettylights-syntax-markup-inserted-text: #2f6b47;
+  --color-prettylights-syntax-markup-inserted-bg: rgba(75, 107, 76, 0.12);
+  --color-prettylights-syntax-markup-changed-text: #a65d28;
+  --color-prettylights-syntax-markup-changed-bg: rgba(166, 93, 40, 0.14);
+  --color-prettylights-syntax-markup-ignored-text: #eae7df;
+  --color-prettylights-syntax-markup-ignored-bg: #2e6472;
+  --color-prettylights-syntax-meta-diff-range: #6d4c7d;
+  --color-prettylights-syntax-brackethighlighter-angle: #56534e;
+  --color-prettylights-syntax-sublimelinter-gutter-mark: #8f8a82;
+  --color-prettylights-syntax-constant-other-reference-link: #a8452e;
+
+  /* Buttons (Ink primary button matching Linen Gitalk .gt-btn) */
+  --color-btn-text: #22211f;
+  --color-btn-bg: #fcfbf8;
+  --color-btn-border: rgba(34, 33, 31, 0.14);
+  --color-btn-shadow: none;
+  --color-btn-inset-shadow: none;
+  --color-btn-hover-bg: #f4f2ec;
+  --color-btn-hover-border: rgba(34, 33, 31, 0.22);
+  --color-btn-active-bg: #eae7df;
+  --color-btn-active-border: rgba(34, 33, 31, 0.24);
+  --color-btn-selected-bg: #eae7df;
+
+  --color-btn-primary-text: #fcfbf8;
+  --color-btn-primary-bg: #22211f;
+  --color-btn-primary-border: #22211f;
+  --color-btn-primary-shadow: none;
+  --color-btn-primary-inset-shadow: none;
+  --color-btn-primary-hover-bg: #353330;
+  --color-btn-primary-hover-border: #353330;
+  --color-btn-primary-selected-bg: #141311;
+  --color-btn-primary-selected-shadow: none;
+  --color-btn-primary-disabled-text: rgba(252, 251, 248, 0.85);
+  --color-btn-primary-disabled-bg: rgba(34, 33, 31, 0.36);
+  --color-btn-primary-disabled-border: transparent;
+
+  --color-action-list-item-default-hover-bg: rgba(34, 33, 31, 0.05);
+  --color-segmented-control-bg: #eae7df;
+  --color-segmented-control-button-bg: #fcfbf8;
+  --color-segmented-control-button-selected-border: rgba(34, 33, 31, 0.2);
+
+  /* Surfaces & Ink */
+  --color-fg-default: #22211f;
+  --color-fg-muted: #56534e;
+  --color-fg-subtle: #716c64;
+  --color-canvas-default: #fcfbf8;
+  --color-canvas-overlay: #ffffff;
+  --color-canvas-inset: #f4f2ec;
+  --color-canvas-subtle: #f4f2ec;
+  --color-border-default: rgba(34, 33, 31, 0.11);
+  --color-border-muted: rgba(34, 33, 31, 0.07);
+  --color-neutral-muted: #eae7df;
+
+  /* Terracotta Accent */
+  --color-accent-fg: #a8452e;
+  --color-accent-emphasis: #a8452e;
+  --color-accent-muted: rgba(168, 69, 46, 0.28);
+  --color-accent-subtle: rgba(168, 69, 46, 0.08);
+
+  --color-success-fg: #2f6b47;
+  --color-attention-fg: #876326;
+  --color-attention-muted: rgba(135, 99, 38, 0.35);
+  --color-attention-subtle: rgba(135, 99, 38, 0.1);
+  --color-danger-fg: #a83b2e;
+  --color-danger-muted: rgba(168, 59, 46, 0.35);
+  --color-danger-subtle: rgba(168, 59, 46, 0.1);
+  --color-primer-shadow-inset: none;
+  --color-scale-gray-1: #eae7df;
+  --color-scale-blue-1: rgba(168, 69, 46, 0.14);
+
+  --color-social-reaction-bg-hover: var(--color-scale-gray-1);
+  --color-social-reaction-bg-reacted-hover: var(--color-scale-blue-1);
+}

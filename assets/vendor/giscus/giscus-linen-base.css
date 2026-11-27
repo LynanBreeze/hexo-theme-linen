@@ -1,0 +1,401 @@
+/* Linen Editorial Layout Overrides for Giscus (mirrors Linen Gitalk aesthetics) */
+html,
+body {
+  background-color: var(--color-canvas-default);
+  color: var(--color-fg-default);
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Text",
+    "SF Pro Icons",
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+main .pagination-loader-container {
+  background-image: none;
+}
+
+main .gsc-loading-image {
+  background-image: none;
+}
+
+.gsc-main {
+  gap: 1.5rem;
+}
+
+.gsc-comments {
+  gap: 1.25rem;
+}
+
+.gsc-timeline {
+  gap: 0.25rem;
+}
+
+/* Header & sort controls */
+.gsc-header {
+  padding-bottom: 0.25rem;
+}
+
+.gsc-comments-count,
+.gsc-comments-count a,
+.gsc-comments-count a.underline {
+  color: var(--color-fg-default);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.gsc-comments-count a:hover,
+.gsc-comments-count a.underline:hover {
+  color: var(--color-accent-fg);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.gsc-right-header .btn {
+  font-size: 12.5px;
+  padding: 3px 10px;
+}
+
+/* Comment composer (mirrors Linen Gitalk .gt-header-comment) */
+.gsc-comment-box:not(.gsc-comment-box-is-reply) {
+  background-color: var(--color-canvas-subtle);
+  border: 1px solid var(--color-border-muted);
+  border-radius: 6px;
+  overflow: hidden;
+  transition:
+    background-color 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gsc-comment-box:not(.gsc-comment-box-is-reply):hover {
+  border-color: var(--color-border-default);
+}
+
+.gsc-comment-box:not(.gsc-comment-box-is-reply):focus-within {
+  background-color: var(--color-canvas-default);
+  border-color: var(--color-accent-muted);
+}
+
+.gsc-comment-box-tabs {
+  background-color: transparent;
+  border-bottom-color: var(--color-border-muted);
+  padding: 0 0.35rem;
+}
+
+.gsc-comment-box-tabs button {
+  color: var(--color-fg-muted);
+  font-size: 13px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  transition:
+    color 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gsc-comment-box-tabs button:hover {
+  color: var(--color-fg-default);
+}
+
+.gsc-comment-box-tabs button.color-bg-canvas,
+.gsc-comment-box-tabs button[aria-selected="true"] {
+  color: var(--color-fg-default);
+  font-weight: 600;
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: inset 0 -2px 0 var(--color-accent-fg);
+}
+
+.gsc-comment-box-write {
+  border-radius: 4px;
+}
+
+.gsc-comment-box-write:focus-within {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.gsc-comment-box-textarea {
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  color: var(--color-fg-default);
+  font-size: 14.5px;
+  line-height: 1.65;
+  padding: 0.65rem 0.75rem;
+}
+
+.gsc-comment-box-textarea::placeholder {
+  color: var(--color-fg-subtle);
+}
+
+.gsc-comment-box-textarea:focus {
+  border-color: transparent;
+  box-shadow: none;
+  outline: none;
+}
+
+.gsc-comment-box-textarea-extras {
+  background-color: transparent;
+  border: none;
+  border-top: 1px dashed var(--color-border-muted);
+  border-radius: 0;
+  padding: 0.4rem 0.75rem;
+}
+
+.gsc-comment-box-bottom {
+  padding: 0.25rem 0.5rem 0.5rem;
+}
+
+/* Flat Linen ink buttons */
+.btn,
+.btn-primary {
+  border-radius: 4px;
+  box-shadow: none;
+  font-weight: 500;
+  transition:
+    background-color 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Frameless editorial comment rows (mirrors Linen Gitalk .gt-comment) */
+.gsc-comment > div {
+  background-color: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border-muted);
+  border-radius: 0;
+  padding: 1.15rem 0 1.25rem;
+}
+
+.gsc-comment:first-child > div {
+  padding-top: 0.35rem;
+}
+
+.gsc-comment:last-child > div {
+  border-bottom: none;
+  padding-bottom: 0.25rem;
+}
+
+.gsc-comment-header {
+  padding-inline: 0;
+  padding-top: 0;
+}
+
+.gsc-comment-author {
+  gap: 0.5rem;
+}
+
+.gsc-comment-author-avatar img {
+  width: 2.125rem;
+  height: 2.125rem;
+  margin-inline-end: 0.65rem;
+  background-color: var(--color-canvas-subtle);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.gsc-comment-author .link-primary {
+  color: var(--color-fg-default);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.gsc-comment-author .link-secondary,
+.gsc-reply-author .link-secondary {
+  color: var(--color-fg-subtle);
+  font-size: 12.5px;
+  text-decoration: none;
+}
+
+.gsc-comment-author .link-secondary:hover,
+.gsc-reply-author .link-secondary:hover {
+  color: var(--color-fg-muted);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.gsc-comment-author .color-box-border-info,
+.gsc-reply-author .color-box-border-info {
+  border-color: var(--color-accent-muted);
+  background-color: var(--color-accent-subtle);
+  color: var(--color-accent-fg);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Editorial serif prose for comment bodies & previews */
+.gsc-comment-content,
+.gsc-reply-content,
+.gsc-comment-box-preview {
+  font-family:
+    "source-serif",
+    "source han serif cn",
+    Georgia,
+    "Times New Roman",
+    "Songti SC",
+    "Noto Serif SC",
+    "SimSun",
+    serif;
+  font-size: 15.5px;
+  line-height: 1.72;
+  color: var(--color-fg-default);
+}
+
+.gsc-comment-content {
+  padding: 0.85rem 0 0.75rem;
+}
+
+.gsc-comment-content a:not([class]),
+.gsc-reply-content a:not([class]),
+.gsc-comment-box-preview a:not([class]) {
+  color: var(--color-accent-fg);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--linen-accent-underline);
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+  transition:
+    color 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    text-decoration-color 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gsc-comment-content a:not([class]):hover,
+.gsc-reply-content a:not([class]):hover,
+.gsc-comment-box-preview a:not([class]):hover {
+  color: var(--linen-accent-dark);
+  text-decoration-color: var(--color-accent-fg);
+}
+
+.gsc-comment-content .user-mention,
+.gsc-reply-content .user-mention,
+.gsc-comment-box-preview .user-mention {
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Text",
+    "SF Pro Icons",
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    sans-serif;
+  color: var(--color-fg-default);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.gsc-comment-content .user-mention:hover,
+.gsc-reply-content .user-mention:hover,
+.gsc-comment-box-preview .user-mention:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
+
+.gsc-comment-content blockquote,
+.gsc-reply-content blockquote,
+.gsc-comment-box-preview blockquote {
+  color: var(--color-fg-muted);
+  border-left: 3px solid var(--color-border-muted);
+}
+
+.gsc-comment-content code,
+.gsc-reply-content code,
+.gsc-comment-box-preview code {
+  background-color: var(--color-neutral-muted);
+  color: var(--color-fg-default);
+  border-radius: 3px;
+}
+
+.gsc-comment-content pre,
+.gsc-reply-content pre,
+.gsc-comment-box-preview pre {
+  background-color: var(--color-canvas-subtle);
+  border: 1px solid var(--color-border-muted);
+  border-radius: 6px;
+}
+
+.gsc-comment-footer {
+  margin-bottom: 0.2rem;
+}
+
+.gsc-comment-reactions {
+  margin-inline-start: 0;
+}
+
+.gsc-comment-replies-count {
+  margin-inline-end: 0;
+}
+
+/* Nested replies as a soft editorial callout */
+.gsc-replies {
+  background-color: var(--color-canvas-subtle);
+  border-top: none;
+  border-left: 2px solid var(--color-border-default);
+  border-radius: 0 6px 6px 0;
+  margin-top: 0.65rem;
+  padding-top: 0.25rem;
+}
+
+.gsc-reply {
+  padding: 0.75rem 1rem 0.5rem;
+}
+
+.gsc-reply-box {
+  background-color: transparent;
+  border-top: 1px solid var(--color-border-muted);
+}
+
+.gsc-reply-box button {
+  background-color: var(--color-canvas-default);
+  border-color: var(--color-border-muted);
+  border-radius: 4px;
+  color: var(--color-fg-subtle);
+}
+
+.gsc-reply-box button:hover {
+  border-color: var(--color-border-default);
+  color: var(--color-fg-default);
+}
+
+/* Reactions & popover */
+.gsc-reactions-count {
+  color: var(--color-fg-muted);
+  font-weight: 500;
+  font-size: 13.5px;
+}
+
+.gsc-social-reaction-summary-item,
+.gsc-direct-reaction-button,
+.gsc-reactions-button {
+  border-color: var(--color-border-muted);
+  transition:
+    background-color 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gsc-reactions-popover {
+  background-color: var(--color-canvas-overlay);
+  border-color: var(--color-border-default);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px var(--linen-shadow-color);
+}
+
+.gsc-pagination-button {
+  border-color: var(--color-border-default);
+  border-radius: 4px;
+  color: var(--color-fg-default);
+}
+
+.gsc-pagination-button:hover {
+  background-color: var(--color-canvas-subtle);
+  border-color: var(--color-accent-muted);
+  color: var(--color-accent-fg);
+}

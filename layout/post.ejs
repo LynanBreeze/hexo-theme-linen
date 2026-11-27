@@ -203,8 +203,10 @@ const seriesInfo = getSeriesInfo(page?.series);
     emitMetadata: theme.comment.emit_metadata ?? '0',
     inputPosition: theme.comment.input_position || 'top',
     theme: theme.comment.theme || '',
-    lightTheme: theme.comment.light_theme || 'light',
-    darkTheme: theme.comment.dark_theme || 'dark_dimmed',
+    lightTheme: theme.comment.light_theme || 'linen',
+    darkTheme: theme.comment.dark_theme || 'linen',
+    linenLightCss: url_for(`/linen-theme/css/giscus-linen-light.css?v=${theme.version}`),
+    linenDarkCss: url_for(`/linen-theme/css/giscus-linen-dark.css?v=${theme.version}`),
     lang: theme.comment.lang || page.language || config.language || 'en',
     errorText: __('common.commentsLoadError'),
   };

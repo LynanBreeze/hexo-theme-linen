@@ -134,6 +134,16 @@ function registerVendorAssets(hexoInstance) {
               "linen-theme/js/giscus-init.js",
               "giscus/giscus-init.js",
             );
+            pushCombinedFiles(
+              assets,
+              "linen-theme/css/giscus-linen-light.css",
+              ["giscus/giscus-linen-light.css", "giscus/giscus-linen-base.css"],
+            );
+            pushCombinedFiles(
+              assets,
+              "linen-theme/css/giscus-linen-dark.css",
+              ["giscus/giscus-linen-dark.css", "giscus/giscus-linen-base.css"],
+            );
           } else {
             pushFile(
               assets,
