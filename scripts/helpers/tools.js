@@ -275,29 +275,29 @@ hexo.extend.helper.register(
       });
     }
 
-    // 文本内容（去掉无关元素）
+    // Plain text content (with non-body elements stripped)
     const englishWords = (safeText.match(/[a-zA-Z]+/g) || []).length;
 
-    // 匹配中文字符
+    // Match CJK characters
     const chineseChars = (safeText.match(/[\u4e00-\u9fff]/g) || []).length;
 
-    // 匹配图片 <img>
-    const imgTime = (photos * imgSec) / 60; // 转成分钟
+    // Image reading time (converted to minutes)
+    const imgTime = (photos * imgSec) / 60;
 
-    // 计算阅读时间
+    // Estimate total reading time
     const timeEnglish = englishWords / englishWPM;
     const timeChinese = chineseChars / chineseCPM;
     const timeCode = codeWords / codeWPM;
 
     const totalTime = timeEnglish + timeChinese + timeCode + imgTime;
 
-    return Math.max(1, Math.round(totalTime)); // 最少 1 分钟
+    return Math.max(1, Math.round(totalTime)); // Minimum 1 minute
   },
 );
 
 hexo.extend.helper.register("extractTocFromHtml", function (htmlString) {
   if (!htmlString || typeof htmlString !== "string") return [];
-  // 匹配 h2 和 h3 的正则表达式，增加捕获 id 处理
+  // Match h2 and h3 headings and capture their id attributes
   const headingRegex = /<(h2|h3)(?:[^>]*?\sid=(?:"([^"]*)"|'([^']*)'))?[^>]*>([\s\S]*?)<\/\1>/gi;
 
   const toc = [];
@@ -305,18 +305,18 @@ hexo.extend.helper.register("extractTocFromHtml", function (htmlString) {
 
   let match;
   while ((match = headingRegex.exec(htmlString)) !== null) {
-    const tag = match[1].toLowerCase(); // h2 或 h3
-    const id = match[2] ?? match[3]; // 已存在的 id
-    let content = match[4].trim(); // 提取标签内容
+    const tag = match[1].toLowerCase(); // h2 or h3
+    const id = match[2] ?? match[3]; // Existing id
+    let content = match[4].trim(); // Extract inner heading content
 
-    // 移除 KaTeX 隐藏的 MathML，避免纯文本提取出现重复公式内容
+    // Strip hidden KaTeX MathML so plain text extraction does not duplicate formulas
     content = content.replace(/<span class="katex-mathml">[\s\S]*?<\/span>/g, "");
 
-    // 去除所有 HTML 标签，提取纯文本内容
+    // Strip remaining HTML tags to get plain heading text
     content = content.replace(/<[^>]*>/g, "");
 
     if (tag === "h2") {
-      // 创建新的 h2 结构
+      // Create a new top-level h2 entry
       currentH2 = {
         title: content,
         id: id,
@@ -324,7 +324,7 @@ hexo.extend.helper.register("extractTocFromHtml", function (htmlString) {
       };
       toc.push(currentH2);
     } else if (tag === "h3" && id && currentH2) {
-      // 将 h3 添加到当前 h2 的 children 数组中
+      // Attach h3 under the current h2's children list
       currentH2.children.push({
         title: content,
         id: id,

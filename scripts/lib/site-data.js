@@ -121,7 +121,7 @@ function getAssetsDbImgs(baseDir, hexoInstance) {
         if (Array.isArray(data)) {
           merged = merged.concat(data);
         } else {
-          console.warn(`⚠️ ${file} 不是数组，跳过`);
+          console.warn(`[linen] ${file} is not an array, skipping`);
         }
       } catch (err) {
         console.error(`❌ JSON parse error in ${file}:`, err);

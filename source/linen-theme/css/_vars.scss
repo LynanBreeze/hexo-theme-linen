@@ -252,7 +252,7 @@ $proseMaxWidth: 720px;
     min-width: 0;
     display: -webkit-box;
     -webkit-line-clamp: $row_count;
-    // 因为autoprefix的原因在编译以后下面这句css会消失，添加这个注释可以解决。
+    // Prevent autoprefixer from stripping -webkit-box-orient during compilation.
     /*! autoprefixer: ignore next */
     -webkit-box-orient: vertical;
     /*! autoprefixer: on */

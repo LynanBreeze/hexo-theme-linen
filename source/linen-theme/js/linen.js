@@ -58,12 +58,12 @@
     var isMobilePost =
       window.innerWidth <= 1280 && header.classList.contains("is-post");
 
-    // PC 端没有 header 隐藏逻辑，确保无 hide 类
+    // Desktop does not auto-hide the header; ensure .hide is cleared
     if (!isMobilePost && header.classList.contains("hide")) {
       header.classList.remove("hide");
     }
 
-    // 接近顶部时（<= 60px），强制展开并退出，消除 iOS/Mac 橡皮筋回弹误判与闪烁
+    // Near the top (<= 60px), force header visible to prevent iOS/macOS rubber-band flicker
     if (currentScrollY <= 60) {
       if (isMobilePost) header.classList.remove("hide");
       if (backToTop) backToTop.classList.remove("visible");
@@ -78,13 +78,13 @@
     }
 
     var scrollDelta = currentScrollY - previousScrollY;
-    // 滤除手指微小抖动
+    // Ignore minor touch scroll jitter
     if (Math.abs(scrollDelta) < 8) {
       return;
     }
 
     if (scrollDelta < 0) {
-      // 向上滑动：即刻平滑展开导航栏
+      // Scrolling up: smoothly reveal header
       if (isMobilePost && !document.querySelector(".pswp--open")) {
         header.classList.remove("hide");
       }
@@ -92,7 +92,7 @@
         backToTop.classList.add("visible");
       }
     } else {
-      // 向下滑动：离开顶部 60% 视口后平滑收起导航栏
+      // Scrolling down: hide header once past 60% of the viewport height
       if (backToTop) backToTop.classList.remove("visible");
       if (isMobilePost && currentScrollY > window.innerHeight * 0.6) {
         header.classList.add("hide");
