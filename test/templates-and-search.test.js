@@ -123,6 +123,71 @@ describe("Template Bugfixes & Refactors", () => {
     assert.match(html, /src="\/blog\/linen-theme\/img\/related-post\.jpg"/);
     assert.ok(!html.includes("/blog/blog/"));
     assert.match(html, /<span class="link-desc">See link and code<\/span>/);
+
+    // Excludes hidden/unpublished posts and handles posts without tags safely
+    const makeQuery = (arr) => ({
+      filter: (fn) => makeQuery(arr.filter(fn)),
+      sort: () => makeQuery(arr),
+      limit: (n) => makeQuery(arr.slice(0, n)),
+      length: arr.length,
+      each: (fn) => arr.forEach(fn),
+    });
+    const allPosts = [
+      {
+        source: "_posts/public.md",
+        path: "2026/public/",
+        title: "Public Related",
+        tags: { data: [{ name: "a" }, { name: "b" }] },
+        date: new Date("2026-01-02"),
+      },
+      {
+        source: "_posts/hidden.md",
+        path: "2026/hidden/",
+        title: "Hidden Archive",
+        hide: { archive: true },
+        tags: { data: [{ name: "a" }, { name: "b" }] },
+        date: new Date("2026-01-03"),
+      },
+      {
+        source: "_posts/noindex.md",
+        path: "2026/noindex/",
+        title: "Hidden SEO",
+        hide: { seo: true },
+        tags: { data: [{ name: "a" }, { name: "b" }] },
+        date: new Date("2026-01-04"),
+      },
+      {
+        source: "_posts/draft.md",
+        path: "2026/draft/",
+        title: "Draft Post",
+        published: false,
+        tags: { data: [{ name: "a" }, { name: "b" }] },
+        date: new Date("2026-01-05"),
+      },
+    ];
+    const filteredHtml = renderTemplate("layout/partials/related-posts.ejs", {
+      page: {
+        source: "_posts/a.md",
+        tags: { data: [{ name: "a" }, { name: "b" }] },
+      },
+      site: { posts: makeQuery(allPosts) },
+      url_for: makeUrlFor("/"),
+      __: (k) => k,
+      strip_html: (s) => String(s || "").replace(/<[^>]+>/g, ""),
+    });
+    assert.ok(filteredHtml.includes("Public Related"));
+    assert.ok(!filteredHtml.includes("Hidden Archive"));
+    assert.ok(!filteredHtml.includes("Hidden SEO"));
+    assert.ok(!filteredHtml.includes("Draft Post"));
+
+    const noTagsHtml = renderTemplate("layout/partials/related-posts.ejs", {
+      page: { source: "_posts/a.md" },
+      site: { posts: makeQuery(allPosts) },
+      url_for: makeUrlFor("/"),
+      __: (k) => k,
+      strip_html: (s) => String(s || "").replace(/<[^>]+>/g, ""),
+    });
+    assert.equal(noTagsHtml.trim(), "");
   });
 
   it("top-posts.ejs omits cover-img when no cover/thumbnail and strips HTML from excerpt", () => {
@@ -213,9 +278,45 @@ describe("Template Bugfixes & Refactors", () => {
 
     const hiddenHtml = renderTemplate("layout/footer.ejs", {
       ...baseLocals,
-      theme: { navItems: [], footer: { logo: false } },
+      theme: { navItems: [], footer: { logo: false }, info: { registration: "京ICP备123456号" } },
     });
     assert.ok(!hiddenHtml.includes("footerLogo"));
+    assert.ok(hiddenHtml.includes('href="https://beian.miit.gov.cn/"'));
+  });
+
+  it("post.ejs emits ageWarning DOM for runtime evaluation and layout.ejs defers theme scripts", () => {
+    const recentDate = new Date();
+    const postHtml = renderTemplate("layout/post.ejs", {
+      page: {
+        title: "Fresh Post",
+        date: recentDate,
+        ageWarning: true,
+        content: "<p>Hi</p>",
+        tags: [],
+        path: "2026/fresh/",
+      },
+      config: { language: "en" },
+      theme: { version: "1.0.63", photoswipe: { useMsrcPlaceholder: true } },
+      site: { posts: [] },
+      getPostLayoutStyle: () => "editorial",
+      getPostDate: () => "Nov 27, 2026",
+      renderTravelRoutes: (c) => c,
+      getSeriesInfo: () => ({}),
+      url_for: makeUrlFor("/"),
+      date: () => "2026-11-27",
+      partial: () => "",
+      __: (k) => k,
+    });
+    assert.ok(postHtml.includes('id="post-age-warning" style="display: none;"'));
+
+    const layoutSource = fs.readFileSync(
+      path.join(ROOT_DIR, "layout/layout.ejs"),
+      "utf8",
+    );
+    assert.ok(
+      layoutSource.includes('src="<%=url_for(`${url}?v=${version}`)%>" defer>'),
+      "Theme scripts in layout.ejs should load with defer",
+    );
   });
 
   it("page.ejs and 404.ejs render styled standalone markup", () => {

@@ -1,8 +1,8 @@
 <% 
-const tags = page.tags.data.map(tag=>tag.name);
-const relatedPosts = site.posts.filter(item=>item.source !== page.source).filter((item) => {
+const tags = (page?.tags?.data || []).map(tag=>tag.name);
+const relatedPosts = site.posts.filter(item=>item && item.source !== page.source && item.published !== false && !item?.hide?.archive && !item?.hide?.seo).filter((item) => {
   let count = 0;
-  const itemTags = item.tags.data.map(tag=>tag.name);
+  const itemTags = (item?.tags?.data || []).map(tag=>tag.name);
   (tags).forEach((tag) => {
     if(itemTags.includes(tag)){
       count ++;

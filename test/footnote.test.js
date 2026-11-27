@@ -29,6 +29,42 @@ describe("scripts/footnote.js", () => {
     assert.ok(!enPost.content.includes("footnote-backref-index"));
   });
 
+  it("preserves prose after mid-document footnote definitions, skips code blocks/inline code, and escapes ids", () => {
+    const hexo = createMockHexo({ config: { language: "en" } });
+    loadHexoScript("scripts/footnote.js", hexo);
+
+    const post = {
+      content: [
+        "Intro with ref[^1] and inline `code [^1] sample`.",
+        "",
+        "[^1]: Mid-document note",
+        "    continued line",
+        "",
+        "Following paragraph must NOT be swallowed.",
+        "",
+        "```markdown",
+        "Code block example[^1]",
+        "",
+        "[^fake]: Not a real footnote",
+        "```",
+        "",
+        'Special id[^a"b]',
+        "",
+        '[^a"b]: Escaped note',
+      ].join("\n"),
+    };
+
+    hexo._filters.before_post_render[0](post);
+    assert.ok(post.content.includes("Following paragraph must NOT be swallowed."));
+    assert.ok(post.content.includes("`code [^1] sample`"));
+    assert.ok(post.content.includes("Code block example[^1]"));
+    assert.ok(post.content.includes("[^fake]: Not a real footnote"));
+    assert.ok(!post.content.includes('id="fn-fake"'));
+    assert.ok(post.content.includes('id="fn-a&quot;b"'));
+    assert.ok(post.content.includes('href="#fn-a&quot;b"'));
+    assert.ok(post.content.includes("Mid-document note\ncontinued line"));
+  });
+
   it("shows footnote popover on hover without blocking native anchor click navigation", () => {
     const linenJs = fs.readFileSync(
       path.join(ROOT_DIR, "source/linen-theme/js/linen.js"),
@@ -346,13 +382,26 @@ describe("scripts/footnote.js", () => {
     (docListeners.keydown || []).forEach((fn) => fn({ key: "Escape" }));
     assert.equal(popover.classList.contains("visible"), false);
 
-    // Anchor highlight style targets .footnote-href and re-triggers on repeated backref click
-    const highlightStyle = mockDocument.getElementById("anchor-highlight-style");
-    assert.ok(highlightStyle);
-    assert.ok(
-      highlightStyle.textContent.includes(".footnote-anchor-wrap.anchor-highlight .footnote-href"),
-      "Highlight animation should target visible .footnote-href inside line-height: 0 sup",
-    );
+    // linen.js is wrapped in an IIFE (no leaked globals) and relies on SCSS instead of runtime <style> injection
+    assert.equal(mockDocument.getElementById("anchor-highlight-style"), null);
+    assert.equal(sandbox.previousScrollY, undefined);
+    assert.equal(sandbox.handleClick, undefined);
+    assert.equal(typeof mockWindow.setBodyScrollLocked, "function");
+
+    // Clicking an SVG element (where className is an SVGAnimatedString, not a string) must not throw
+    const svgTarget = {
+      nodeType: 1,
+      tagName: "svg",
+      id: "",
+      className: { baseVal: "icon-sun", animVal: "icon-sun" },
+      classList: createClassList(["icon-sun"]),
+      closest: () => null,
+      parentElement: body,
+    };
+    assert.doesNotThrow(() => {
+      (docListeners.click || []).forEach((fn) => fn({ target: svgTarget }));
+    });
+
     mockWindow.location.hash = "#fnref-1-1";
     assert.equal(anchorWrap.classList.contains("anchor-highlight"), false);
     (docListeners.click || []).forEach((fn) => fn({ target: backref }));

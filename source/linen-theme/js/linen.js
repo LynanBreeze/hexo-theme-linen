@@ -1,5 +1,7 @@
+(function () {
+"use strict";
+
 var previousScrollY = 0;
-var isResizing = false;
 var viewportWidth = window.innerWidth;
 var isAnchoring = false;
 var anchoringId = null;
@@ -136,77 +138,7 @@ function highlightAnchor(hash, highlightClass = "anchor-highlight") {
   fallbackTimer = setTimeout(fire, 900);
 }
 
-function initAnchorHighlighter({
-  highlightClass = "anchor-highlight",
-  duration = 2200,
-} = {}) {
-  // 动态注入高亮样式
-  if (!document.getElementById("anchor-highlight-style")) {
-    const style = document.createElement("style");
-    style.id = "anchor-highlight-style";
-    style.textContent = `
-      @keyframes anchorFlash {
-        0%   { background-color: var(--linen-accent-soft-strong, rgba(168, 69, 46, 0.14)); }
-        45%  { background-color: var(--linen-accent-soft-strong, rgba(168, 69, 46, 0.14)); }
-        100% { background-color: transparent; }
-      }
-      @keyframes footnoteContextFlash {
-        0% {
-          background-color: var(--linen-accent-soft, rgba(168, 69, 46, 0.08));
-          box-shadow: 0 0 0 4px var(--linen-accent-soft, rgba(168, 69, 46, 0.08));
-        }
-        45% {
-          background-color: var(--linen-accent-soft, rgba(168, 69, 46, 0.08));
-          box-shadow: 0 0 0 4px var(--linen-accent-soft, rgba(168, 69, 46, 0.08));
-        }
-        100% {
-          background-color: transparent;
-          box-shadow: 0 0 0 4px transparent;
-        }
-      }
-      @keyframes footnoteAnchorFlash {
-        0% {
-          background-color: var(--linen-accent, #a8452e);
-          color: var(--linen-on-accent, #fcfbf8);
-          transform: scale(1.22);
-          box-shadow: 0 0 0 0 var(--linen-accent-focus, rgba(168, 69, 46, 0.45));
-        }
-        18% {
-          background-color: var(--linen-accent, #a8452e);
-          color: var(--linen-on-accent, #fcfbf8);
-          transform: scale(1.16);
-          box-shadow: 0 0 0 8px rgba(168, 69, 46, 0);
-        }
-        52% {
-          background-color: var(--linen-accent, #a8452e);
-          color: var(--linen-on-accent, #fcfbf8);
-          transform: scale(1.06);
-          box-shadow: 0 0 0 3px var(--linen-accent-soft-strong, rgba(168, 69, 46, 0.14));
-        }
-        100% {
-          background-color: transparent;
-          color: var(--linen-accent, #a8452e);
-          transform: scale(1);
-          box-shadow: 0 0 0 0 transparent;
-        }
-      }
-      .${highlightClass} {
-        border-radius: 3px;
-        animation: anchorFlash ${duration}ms cubic-bezier(0.22, 1, 0.36, 1);
-      }
-      .footnote-context-highlight {
-        border-radius: 4px;
-        animation: footnoteContextFlash ${duration}ms cubic-bezier(0.22, 1, 0.36, 1);
-      }
-      .footnote-anchor-wrap.${highlightClass} {
-        animation: none;
-      }
-      .footnote-anchor-wrap.${highlightClass} .footnote-href {
-        animation: footnoteAnchorFlash ${duration}ms cubic-bezier(0.22, 1, 0.36, 1);
-      }
-    `;
-    document.head.appendChild(style);
-  }
+function initAnchorHighlighter() {
   if (location.hash) {
     highlightAnchor(location.hash);
   }
@@ -235,9 +167,7 @@ function initAnchorHighlighter({
   });
 }
 
-initAnchorHighlighter({
-  duration: 2200,
-});
+initAnchorHighlighter();
 
 function initImageGridSwitchers() {
   var switchers = document.querySelectorAll(".image-grid.switcher");
@@ -299,7 +229,7 @@ function onScroll() {
   var triggerHeight = window.innerHeight * 1.5;
 
   if (!window.$gitalkInitiated && currentScrollY > window.innerHeight) {
-    typeof loadGitalk !== "undefined" && loadGitalk();
+    typeof window.loadGitalk === "function" && window.loadGitalk();
   }
 
   var isMobilePost =
@@ -394,6 +324,7 @@ function setBodyScrollLocked(locked) {
     html && html.classList.remove("no-scroll");
   }
 }
+window.setBodyScrollLocked = setBodyScrollLocked;
 
 function positionDonateModal(trigger, modal) {
   var buttonRect = trigger.getBoundingClientRect();
@@ -435,25 +366,82 @@ function positionDonateModal(trigger, modal) {
   }
 }
 
+function closestEl(el, selector) {
+  return el && typeof el.closest === "function" ? el.closest(selector) : null;
+}
+
+function hasClass(el, className) {
+  return Boolean(
+    el &&
+      el.classList &&
+      typeof el.classList.contains === "function" &&
+      el.classList.contains(className)
+  );
+}
+
 function handleClick(e) {
   try {
     var target = e.target;
+    if (target && target.nodeType !== 1) {
+      target = target.parentElement;
+    }
+    if (!target) return;
+
     var tocElement = document.getElementById("toc");
     var seriesElement = document.getElementById("series");
     var maskElement = document.getElementById("mask");
-    var bodyElement = document.body;
     var donateModal = document.getElementById("donate-modal");
-    if (/content-switch/.test(target.id)) {
+
+    var contentSwitch = closestEl(target, "#content-switch") || (target.id === "content-switch" ? target : null);
+    if (contentSwitch) {
       if (document.body.classList.contains("render-raw")) {
-        target.innerText = target.dataset.rawcontentlabel;
+        contentSwitch.innerText = contentSwitch.dataset.rawcontentlabel;
       } else {
-        target.innerText = target.dataset.renderedcontentlabel;
+        contentSwitch.innerText = contentSwitch.dataset.renderedcontentlabel;
       }
       document.body.classList.toggle("render-raw");
     }
-    if (/close-series-popup-icon/.test(target.className)) {
+
+    var closeSeriesBtn =
+      closestEl(target, ".close-series-popup-icon, .close-series-popup-icon-wrap") ||
+      (hasClass(target, "close-series-popup-icon") || hasClass(target, "close-series-popup-icon-wrap")
+        ? target
+        : null);
+    var captionLink =
+      closestEl(target, ".caption-link") ||
+      (hasClass(target, "caption-link") ? target : null);
+    var copyBtn =
+      closestEl(target, ".copy-btn") ||
+      (hasClass(target, "copy-btn") ? target : null);
+    var backToTopBtn =
+      closestEl(target, "#back-to-top") ||
+      (target.id === "back-to-top" ? target : null);
+    var tocLink =
+      closestEl(target, ".toc-item-link, .toc-sub-item-link") ||
+      (hasClass(target, "toc-item-link") || hasClass(target, "toc-sub-item-link")
+        ? target
+        : null);
+    var tocToggleBtnEl =
+      closestEl(target, "#toc-toggle") ||
+      (target.id === "toc-toggle" ? target : null);
+    var seriesTrigger =
+      target.tagName !== "H1"
+        ? closestEl(target, ".series-name") ||
+          (hasClass(target, "series-name") ? target : null)
+        : null;
+    if (seriesTrigger && seriesTrigger.tagName === "H1") {
+      seriesTrigger = null;
+    }
+    var seriesItemLink =
+      closestEl(target, ".series-item-link") ||
+      (hasClass(target, "series-item-link") ? target : null);
+    var foldToggle =
+      closestEl(target, ".fold-toggle") ||
+      (hasClass(target, "fold-toggle") ? target : null);
+
+    if (closeSeriesBtn) {
       seriesElement?.classList?.remove("visible");
-      maskElement.classList.remove("visible");
+      maskElement?.classList?.remove("visible");
       setBodyScrollLocked(false);
     } else if (["H2", "H3"].includes(target.tagName) && target.id) {
       const newLocation = new URL(location.href);
@@ -465,26 +453,23 @@ function handleClick(e) {
       });
       highlightAnchor(target.id);
       return;
-    } else if (
-      target?.className === "caption-link" ||
-      target.parentElement?.className === "caption-link"
-    ) {
-      const href =
-        target.getAttribute("href") ||
-        target.parentElement.getAttribute("href");
-      window.open(href);
+    } else if (captionLink) {
+      const href = captionLink.getAttribute("href");
+      if (href) {
+        window.open(href, "_blank", "noopener,noreferrer");
+      }
       return;
-    } else if (target.className === "copy-btn") {
+    } else if (copyBtn) {
       try {
-        var codeBlock = target.parentElement.querySelector(".code");
+        var codeBlock = copyBtn.parentElement.querySelector(".code");
         copyToClipboard(codeBlock.innerText);
-        target.classList.add("copied");
+        copyBtn.classList.add("copied");
         setTimeout(() => {
-          target.classList.remove("copied");
+          copyBtn.classList.remove("copied");
         }, 500);
         return;
       } catch (error) {}
-    } else if (target.id === "back-to-top") {
+    } else if (backToTopBtn) {
       e.preventDefault();
       const newLocation = new URL(location.href);
       newLocation.hash = "";
@@ -495,22 +480,19 @@ function handleClick(e) {
         behavior: "smooth",
       });
       return;
-    } else if (target?.className?.includes("placeholder")) {
+    } else if (hasClass(target, "placeholder")) {
       e.preventDefault();
       return;
-    } else if (
-      target?.className?.includes("toc-item-link") ||
-      target?.className?.includes("toc-sub-item-link")
-    ) {
+    } else if (tocLink) {
       e.preventDefault();
       if (!window.$gitalkInitiated) {
-        typeof loadGitalk !== "undefined" && loadGitalk();
+        typeof window.loadGitalk === "function" && window.loadGitalk();
       }
-      const targetId = target.dataset.id;
+      const targetId = tocLink.dataset.id;
       const anchor = document.getElementById(targetId);
       if (tocElement?.classList?.contains("visible")) {
         tocElement.classList.remove("visible");
-        maskElement.classList.remove("visible");
+        maskElement?.classList?.remove("visible");
         setBodyScrollLocked(false);
         var tocBtn = document.getElementById("toc-toggle");
         if (tocBtn) tocBtn.setAttribute("aria-expanded", "false");
@@ -518,9 +500,7 @@ function handleClick(e) {
       const firstTocLink = tocElement
         ? tocElement.querySelector(".toc-item-link")
         : null;
-      const isFirstToc =
-        target === firstTocLink ||
-        target.closest(".toc-item-link") === firstTocLink;
+      const isFirstToc = tocLink === firstTocLink;
 
       if (targetId === "to-page-top" || targetId === "page-top") {
         window.scrollTo({
@@ -553,7 +533,7 @@ function handleClick(e) {
       }
       highlightAnchor(targetId);
       if (
-        target.className?.includes("toc-item-link") &&
+        hasClass(tocLink, "toc-item-link") &&
         anchor &&
         isElementInViewport(anchor)
       ) {
@@ -573,56 +553,47 @@ function handleClick(e) {
         }
       }
       return;
-    } else if (target.id === "toc-toggle") {
+    } else if (tocToggleBtnEl) {
       if (tocElement?.classList?.contains("visible")) {
         tocElement.classList.remove("visible");
-        maskElement.classList.remove("visible");
+        maskElement?.classList?.remove("visible");
         setBodyScrollLocked(false);
-        var tocBtn = document.getElementById("toc-toggle");
-        if (tocBtn) tocBtn.setAttribute("aria-expanded", "false");
+        tocToggleBtnEl.setAttribute("aria-expanded", "false");
       } else {
-        tocElement.classList.add("visible");
-        maskElement.classList.add("visible");
+        tocElement?.classList?.add("visible");
+        maskElement?.classList?.add("visible");
         setBodyScrollLocked(true);
-        target.setAttribute("aria-expanded", "true");
+        tocToggleBtnEl.setAttribute("aria-expanded", "true");
       }
       return;
-    } else if (
-      target.tagName !== "H1" &&
-      (target.className === "series-name" ||
-        target?.parentElement?.className === "series-name" ||
-        target.className === "series-name-content" ||
-        target?.parentElement?.className === "series-name-content")
-    ) {
+    } else if (seriesTrigger) {
       seriesElement?.classList?.add("visible");
       maskElement?.classList?.add("visible");
       donateModal?.classList?.remove("visible");
       setBodyScrollLocked(true);
       return;
-    } else if (target?.className?.includes("series-item-link")) {
+    } else if (seriesItemLink) {
       e.preventDefault();
       seriesElement?.classList?.remove("visible");
-      maskElement.classList.remove("visible");
+      maskElement?.classList?.remove("visible");
       setBodyScrollLocked(false);
-      const href =
-        target.getAttribute("href") ||
-        target.parentElement.getAttribute("href");
-      location.href = href;
+      const href = seriesItemLink.getAttribute("href");
+      if (href) {
+        location.href = href;
+      }
       return;
     } else if (target.id === "mask") {
       tocElement?.classList?.remove("visible");
       seriesElement?.classList?.remove("visible");
-      maskElement.classList.remove("visible");
+      maskElement?.classList?.remove("visible");
       setBodyScrollLocked(false);
       var tocToggleBtn = document.getElementById("toc-toggle");
       if (tocToggleBtn) tocToggleBtn.setAttribute("aria-expanded", "false");
       return;
-    } else if (target?.className?.includes("fold-toggle")) {
-      const parentElement = target.parentElement;
-      if (parentElement.classList.contains("folded")) {
-        parentElement.classList.remove("folded");
-      } else {
-        parentElement.classList.add("folded");
+    } else if (foldToggle) {
+      const parentElement = foldToggle.parentElement;
+      if (parentElement) {
+        parentElement.classList.toggle("folded");
       }
       return;
     } else if (target.id === "page-donates") {
@@ -640,7 +611,7 @@ function handleClick(e) {
       if (
         donateModal &&
         donateModal.classList.contains("visible") &&
-        !target.closest("#donate-modal")
+        !closestEl(target, "#donate-modal")
       ) {
         donateModal.classList.remove("visible");
       }
@@ -738,15 +709,12 @@ function initAgeWarning() {
     if (daysSpan) {
       daysSpan.innerText = diffDays;
     }
+    ageWarningElement.style.display = "";
   } else {
-    if (ageWarningElement) {
-      ageWarningElement.style.display = "none";
-    }
+    ageWarningElement.style.display = "none";
   }
   return diffDays;
 }
-
-initAgeWarning();
 
 function initMaskScrollLock() {
   var mask = document.getElementById("mask");
@@ -1400,14 +1368,17 @@ function initFootnotePopover() {
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", function () {
+    initAgeWarning();
     initThemeToggle();
     initMaskScrollLock();
     initCopyrightPopover();
     initFootnotePopover();
   });
 } else {
+  initAgeWarning();
   initThemeToggle();
   initMaskScrollLock();
   initCopyrightPopover();
   initFootnotePopover();
 }
+})();

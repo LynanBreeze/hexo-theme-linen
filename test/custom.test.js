@@ -95,4 +95,32 @@ describe("scripts/custom.js & scripts/folded-code-block.js", () => {
     }
     assert.equal((data.content.match(/class="table-wrap"/g) || []).length, 1);
   });
+
+  it("injects gitalk-initiator only when comments are enabled and respects explicit zh language on Travel series", () => {
+    const hexoNoComment = createMockHexo({ config: { language: "zh-CN" } });
+    loadHexoScript("scripts/custom.js", hexoNoComment);
+    const postNoComment = {
+      series: "Travel",
+      language: "zh-CN",
+      content: `<h2>路线</h2><ul><li>大阪 2 日</li><li>京都 3 日</li></ul>`,
+    };
+    for (const fn of hexoNoComment._filters.after_post_render) {
+      fn.call(hexoNoComment, postNoComment);
+    }
+    assert.ok(!postNoComment.content.includes("gitalk-initiator"));
+    assert.ok(postNoComment.content.includes("2 站 · 共 5 日"));
+
+    const hexoWithComment = createMockHexo({
+      themeConfig: { comment: { client_id: "cid" } },
+    });
+    loadHexoScript("scripts/custom.js", hexoWithComment);
+    const postWithComment = { content: "<p>Hello</p>" };
+    const postCommentDisabled = { comment: false, content: "<p>Hello</p>" };
+    for (const fn of hexoWithComment._filters.after_post_render) {
+      fn.call(hexoWithComment, postWithComment);
+      fn.call(hexoWithComment, postCommentDisabled);
+    }
+    assert.ok(postWithComment.content.includes('<div id="gitalk-initiator"></div>'));
+    assert.ok(!postCommentDisabled.content.includes("gitalk-initiator"));
+  });
 });

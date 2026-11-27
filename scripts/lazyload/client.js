@@ -389,7 +389,17 @@
         for (var idx = 0; idx < entries.length; idx++) {
           var entry = entries[idx];
           var target = entry.target;
-          var isVisible = entry.intersectionRatio >= minRatio;
+          var viewportHeight =
+            window.innerHeight || document.documentElement.clientHeight || 0;
+          var targetHeight = entry.boundingClientRect
+            ? entry.boundingClientRect.height
+            : 0;
+          var isOversizedVisible =
+            Boolean(entry.isIntersecting) &&
+            viewportHeight > 0 &&
+            targetHeight * minRatio > viewportHeight * 0.9;
+          var isVisible =
+            entry.intersectionRatio >= minRatio || isOversizedVisible;
           var existingTimer = visibilityTimers.get(target);
 
           if (isVisible) {
@@ -423,7 +433,7 @@
           }
         }
       },
-      { threshold: [0, 0.2, 0.4, 0.6, 0.8, 1] },
+      { threshold: [0, 0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1] },
     );
     return sharedObserver;
   };

@@ -63,7 +63,7 @@
     <ul class="taxonomy-category-list">
       <% items.forEach(item => { %>
       <li>
-        <a class="taxonomy-category-link<%= item.name === current ? ' active' : '' %>" href="<%=url_for(`/series/${item.name}/`)%>">
+        <a class="taxonomy-category-link<%= item.name === current ? ' active' : '' %>" href="<%=url_for(`/series/${encodeURIComponent(item.name)}/`)%>">
           <span class="name"><%=item.name%></span>
           <span class="count"><%=item.count%></span>
         </a>

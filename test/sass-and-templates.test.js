@@ -26,6 +26,24 @@ describe("Stylesheets & Templates Smoke Tests", () => {
       });
       assert.ok(res.css.length > 0);
       assert.deepEqual(warnings, [], `Unexpected Sass warnings in ${rel}`);
+      if (rel.endsWith("linen.scss")) {
+        assert.ok(
+          !res.css.includes("#raw-markdown-block.travel-post"),
+          "linen.scss must not generate dead #raw-markdown-block.travel-post selectors",
+        );
+        assert.ok(
+          !res.css.includes("#raw-markdown-block.layout-style-journal"),
+          "linen.scss must not generate dead #raw-markdown-block.layout-style-journal selectors",
+        );
+        assert.ok(
+          res.css.includes(".footnote-anchor-wrap.anchor-highlight .footnote-href"),
+          "linen.scss should contain anchor highlight styles moved out of linen.js",
+        );
+        assert.ok(
+          res.css.includes("U+2103") && !res.css.includes("U+0043"),
+          "source-serif unicode-range should use U+2103 instead of redundant U+0043",
+        );
+      }
     }
   });
 

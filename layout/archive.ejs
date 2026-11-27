@@ -70,7 +70,7 @@ const archivesList = Object.entries(visiblePosts.reduce((acc, post) => {
     <ul class="archive-list">
       <% seriesList.forEach(series => { %>
       <li class="archive-list-item">
-        <a class="archive-list-link" data-firstletter="<%=series.name.charAt(0)%>" href="<%=url_for(`/series/${series.name}/`)%>">
+        <a class="archive-list-link" data-firstletter="<%=series.name.charAt(0)%>" href="<%=url_for(`/series/${encodeURIComponent(series.name)}/`)%>">
           <%=series.name%>
           <span class="archive-list-count"><%=series.count%></span>
         </a>

@@ -14,7 +14,6 @@ module.exports = function (hexo) {
     const page = data?.page || {};
     const {
       loadingImage,
-      errorTipImage,
       intersectionRatio,
       showTransition,
       preloadCount,
@@ -22,7 +21,6 @@ module.exports = function (hexo) {
     } = getLazyloadConfig(hexo);
 
     const resolvedLoadingImage = resolveSiteAsset(hexo, loadingImage);
-    const resolvedErrorTipImage = resolveSiteAsset(hexo, errorTipImage);
 
     const settingsContent = `<script>var $lazyload = {
     intersectionRatio: ${intersectionRatio},
@@ -36,11 +34,6 @@ module.exports = function (hexo) {
     if (resolvedLoadingImage) {
       headAdditions.push(
         `<link rel="preload" as="image" href="${resolvedLoadingImage}" />`,
-      );
-    }
-    if (resolvedErrorTipImage) {
-      headAdditions.push(
-        `<link rel="preload" as="image" href="${resolvedErrorTipImage}" />`,
       );
     }
 

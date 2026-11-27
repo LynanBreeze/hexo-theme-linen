@@ -12,7 +12,7 @@ const maxYear = years.length ? Math.max(...years) : null;
 const yearRange = minYear && maxYear ? (minYear === maxYear ? `${minYear}` : `${minYear} — ${maxYear}`) : '';
 const seriesCountMap = new Map();
 site.posts.forEach(post => {
-  if (!post.series) return;
+  if (!post.series || post?.hide?.archive) return;
   seriesCountMap.set(post.series, (seriesCountMap.get(post.series) || 0) + 1);
 });
 const seriesList = Array.from(seriesCountMap.entries())

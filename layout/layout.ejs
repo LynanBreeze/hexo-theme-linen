@@ -117,7 +117,7 @@ const version = theme.version;
     <div class="side-content">
       <% if (series.length) { %>
       <div class="post-series">
-        <a class="series-title" href="<%=url_for(`/series/${page.series}/`)%>"><%=page.series%></a>
+        <a class="series-title" href="<%=url_for(`/series/${encodeURIComponent(page.series)}/`)%>"><%=page.series%></a>
         <div class="series-items">
           <%
           let currentSeriesYear = null;
@@ -134,7 +134,7 @@ const version = theme.version;
           <a class="series-item-link<%-item.source === page.source ? ' active': ''%>" href="<%=url_for(item.path)%>"><%-`${item.title}`%><% if (item.subTitle) { %><span class="sub-title"><%=item.subTitle%></span><% } %></a>
           <% }); %>
           <% if(series.length > 50) { %>
-          <a class="series-item-link view-more" href="<%=url_for(`/series/${page.series}/`)%>"><%-`${__('common.total')} ${series.length} ${__('common.seriesPostCountShort')}`%></a>
+          <a class="series-item-link view-more" href="<%=url_for(`/series/${encodeURIComponent(page.series)}/`)%>"><%-`${__('common.total')} ${series.length} ${__('common.seriesPostCountShort')}`%></a>
           <% } %>
         </div>
       </div>
@@ -192,7 +192,7 @@ const version = theme.version;
   <% if (theme.scripts !== undefined && theme.scripts.length > 0) { %>
   <!-- scripts list from theme config.yml -->
   <% theme.scripts.forEach(url => { %>
-  <script src="<%=url_for(`${url}?v=${version}`)%>"></script>
+  <script src="<%=url_for(`${url}?v=${version}`)%>" defer></script>
   <% }); %>
   <% } %>
   <% if (page.hdrAssetsPrefix) { %>

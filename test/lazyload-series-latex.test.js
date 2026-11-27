@@ -156,6 +156,18 @@ describe("Series Template, Lazyload Pipeline & LaTeX Config Fixes", () => {
       assert.ok(postData.content.includes('<span class="gallery-item"'));
       assert.ok(!postData.content.includes('<span class="gallery-item" href='));
       assert.ok(!postData.content.includes('target="_blank"'));
+      assert.ok(!postData.content.includes("data-fancybox"));
+
+      const exifData = {
+        content: '<p><img src="https://cdn.example.com/photos/b.jpg" alt="photo"></p>',
+      };
+      idx.byUrl.get("https://cdn.example.com/photos/b.jpg").exif = "{Leica}{100}";
+      idx.byUrl.get("https://cdn.example.com/photos/b.jpg").location = "https://maps.example.com";
+      idx.byUrl.get("https://cdn.example.com/photos/b.jpg").locationText = "Tokyo";
+      processPost.call(ctx, exifData);
+      assert.ok(exifData.content.includes('data-pswp-exif="{Leica}{100}"'));
+      assert.ok(exifData.content.includes('data-pswp-location="{https://maps.example.com}{Tokyo}"'));
+      assert.ok(!exifData.content.includes("data-pspw-"));
 
       const coverHtmlBlurhash = processCovers.call(
         ctx,
@@ -197,6 +209,11 @@ describe("Series Template, Lazyload Pipeline & LaTeX Config Fixes", () => {
     assert.ok(clientCode.includes("width > 0"));
     assert.ok(clientCode.includes('getAttribute("data-keep-placeholder")'));
     assert.ok(clientCode.includes("!showTransition || !inViewport"));
+    assert.ok(clientCode.includes("isOversizedVisible"));
+
+    const injectScript = require("../scripts/lazyload/inject")(createMockHexo());
+    const injectedHtml = injectScript("<html><head></head><body></body></html>", { page: {} });
+    assert.ok(!injectedHtml.includes("error-tip.svg"), "Must not preload error-tip.svg");
   });
 
   it("supports per-image hide-placeholder via alt directive, HTML attr, and assets-db, and hides blurhash canvas on load", () => {

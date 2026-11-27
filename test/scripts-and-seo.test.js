@@ -98,6 +98,26 @@ describe("SEO, Date Helper, HoverTexts, ImageGrid & Archive Fixes", () => {
         'Use C++ and <span class="commented-text" data-comment="Call site">foo(bar)</span> here. Also <span class="commented-text" data-comment="Say &quot;hi&quot; &lt;script&gt;">C++</span> again.',
       ),
     );
+
+    const protectedData = {
+      content: [
+        "```js",
+        "const token = 'Linen';",
+        "```",
+        "Inline `Linen` and ![Linen cover](/Linen.jpg) and [link](https://example.com/Linen) and <a title=\"Linen\">real Linen</a>.",
+      ].join("\n"),
+      customComments: [{ text: "Linen", index: 0, comment: "Theme name" }],
+    };
+    filter.call(hexo, protectedData);
+    assert.ok(protectedData.content.includes("const token = 'Linen';"));
+    assert.ok(protectedData.content.includes("`Linen`"));
+    assert.ok(protectedData.content.includes("![Linen cover](/Linen.jpg)"));
+    assert.ok(protectedData.content.includes("[link](https://example.com/Linen)"));
+    assert.ok(
+      protectedData.content.includes(
+        '<a title="Linen">real <span class="commented-text" data-comment="Theme name">Linen</span></a>',
+      ),
+    );
   });
 
   it("markdown-it-image-grid.js prioritizes explicit switcher label and ignores pipes inside image markdown", () => {
@@ -167,6 +187,7 @@ describe("SEO, Date Helper, HoverTexts, ImageGrid & Archive Fixes", () => {
     });
     assert.ok(siteInfoHtml.includes('href="/archives/#archives"'));
     assert.ok(!siteInfoHtml.includes("/archives/#posts"));
+    assert.ok(siteInfoHtml.includes("1 common.series"));
 
     const archiveHtml = renderTemplate("layout/archive.ejs", {
       site: {

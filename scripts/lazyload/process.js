@@ -291,7 +291,6 @@ const getformatedStr = (str, attrs, placeholerStyle = "") => {
 };
 
 function lazyProcess(htmlContent) {
-  const theme = this.config.theme;
   const themeConfig = this.config.theme_config;
   const language = this.config.language;
   const { showAltText, placeholderRatio } = {
@@ -349,10 +348,10 @@ function lazyProcess(htmlContent) {
               ? `data-pswp-src="${formatedAttributes["pswp-src"]}"`
               : ""
           } data-cropped="true"${
-            formatedAttributes.exif ? ` data-pspw-exif="${formatedAttributes.exif}"` : ""
+            formatedAttributes.exif ? ` data-pswp-exif="${formatedAttributes.exif}"` : ""
           }${
             formatedAttributes.location
-              ? ` data-pspw-location="${formatedAttributes.location}"`
+              ? ` data-pswp-location="${formatedAttributes.location}"`
               : ""
           }`
         : "";
@@ -367,9 +366,7 @@ function lazyProcess(htmlContent) {
           ? ` data-keep-placeholder="${formatedAttributes.keepPlaceholder}"`
           : "";
 
-      return `<span class="lazyload-outer-wrap" style="width: 100%;"><${itemTag} class="gallery-item"${linkAttrs} ${pswpConfig} ${
-        theme === "landscape" ? 'data-fancybox="gallery"' : ""
-      } ${widthStyle}><noscript>${noScriptElementStr}</noscript><span class="lazyload-wrap" data-content="${encodeURIComponent(
+      return `<span class="lazyload-outer-wrap" style="width: 100%;"><${itemTag} class="gallery-item"${linkAttrs} ${pswpConfig} ${widthStyle}><noscript>${noScriptElementStr}</noscript><span class="lazyload-wrap" data-content="${encodeURIComponent(
         formatedStr
       )}"${keepPlaceholderAttr} ${
         wrapStyle ? `style="${wrapStyle}"` : ""

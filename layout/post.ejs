@@ -60,8 +60,10 @@
       <div id="content-switch" role="button" tabindex="0" data-rawcontentlabel="<%-__('common.switchTo')+__('common.rawMarkdownContent')%>" data-renderedcontentlabel="<%-__('common.switchTo')+__('common.renderedContent')%>"><%-__('common.switchTo')+__('common.rawMarkdownContent')%></div>
     <% } %>
   </div>
-  <% if (page.ageWarning && (Date.now() - new Date(page.date).getTime()) > 180 * 1000 * 60 * 60 * 24) { %>
-    <div id="post-age-warning"><%-__('common.age_notice')%></div>
+  <% if (page.ageWarning && page.date && !date(page.date).startsWith('1970')) {
+    const isAlreadyAged = (Date.now() - new Date(page.date).getTime()) > 180 * 1000 * 60 * 60 * 24;
+  %>
+    <div id="post-age-warning"<%- isAlreadyAged ? '' : ' style="display: none;"' %>><%-__('common.age_notice')%></div>
   <% } %>
   <div id="page-content"><%- renderTravelRoutes(page.content, page) %></div>
   <div id="page-content-end"></div>
@@ -149,7 +151,7 @@ const seriesInfo = getSeriesInfo(page?.series);
       </span>
       <span class="title"><%=page?.series%></span>
       <span class="details-link">
-        <a href="<%=url_for(`/series/${page.series}/`)%>"><%=__('common.details')%></a>
+        <a href="<%=url_for(`/series/${encodeURIComponent(page.series)}/`)%>"><%=__('common.details')%></a>
       </span>
     </div>
     <div class="series-items">
@@ -201,7 +203,12 @@ const seriesInfo = getSeriesInfo(page?.series);
 <% if ([theme?.photoswipe ?? config?.theme_config?.photoswipe, page.photoswipe ?? true, /<img|\/static\/live-photo\/|live-photo-gallery-item|data-live-photo-src/.test(page?.content)].every(enable=>enable)) {
   const version = theme.version;
   const hdrAssetsPrefix = page?.hdrAssetsPrefix || '';
-  const useMsrcPlaceholder = Boolean(page.photoswipeUseMsrcPlaceholder ?? (page.path === 'gallery/index.html'));
+  const useMsrcPlaceholder = Boolean(
+    page.photoswipeUseMsrcPlaceholder ??
+      theme?.photoswipe?.useMsrcPlaceholder ??
+      config?.theme_config?.photoswipe?.useMsrcPlaceholder ??
+      (page.path === 'gallery/index.html')
+  );
 %>
 <link rel="stylesheet" href="<%=url_for(`/linen-theme/css/photoswipe.css?v=${version}`)%>" />
 <link rel="stylesheet" href="<%=url_for(`/linen-theme/css/photoswipe-dynamic-caption-plugin.css?v=${version}`)%>" />

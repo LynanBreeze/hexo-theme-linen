@@ -1,5 +1,5 @@
 <%
-const series = Array.from(new Set(site.posts.filter(item=>item.series).sort('date', -1).map(item=>item.series)))
+const series = Array.from(new Set(site.posts.filter(item=>item.series && !item?.hide?.archive).sort('date', -1).map(item=>item.series)))
 %>
 <div class="site-info<%=is_home_first_page() ? ' home' : ''%>">
   <div class="info-row">

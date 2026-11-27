@@ -131,9 +131,7 @@
   }
 }
 
-#post,
-#page,
-#raw-markdown-block {
+:is(#post, #page) {
   background-color: $bg;
   color: $darkText;
   word-break: normal;
@@ -262,9 +260,10 @@
       color: $strongText;
     }
   }
-  &.layout-style-journal,
-  &.travel-post {
-    #page-content {
+}
+
+#post:is(.layout-style-journal, .travel-post) {
+  #page-content {
       counter-reset: travel-h2;
 
       h2#to-page-top,
@@ -773,6 +772,8 @@
       }
     }
   }
+
+:is(#post, #page) {
   .post-meta {
     @include defaultFont;
     margin: 0 0 1.6em;
@@ -1113,7 +1114,9 @@
       }
     }
   }
+}
 
+:is(#post, #page, #raw-markdown-block) {
   figure.highlight {
     background-color: $surface;
     border: 1px solid $borderSubtle;
@@ -1312,7 +1315,9 @@
 
     @include highlight_github_theme;
   }
+}
 
+:is(#post, #page) {
   code {
     background-color: $surfaceAlt;
     color: $darkText;
@@ -1444,6 +1449,15 @@
 
 #raw-markdown-block {
   display: none;
+  background-color: $bg;
+  color: $darkText;
+  word-break: normal;
+  overflow-wrap: break-word;
+  &::after {
+    content: "";
+    display: table;
+    clear: both;
+  }
   figure.highlight td.gutter.gutter {
     display: none;
   }
@@ -1728,6 +1742,78 @@
     border-bottom: 1px solid $borderColor;
     transform: translateX(-50%) rotate(45deg);
     pointer-events: none;
+  }
+}
+
+@keyframes anchorFlash {
+  0% {
+    background-color: var(--linen-accent-soft-strong, rgba(168, 69, 46, 0.14));
+  }
+  45% {
+    background-color: var(--linen-accent-soft-strong, rgba(168, 69, 46, 0.14));
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes footnoteContextFlash {
+  0% {
+    background-color: var(--linen-accent-soft, rgba(168, 69, 46, 0.08));
+    box-shadow: 0 0 0 4px var(--linen-accent-soft, rgba(168, 69, 46, 0.08));
+  }
+  45% {
+    background-color: var(--linen-accent-soft, rgba(168, 69, 46, 0.08));
+    box-shadow: 0 0 0 4px var(--linen-accent-soft, rgba(168, 69, 46, 0.08));
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: 0 0 0 4px transparent;
+  }
+}
+
+@keyframes footnoteAnchorFlash {
+  0% {
+    background-color: var(--linen-accent, #a8452e);
+    color: var(--linen-on-accent, #fcfbf8);
+    transform: scale(1.22);
+    box-shadow: 0 0 0 0 var(--linen-accent-focus, rgba(168, 69, 46, 0.45));
+  }
+  18% {
+    background-color: var(--linen-accent, #a8452e);
+    color: var(--linen-on-accent, #fcfbf8);
+    transform: scale(1.16);
+    box-shadow: 0 0 0 8px rgba(168, 69, 46, 0);
+  }
+  52% {
+    background-color: var(--linen-accent, #a8452e);
+    color: var(--linen-on-accent, #fcfbf8);
+    transform: scale(1.06);
+    box-shadow: 0 0 0 3px var(--linen-accent-soft-strong, rgba(168, 69, 46, 0.14));
+  }
+  100% {
+    background-color: transparent;
+    color: var(--linen-accent, #a8452e);
+    transform: scale(1);
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.anchor-highlight {
+  border-radius: 3px;
+  animation: anchorFlash 2200ms $easeOut;
+}
+
+.footnote-context-highlight {
+  border-radius: 4px;
+  animation: footnoteContextFlash 2200ms $easeOut;
+}
+
+.footnote-anchor-wrap.anchor-highlight {
+  animation: none;
+
+  .footnote-href {
+    animation: footnoteAnchorFlash 2200ms $easeOut;
   }
 }
 

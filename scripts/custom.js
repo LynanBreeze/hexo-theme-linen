@@ -335,15 +335,16 @@ function processTravelRoute(content, data, ctx, hexoInstance) {
     return content;
   }
 
-  const isEnglishPost =
-    data?.series === "Travel" ||
-    String(
-      data?.language ||
-        data?.lang ||
-        ctx?.config?.language ||
-        hexoInstance?.config?.language ||
-        "",
-    ).startsWith("en");
+  const explicitLang = String(
+    data?.language ||
+      data?.lang ||
+      ctx?.config?.language ||
+      hexoInstance?.config?.language ||
+      "",
+  ).trim();
+  const isEnglishPost = explicitLang
+    ? /^en\b/i.test(explicitLang)
+    : data?.series === "Travel";
 
   const headingRe = /<h([23])\b[^>]*>([\s\S]*?)<\/h\1>/gi;
   const betweenRe =
@@ -445,13 +446,23 @@ hexo.extend.helper.register("renderTravelRoutes", function (content, post) {
   return processTravelRoute(content, post || this.page, this, hexo);
 });
 
+function isCommentsEnabled(data, hexoInstance) {
+  if (data?.comment === false) return false;
+  const commentConfig =
+    hexoInstance?.theme?.config?.comment ??
+    hexoInstance?.config?.theme_config?.comment;
+  return Boolean(commentConfig);
+}
+
 hexo.extend.filter.register(
   "after_post_render",
   function (data) {
     data.content = processCodeBlock(data.content);
     data.content = processTables(data.content);
     data.content = processTravelRoute(data.content, data, this, hexo);
-    data.content = process.call(this, data.content);
+    if (isCommentsEnabled(data, hexo)) {
+      data.content = process.call(this, data.content);
+    }
     return data;
   },
   2,

@@ -105,9 +105,15 @@ const sanitizeExternalUrl = (rawUrl) => {
 
 const getExif = (element) => {
   const exifString =
-    (element && element.dataset && element.dataset.pspwExif) || "";
+    (element &&
+      element.dataset &&
+      (element.dataset.pswpExif || element.dataset.pspwExif)) ||
+    "";
   const locationString =
-    (element && element.dataset && element.dataset.pspwLocation) || "";
+    (element &&
+      element.dataset &&
+      (element.dataset.pswpLocation || element.dataset.pspwLocation)) ||
+    "";
   const matches = [...exifString.matchAll(/\{([^}]*)\}/g)].map(
     (match) => match[1],
   );
