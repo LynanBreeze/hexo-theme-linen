@@ -224,7 +224,7 @@
     backface-visibility: hidden;
     transform: translateZ(0);
     &:not(.active) {
-      opacity: 0.48;
+      opacity: 0.68;
     }
   }
   &:hover {
@@ -266,7 +266,7 @@
     }
     &.active {
       .toc-sub-item-link:not(.active) {
-        opacity: 0.65;
+        opacity: 0.72;
       }
     }
     .toc-sub-item-wrap {
@@ -393,10 +393,10 @@
     transform: translateZ(0);
   }
   .series-year-divider:not(.active) {
-    opacity: 0.48;
+    opacity: 0.68;
   }
   .series-item-link:not(.active) {
-    opacity: 0.48;
+    opacity: 0.68;
     color: $gray5;
     .sub-title {
       color: $gray5;
@@ -581,6 +581,12 @@ html[lang^="zh"] {
     font-size: 1.05rem;
     font-weight: 600;
     color: $darkText;
+  }
+  .shared-link {
+    margin-bottom: 0.85rem;
+  }
+  > a:last-child .shared-link {
+    margin-bottom: 0;
   }
 }
 

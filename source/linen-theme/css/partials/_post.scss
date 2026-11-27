@@ -31,6 +31,10 @@
   h6 {
     @include defaultFont;
     color: $darkText;
+    a.headerlink,
+    a.header-anchor {
+      display: none;
+    }
   }
   h1 {
     font-size: 2rem;
@@ -1249,19 +1253,28 @@
     }
   }
   .attachment-item {
-    padding: 4px 6px;
+    padding: 10px 12px;
+    min-width: 96px;
     display: inline-flex;
     vertical-align: bottom;
     flex-direction: column;
     align-items: center;
+    gap: 4px;
     border-radius: $radiusMd;
-    border: solid 1px $borderColor;
+    border: 1px solid $borderColor;
     background-color: $surface;
-    transition: all ease-in-out 0.3s;
+    box-shadow: 0 1px 2px $borderSubtle;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      border-color 220ms $easeOut,
+      background-color 220ms $easeOut,
+      box-shadow 220ms $easeOut,
+      transform 220ms $easeOut,
+      opacity 160ms $easeOut;
     .attachment-icon {
       margin-top: 2px;
-      width: 35px;
-      height: 35px;
+      width: 34px;
+      height: 34px;
       background-size: cover;
       &.zip {
         background-image: url("../img/icons/ZIP.svg");
@@ -1271,29 +1284,33 @@
       }
     }
     .attachment-size {
-      margin-top: 4px;
-      font-family: monospace;
-      color: $darkText;
+      font-family: $linkFontFamily;
+      color: $metaText;
       font-size: 11px;
+      line-height: 1.2;
     }
     .attachment-name {
-      font-family:
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Oxygen,
-        Ubuntu,
-        Cantarell,
-        "Open Sans",
-        "Helvetica Neue",
-        sans-serif;
-      font-size: 12px;
+      @include defaultFont;
+      color: $darkText;
+      font-size: 12.5px;
+      font-weight: 500;
+      line-height: 1.35;
+      transition: color 180ms $easeOut;
     }
-    &:hover {
-      border-color: $accentBorder;
-      box-shadow: $shadowColor 0px 7px 24px 0px;
+    @media (hover: hover) {
+      &:hover {
+        border-color: $accentBorder;
+        background-color: $bgElevated;
+        box-shadow: 0 6px 18px $shadowColor;
+        transform: translateY(-1px);
+        .attachment-name {
+          color: $accent;
+        }
+      }
+    }
+    &:active {
+      opacity: 0.72;
+      transform: translateY(0);
     }
   }
   .commented-text {

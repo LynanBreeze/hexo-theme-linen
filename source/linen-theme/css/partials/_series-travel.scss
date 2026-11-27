@@ -406,26 +406,30 @@
   .travel-place-card {
     position: relative;
     display: grid;
-    grid-template-columns: 132px minmax(0, 1fr);
-    min-height: 132px;
+    grid-template-columns: 168px minmax(0, 1fr);
+    min-height: 126px;
     overflow: hidden;
     border-radius: $radiusMd;
     border: 1px solid $borderColor;
-    background-color: $bg;
+    background-color: $surface;
+    box-shadow: 0 1px 2px $borderSubtle;
     cursor: pointer;
     transition:
       border-color 0.22s $easeOut,
+      background-color 0.22s $easeOut,
       box-shadow 0.22s $easeOut,
       transform 0.22s $easeOut,
       opacity 160ms $easeOut;
     &.active {
       border-color: $accentBorder;
+      background-color: $bgElevated;
       box-shadow: $shadowColor 0 12px 26px;
       transform: translateY(-1px);
     }
     @media (hover: hover) {
       &:hover {
         border-color: $accentBorder;
+        background-color: $bgElevated;
         box-shadow: $shadowColor 0 12px 26px;
         transform: translateY(-1px);
       }
@@ -447,9 +451,9 @@
   .travel-place-cover {
     display: block;
     position: relative;
-    width: 132px;
-    aspect-ratio: 1;
-    min-height: 132px;
+    width: 168px;
+    aspect-ratio: 4 / 3;
+    min-height: 126px;
     overflow: hidden;
     background-color: $surfaceAlt;
     background-position: center;

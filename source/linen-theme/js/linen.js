@@ -24,7 +24,7 @@
   }
 
   function triggerAnchoring() {
-    if (window.innerWidth > 1280) return;
+    if (window.innerWidth >= 1440) return;
     isAnchoring = true;
     var header = getHeaderEl();
     if (header) {
@@ -68,7 +68,7 @@
     var triggerHeight = window.innerHeight * 1.5;
 
     var isMobilePost =
-      window.innerWidth <= 1280 && header.classList.contains("is-post");
+      window.innerWidth < 1440 && header.classList.contains("is-post");
 
     // Desktop does not auto-hide the header; ensure .hide is cleared
     if (!isMobilePost && header.classList.contains("hide")) {
@@ -137,7 +137,7 @@
     body.classList.add("resizing");
     viewportWidth = window.innerWidth;
 
-    if (window.innerWidth > 1280) {
+    if (window.innerWidth >= 1440) {
       var header = document.querySelector(".nav-header");
       if (header) header.classList.remove("hide");
     }

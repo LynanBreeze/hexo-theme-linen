@@ -55,12 +55,12 @@
   --linen-shimmer-highlight: rgba(255, 255, 255, 0.55);
   --linen-linkcard-gradient: linear-gradient(
     to right,
-    rgba(255, 255, 255, 1),
-    rgba(255, 255, 255, 0.93),
-    rgba(255, 255, 255, 0.86),
-    rgba(255, 255, 255, 0.2)
+    rgba(244, 242, 236, 0.98) 0%,
+    rgba(244, 242, 236, 0.94) 55%,
+    rgba(244, 242, 236, 0.84) 82%,
+    rgba(244, 242, 236, 0.32) 100%
   );
-  --linen-linkcard-text-shadow: 0px 0px 2px #ffffff;
+  --linen-linkcard-text-shadow: 0 0 2px rgba(244, 242, 236, 0.9);
   --linen-travel-panel-bg:
     linear-gradient(135deg, rgba(252, 251, 248, 0.96), rgba(244, 242, 236, 0.94)),
     var(--linen-surface);
@@ -133,12 +133,12 @@
   --linen-shimmer-highlight: rgba(255, 250, 240, 0.08);
   --linen-linkcard-gradient: linear-gradient(
     to right,
-    rgba(37, 35, 31, 1),
-    rgba(37, 35, 31, 0.94),
-    rgba(37, 35, 31, 0.86),
-    rgba(37, 35, 31, 0.28)
+    rgba(32, 30, 27, 0.98) 0%,
+    rgba(32, 30, 27, 0.94) 55%,
+    rgba(32, 30, 27, 0.85) 82%,
+    rgba(32, 30, 27, 0.34) 100%
   );
-  --linen-linkcard-text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.65);
+  --linen-linkcard-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
   --linen-travel-panel-bg:
     linear-gradient(135deg, rgba(32, 30, 27, 0.98), rgba(23, 22, 20, 0.96)),
     var(--linen-surface);

@@ -141,7 +141,7 @@
 
   // 6. Apply the active state to the TOC DOM.
   function isTocVisible() {
-    return window.innerWidth > 1280 || tocContainer.classList.contains("visible");
+    return window.innerWidth >= 1440 || tocContainer.classList.contains("visible");
   }
 
   function updateActive(force) {

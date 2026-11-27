@@ -27,21 +27,6 @@
         &:nth-child(2) {
           margin-top: 16px;
         }
-        .logo {
-          width: 36px;
-          height: 36px;
-          display: inline-block;
-          margin: 0;
-          vertical-align: middle;
-          border-radius: $radiusSm;
-        }
-        .site-name {
-          margin-left: 10px;
-          display: inline-block;
-          line-height: 36px;
-          color: $darkText;
-          font-size: 18px;
-        }
         .author {
           display: flex;
           align-items: center;
@@ -102,57 +87,6 @@
             }
           }
         }
-        &.about {
-          margin-bottom: 10px;
-          color: $accent;
-          font-size: 14px;
-          a {
-            &:hover {
-              text-decoration: underline;
-            }
-          }
-          .about-this-site {
-            display: inline-block;
-            position: relative;
-            bottom: 1px;
-            white-space: nowrap;
-            color: inherit;
-            margin-right: 12px;
-            i.about-icon {
-              width: 18px;
-              height: 18px;
-              background-color: currentColor;
-              -webkit-mask: url("../img/icons/about.svg") no-repeat center / contain;
-              mask: url("../img/icons/about.svg") no-repeat center / contain;
-              display: inline-block;
-              vertical-align: middle;
-              margin-bottom: 2px;
-              opacity: 0.78;
-              margin-right: 2px;
-            }
-          }
-          .whats-new {
-            margin-right: 0;
-            display: inline-block;
-            position: relative;
-            bottom: 1px;
-            white-space: nowrap;
-            font-size: 14px;
-            color: $linkColor;
-            i.new-icon {
-              width: 18px;
-              height: 18px;
-              background-color: currentColor;
-              -webkit-mask: url("../img/icons/new.svg") no-repeat center / contain;
-              mask: url("../img/icons/new.svg") no-repeat center / contain;
-              display: inline-block;
-              vertical-align: middle;
-              margin-bottom: 2px;
-              opacity: 0.78;
-              margin-right: 2px;
-            }
-          }
-        }
       }
     }
   }
@@ -183,7 +117,7 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    @media (min-width: 1281px) {
+    @media (min-width: 1440px) {
       &:has(> *) {
         height: 100vh;
       }

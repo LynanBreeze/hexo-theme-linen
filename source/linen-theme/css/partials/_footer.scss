@@ -305,20 +305,32 @@
     }
 
     .footerLinks {
-      flex-direction: row;
-      flex-wrap: nowrap;
-      gap: 0 12px;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px 16px;
+      justify-content: stretch;
     }
 
     .footerLinkCol {
-      min-width: unset;
-      gap: 6px;
+      min-width: 0;
+      gap: 8px;
 
       &.footerMetaCol {
-        min-width: unset;
-        width: auto;
+        grid-column: 1 / -1;
+        min-width: 0;
+        width: 100%;
         margin-top: 0;
+        padding-top: 16px;
+        border-top: 1px solid $borderSubtle;
+
+        &:first-child {
+          padding-top: 0;
+          border-top: none;
+        }
+
+        .footerMetaText {
+          overflow-wrap: break-word;
+        }
       }
     }
   }
