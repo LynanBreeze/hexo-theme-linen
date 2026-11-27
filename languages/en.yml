@@ -56,3 +56,5 @@ common:
   searchError: "Failed to load search index"
   searchHint: "Type keywords to search"
   close: "Close"
+  commentsLoading: "Loading comments..."
+  commentsLoadError: "Failed to load comments"

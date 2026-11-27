@@ -356,6 +356,8 @@ describe("Template Bugfixes & Refactors", () => {
       },
     });
     assert.ok(giscusHtml.includes('id="giscus-container"'));
+    assert.ok(giscusHtml.includes('class="giscus-container is-loading"'));
+    assert.ok(giscusHtml.includes('class="giscus-loading"'));
     assert.ok(giscusHtml.includes('id="linen-giscus-config"'));
     assert.ok(giscusHtml.includes("/linen-theme/js/giscus-init.js?v=1.0.63"));
     assert.ok(!giscusHtml.includes('id="gitalk-container"'));
@@ -418,9 +420,20 @@ describe("Template Bugfixes & Refactors", () => {
         postMessage: (msg, origin) => postedMessages.push({ msg, origin }),
       },
     };
+    const mockContainerClasses = new Set(["giscus-container", "is-loading"]);
+    const mockLoadingText = { textContent: "Loading..." };
     const mockContainer = {
+      classList: {
+        add: (...cls) => cls.forEach((c) => mockContainerClasses.add(c)),
+        remove: (...cls) => cls.forEach((c) => mockContainerClasses.delete(c)),
+        contains: (c) => mockContainerClasses.has(c),
+      },
       appendChild: (node) => appendedScripts.push(node),
-      querySelector: (sel) => (sel === "iframe.giscus-frame" ? mockIframe : null),
+      querySelector: (sel) => {
+        if (sel === "iframe.giscus-frame") return mockIframe;
+        if (sel === ".giscus-loading-text") return mockLoadingText;
+        return null;
+      },
     };
     const mockDocument = {
       readyState: "complete",
@@ -467,6 +480,17 @@ describe("Template Bugfixes & Refactors", () => {
     assert.equal(appendedScripts[0].attrs["data-repo"], "owner/blog");
     assert.equal(appendedScripts[0].attrs["data-theme"], "dark_dimmed");
     assert.equal(appendedScripts[0].attrs["data-lang"], "zh-CN");
+    assert.equal(mockContainer.classList.contains("is-loading"), true);
+
+    // Giscus resizeHeight message transitions container from loading -> loaded
+    (windowListeners["message"] || []).forEach((fn) =>
+      fn({
+        origin: "https://giscus.app",
+        data: { giscus: { resizeHeight: 360 } },
+      }),
+    );
+    assert.equal(mockContainer.classList.contains("is-loading"), false);
+    assert.equal(mockContainer.classList.contains("is-loaded"), true);
 
     (windowListeners["linen:themechange"] || []).forEach((fn) =>
       fn({ detail: { theme: "light" } }),

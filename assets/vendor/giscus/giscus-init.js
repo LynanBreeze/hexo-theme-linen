@@ -18,6 +18,9 @@
 
   var GISCUS_ORIGIN = "https://giscus.app";
   var loaded = false;
+  var ready = false;
+  var frameObserver = null;
+  var fallbackTimer = null;
 
   function getEffectiveColorScheme() {
     var explicit = document.documentElement.getAttribute("data-theme");
@@ -31,7 +34,11 @@
   }
 
   function resolveGiscusTheme(scheme) {
-    if (config.theme && config.theme !== "auto" && config.theme !== "preferred_color_scheme") {
+    if (
+      config.theme &&
+      config.theme !== "auto" &&
+      config.theme !== "preferred_color_scheme"
+    ) {
       return config.theme;
     }
     return scheme === "dark"
@@ -44,6 +51,46 @@
     if (/^zh[-_]?cn$/i.test(value) || value.toLowerCase() === "zh") return "zh-CN";
     if (/^zh[-_]?(tw|hk|hant)$/i.test(value)) return "zh-TW";
     return value || "en";
+  }
+
+  function markReady() {
+    if (ready) return;
+    ready = true;
+    if (fallbackTimer) {
+      clearTimeout(fallbackTimer);
+      fallbackTimer = null;
+    }
+    if (frameObserver) {
+      frameObserver.disconnect();
+      frameObserver = null;
+    }
+    if (container.classList) {
+      container.classList.remove("is-loading", "is-error");
+      container.classList.add("is-loaded");
+    }
+  }
+
+  function markError() {
+    if (ready) return;
+    if (fallbackTimer) {
+      clearTimeout(fallbackTimer);
+      fallbackTimer = null;
+    }
+    if (frameObserver) {
+      frameObserver.disconnect();
+      frameObserver = null;
+    }
+    if (container.classList) {
+      container.classList.remove("is-loading");
+      container.classList.add("is-error");
+    }
+    var textEl =
+      typeof container.querySelector === "function"
+        ? container.querySelector(".giscus-loading-text")
+        : null;
+    if (textEl && config.errorText) {
+      textEl.textContent = config.errorText;
+    }
   }
 
   function syncGiscusTheme(scheme) {
@@ -61,9 +108,46 @@
     );
   }
 
+  function bindIframeLoad(iframe) {
+    if (!iframe || iframe.__linenLoadBound) return;
+    iframe.__linenLoadBound = true;
+    if (typeof iframe.addEventListener === "function") {
+      iframe.addEventListener("load", function () {
+        if (!ready) {
+          fallbackTimer = setTimeout(markReady, 400);
+        }
+      });
+    }
+  }
+
+  function watchGiscusFrame() {
+    var existing =
+      typeof container.querySelector === "function"
+        ? container.querySelector("iframe.giscus-frame")
+        : null;
+    if (existing) {
+      bindIframeLoad(existing);
+      return;
+    }
+    if (typeof MutationObserver !== "function") return;
+    frameObserver = new MutationObserver(function () {
+      var iframe = container.querySelector("iframe.giscus-frame");
+      if (iframe) {
+        bindIframeLoad(iframe);
+        if (frameObserver) {
+          frameObserver.disconnect();
+          frameObserver = null;
+        }
+      }
+    });
+    frameObserver.observe(container, { childList: true, subtree: true });
+  }
+
   function loadGiscus() {
     if (loaded) return;
     loaded = true;
+
+    watchGiscusFrame();
 
     var script = document.createElement("script");
     script.src = GISCUS_ORIGIN + "/client.js";
@@ -92,12 +176,28 @@
       resolveGiscusTheme(getEffectiveColorScheme()),
     );
     script.setAttribute("data-lang", normalizeLang(config.lang));
-    script.setAttribute("data-loading", "lazy");
+
+    script.onerror = markError;
 
     container.appendChild(script);
   }
 
   window.loadGiscus = loadGiscus;
+
+  window.addEventListener("message", function (event) {
+    if (event.origin !== GISCUS_ORIGIN) return;
+    if (!event.data || typeof event.data !== "object" || !event.data.giscus) {
+      return;
+    }
+    var payload = event.data.giscus;
+    if (
+      (typeof payload.resizeHeight === "number" && payload.resizeHeight > 0) ||
+      payload.discussion !== undefined ||
+      payload.error !== undefined
+    ) {
+      markReady();
+    }
+  });
 
   window.addEventListener("linen:themechange", function (e) {
     syncGiscusTheme(e && e.detail && e.detail.theme);

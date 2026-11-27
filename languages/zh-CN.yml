@@ -56,3 +56,5 @@ common:
   searchError: "搜索索引加载失败"
   searchHint: "输入关键词开始搜索"
   close: "关闭"
+  commentsLoading: "正在加载评论…"
+  commentsLoadError: "评论加载失败，请稍后重试"

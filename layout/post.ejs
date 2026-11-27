@@ -206,9 +206,15 @@ const seriesInfo = getSeriesInfo(page?.series);
     lightTheme: theme.comment.light_theme || 'light',
     darkTheme: theme.comment.dark_theme || 'dark_dimmed',
     lang: theme.comment.lang || page.language || config.language || 'en',
+    errorText: __('common.commentsLoadError'),
   };
 %>
-<div id="giscus-container" class="giscus-container"></div>
+<div id="giscus-container" class="giscus-container is-loading">
+  <div class="giscus-loading" role="status" aria-live="polite">
+    <span class="giscus-loading-spinner" aria-hidden="true"></span>
+    <span class="giscus-loading-text"><%=__('common.commentsLoading')%></span>
+  </div>
+</div>
 <script id="linen-giscus-config" type="application/json"><%- JSON.stringify(giscusConfig).replace(/<\//g, '<\\/') %></script>
 <script src="<%=url_for(`/linen-theme/js/giscus-init.js?v=${theme.version}`)%>" defer></script>
 <% } else {

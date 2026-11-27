@@ -275,10 +275,88 @@
       }
     }
     #giscus-container {
+      --giscus-placeholder-height: 320px;
+      position: relative;
       margin: 1.5em 0 0;
       padding: 1.25rem $commonPadding 0;
       background-color: $bg;
       border-top: 1px solid $borderSubtle;
+      min-height: var(--giscus-placeholder-height);
+
+      .giscus-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: calc(var(--giscus-placeholder-height) - 1.25rem);
+        color: $metaText;
+        font-size: 13.5px;
+        letter-spacing: 0.01em;
+        transition: opacity 220ms $easeOut;
+      }
+
+      .giscus-loading-spinner {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        border: 1.75px solid $borderStrong;
+        border-top-color: $accent;
+        animation: giscusSpin 0.78s linear infinite;
+        flex-shrink: 0;
+      }
+
+      iframe.giscus-frame {
+        display: block;
+        width: 100%;
+        transition: opacity 240ms $easeOut;
+      }
+
+      &.is-loading {
+        > .giscus,
+        > iframe.giscus-frame {
+          position: absolute;
+          inset: 1.25rem $commonPadding 0;
+          width: calc(100% - #{$commonPadding} * 2);
+          opacity: 0;
+          pointer-events: none;
+        }
+      }
+
+      &.is-loaded {
+        min-height: 0;
+
+        .giscus-loading {
+          display: none;
+        }
+
+        iframe.giscus-frame {
+          opacity: 1;
+        }
+      }
+
+      &.is-error {
+        min-height: 120px;
+
+        .giscus-loading {
+          min-height: 96px;
+        }
+
+        .giscus-loading-spinner {
+          display: none;
+        }
+      }
+    }
+
+    @keyframes giscusSpin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #giscus-container .giscus-loading-spinner {
+        animation: none;
+      }
     }
     #gitalk-container {
       --gt-avatar-size: 2.25rem;
