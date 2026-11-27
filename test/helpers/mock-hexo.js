@@ -44,7 +44,8 @@ function createMockHexo(overrides = {}) {
     },
     extend: {
       filter: {
-        register(name, fn) {
+        register(name, fn, priority = 10) {
+          fn._priority = priority;
           (filters[name] ||= []).push(fn);
         },
       },
@@ -81,6 +82,11 @@ function loadHexoScript(relPath, mockHexo) {
   );
   const localRequire = (id) =>
     require(id.startsWith(".") ? path.resolve(path.dirname(fullPath), id) : id);
+  localRequire.resolve = (id, options) =>
+    require.resolve(
+      id.startsWith(".") ? path.resolve(path.dirname(fullPath), id) : id,
+      options,
+    );
   wrapper(
     mod.exports,
     localRequire,

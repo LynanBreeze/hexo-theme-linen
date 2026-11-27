@@ -250,4 +250,102 @@ describe("scripts/rss.js", () => {
     assert.ok(!noCover.includes("<enclosure"));
     assert.ok(noCover.includes("<description><![CDATA[<p>Plain text</p>]]></description>"));
   });
+
+  it("snapshots clean pre-lazyload HTML at after_post_render priority 1.5 with footnotes, MathML, and clean images", () => {
+    const { processPost } = require("../scripts/lazyload/process");
+    const hexo = createMockHexo({
+      config: {
+        title: "Full Pipeline",
+        url: "https://example.com",
+        root: "/",
+        language: "zh-CN",
+        theme_config: {
+          latex: { enable: true },
+          lazyload: { enable: true },
+          photoswipe: true,
+          comment: { client_id: "cid" },
+        },
+      },
+      themeConfig: {
+        latex: { enable: true },
+        feed: { limit: 10 },
+        comment: { client_id: "cid" },
+      },
+      render: {
+        renderSync: ({ text }) => {
+          const m = String(text || "").match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+          if (m) return `<p><img src="${m[2]}" alt="${m[1]}"></p>`;
+          return `<p>${String(text || "").trim()}</p>`;
+        },
+      },
+    });
+
+    loadHexoScript("scripts/latex.js", hexo);
+    loadHexoScript("scripts/markdown-it-image-grid.js", hexo);
+    loadHexoScript("scripts/footnote.js", hexo);
+    loadHexoScript("scripts/rss.js", hexo);
+    loadHexoScript("scripts/custom.js", hexo);
+    hexo.extend.filter.register("after_post_render", processPost, 10);
+
+    const post = {
+      source: "_posts/pipeline.md",
+      path: "2026/pipeline/",
+      title: "Pipeline Post",
+      date: new Date("2026-11-26T08:00:00Z"),
+      content: [
+        "公式 $E=mc^2$ 与脚注[^1]。",
+        "",
+        '<img src="/img/pic.png" alt="示例 $hide-placeholder" data-placeholderimg="blurhash:abc">',
+        "",
+        ":::image-grid switcher",
+        "白天 | ![日景](/img/day.jpg)",
+        "夜晚 | ![夜景](/img/night.jpg)",
+        ":::",
+        "",
+        '<iframe src="https://example.com/embed"></iframe>',
+        '<figure class="highlight js"><table><tr><td class="code">1</td></tr></table></figure>',
+        "",
+        "[^1]: 这是脚注内容",
+      ].join("\n"),
+    };
+
+    const runOrdered = (list) =>
+      [...list]
+        .sort((a, b) => (a._priority ?? 10) - (b._priority ?? 10))
+        .forEach((fn) => fn.call(hexo, post));
+
+    runOrdered(hexo._filters.before_post_render);
+    // Simulate markdown rendering wrapping plain text while preserving blocks
+    post.content = post.content;
+    runOrdered(hexo._filters.after_post_render);
+
+    // Webpage post.content has lazyload wrappers, copy-btn, gitalk-initiator, and full KaTeX HTML
+    assert.ok(post.content.includes("lazyload-outer-wrap"));
+    assert.ok(post.content.includes("copy-btn"));
+    assert.ok(post.content.includes("gitalk-initiator"));
+    assert.ok(post.content.includes("katex-html"));
+
+    // RSS output uses priority 1.5 snapshot: clean XML, no lazyload/copy-btn/gitalk/iframe/switcher controls
+    const out = hexo._generators.rss({
+      posts: { sort: () => ({ toArray: () => [post] }) },
+    });
+    assert.ok(out.data.includes('id="fn-1"'), "RSS should preserve rendered footnotes");
+    assert.ok(out.data.includes("这是脚注内容"));
+    assert.ok(out.data.includes("<math "), "RSS should preserve MathML from KaTeX");
+    assert.ok(!out.data.includes("katex-html"), "RSS must strip CSS-dependent katex-html");
+    assert.ok(!out.data.includes("lazyload-outer-wrap"), "RSS must not include lazyload wrappers");
+    assert.ok(!out.data.includes("copy-btn"), "RSS must not include copy-btn");
+    assert.ok(!out.data.includes("gitalk-initiator"), "RSS must not include gitalk-initiator");
+    assert.ok(!out.data.includes("<iframe"), "RSS must strip iframes");
+    assert.ok(!out.data.includes("image-grid-switcher-controls"), "RSS must strip switcher buttons");
+    assert.ok(
+      !/<span[^>]*\bgrid-item\b[^>]*\baria-hidden="true"/i.test(out.data),
+      "RSS switcher images should not stay hidden",
+    );
+    assert.ok(!out.data.includes("$hide-placeholder"), "RSS must strip lazyload alt directives");
+    assert.ok(!out.data.includes("data-placeholderimg"), "RSS must strip placeholder attrs");
+    assert.ok(out.data.includes('src="https://example.com/img/pic.png"'));
+    assert.ok(out.data.includes('src="https://example.com/img/day.jpg"'));
+    assert.ok(out.data.includes('src="https://example.com/img/night.jpg"'));
+  });
 });

@@ -30,7 +30,8 @@
 .post-cover-img-wrap .cover-img {
   opacity: 1 !important;
 }
-#gitalk-container {
+#gitalk-container,
+#giscus-container {
   display: none;
 }
 .hdr-switch {

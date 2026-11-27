@@ -7,6 +7,8 @@ if (
   return;
 }
 
+const rssSnapshotMap = new Map();
+
 function escape(value) {
   if (value == null) return "";
   const str = String(value);
@@ -132,6 +134,117 @@ function startsWithImageUrl(html, targetUrl) {
   return firstSrc === targetUrl;
 }
 
+function replaceBalancedSpanByClass(html, classRe, replacer) {
+  const openTagRe = /<span\b[^>]*>/gi;
+  let result = "";
+  let cursor = 0;
+  let match;
+
+  while ((match = openTagRe.exec(html)) !== null) {
+    if (match.index < cursor) continue;
+    const openTag = match[0];
+    if (!classRe.test(openTag)) continue;
+
+    const start = match.index;
+    const tokenRe = /<(\/?)span\b[^>]*>/gi;
+    tokenRe.lastIndex = start;
+    let depth = 0;
+    let end = -1;
+    let token;
+
+    while ((token = tokenRe.exec(html)) !== null) {
+      if (token[1]) {
+        depth--;
+        if (depth === 0) {
+          end = token.index + token[0].length;
+          break;
+        }
+      } else {
+        depth++;
+      }
+    }
+
+    if (end === -1) continue;
+
+    const fullBlock = html.slice(start, end);
+    result += html.slice(cursor, start) + replacer(fullBlock);
+    cursor = end;
+    openTagRe.lastIndex = end;
+  }
+
+  return cursor === 0 ? html : result + html.slice(cursor);
+}
+
+function simplifyKatexForRss(html) {
+  if (!html || !html.includes("katex")) return html;
+  return replaceBalancedSpanByClass(
+    html,
+    /\bclass=["'][^"']*\bkatex(?:-display)?\b[^"']*["']/i,
+    (block) => {
+      const mathMatch = block.match(/<math\b[\s\S]*?<\/math>/i);
+      return mathMatch ? mathMatch[0] : block;
+    },
+  );
+}
+
+function cleanImgDirectivesForRss(html) {
+  return String(html || "").replace(/<img\b[^>]*>/gi, (tag) => {
+    let cleaned = tag
+      .replace(/\s+data-placeholderimg\s*=\s*(?:"[^"]*"|'[^']*')/gi, "")
+      .replace(/\s+data-keep-placeholder\s*=\s*(?:"[^"]*"|'[^']*'|[\w-]+)/gi, "")
+      .replace(/\s+(?:hide-placeholder|no-lazy|no-link)\b(?=\s|>|\/)/gi, "")
+      .replace(/(\balt\s*=\s*["'])([^"']*)(["'])/gi, (_, open, altVal, close) => {
+        const nextAlt = altVal
+          .replace(/\$placeholder=\S+=placeholder/gi, "")
+          .replace(/\$aspect-ratio=\S+=aspect-ratio/gi, "")
+          .replace(/(?:^|\s+)\$?(?:no-lazy|no-link|hide-placeholder)\b/gi, "")
+          .trim();
+        return `${open}${nextAlt}${close}`;
+      });
+
+    if (!/\bloading\s*=/i.test(cleaned)) {
+      cleaned = cleaned.replace(/^<img\b/i, '<img loading="lazy"');
+    }
+    return cleaned;
+  });
+}
+
+function sanitizeHtmlForRss(html, siteUrl, root, postUrl) {
+  let out = String(html || "");
+  out = out.replace(/<iframe[\s\S]*?<\/iframe>/gi, "");
+  out = replaceBalancedSpanByClass(
+    out,
+    /\bclass=["'][^"']*\bimage-grid-switcher-controls\b[^"']*["']/i,
+    () => "",
+  );
+  out = out.replace(
+    /(<span\b[^>]*\bclass=["'][^"']*\bgrid-item\b[^"']*["'][^>]*?)\s+aria-hidden=["']true["']/gi,
+    "$1",
+  );
+  out = simplifyKatexForRss(out);
+  out = cleanImgDirectivesForRss(out);
+  out = absolutizeImgSrc(out, siteUrl, root, postUrl);
+  return out.trim();
+}
+
+function getPostSnapshotKey(post) {
+  return post?.source || post?.path || "";
+}
+
+// Capture clean rendered HTML after latex restoration (priority 1) and before
+// custom/folded/lazyload DOM mutations (priority >= 2).
+hexo.extend.filter.register(
+  "after_post_render",
+  function (data) {
+    const key = getPostSnapshotKey(data);
+    if (key && typeof data?.content === "string") {
+      rssSnapshotMap.set(key, data.content);
+    }
+    return data;
+  },
+  1.5,
+);
+
 hexo.extend.generator.register("rss", function (locals) {
   const themeConfig = hexo.theme.config;
   const limit = themeConfig?.feed?.limit ?? 10;
@@ -195,8 +308,14 @@ hexo.extend.generator.register("rss", function (locals) {
         config.root,
       );
 
-      let postContent = String(post._content || "")
-        .replace(
+      const snapshotKey = getPostSnapshotKey(post);
+      const snapshotHtml = snapshotKey ? rssSnapshotMap.get(snapshotKey) : undefined;
+      let rawHtml = "";
+
+      if (typeof snapshotHtml === "string") {
+        rawHtml = sanitizeHtmlForRss(snapshotHtml, siteUrl, config.root, postUrl);
+      } else {
+        const postContent = String(post._content || "").replace(
           /:::image-grid(?:\s+([\w-]+))?([\s\S]*?):::/g,
           (match, grid, content) => {
             const gridClass = grid ? ` ${grid}` : "";
@@ -215,23 +334,13 @@ hexo.extend.generator.register("rss", function (locals) {
               .replace(/<p>/g, '<span class="grid-item">')
               .replace(/<\/p>/g, "</span>")}</span>`;
           },
-        )
-        .replace(/\s*data-placeholderimg="[^"]*"/g, "");
-      let rawHtml = absolutizeImgSrc(
-        hexo.render
-          .renderSync({
-            text: postContent,
-            engine: "markdown",
-          })
-          .replace(
-            /<img\b(?![^>]*\bloading=)([^>]*)>/gi,
-            '<img loading="lazy"$1>',
-          )
-          .replace(/<iframe[\s\S]*?<\/iframe>/gi, ""),
-        siteUrl,
-        config.root,
-        postUrl,
-      );
+        );
+        const renderedFallback = hexo.render.renderSync({
+          text: postContent,
+          engine: "markdown",
+        });
+        rawHtml = sanitizeHtmlForRss(renderedFallback, siteUrl, config.root, postUrl);
+      }
 
       if (isHttpUrl(coverUrl) && !startsWithImageUrl(rawHtml, coverUrl)) {
         const coverImgHtml = `<p><img src="${escape(coverUrl)}" alt="${escape(titleText)}" /></p>`;

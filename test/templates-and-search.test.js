@@ -319,6 +319,143 @@ describe("Template Bugfixes & Refactors", () => {
     );
   });
 
+  it("post.ejs supports Giscus comment provider and giscus-init.js syncs dark/light theme changes", () => {
+    const vm = require("vm");
+    const basePostLocals = {
+      page: {
+        title: "Hello",
+        date: new Date("2026-05-01"),
+        content: "<p>Hi</p>",
+        tags: [],
+        path: "2026/hello/",
+        language: "zh-CN",
+      },
+      config: { language: "zh-CN" },
+      site: { posts: [] },
+      getPostLayoutStyle: () => "editorial",
+      getPostDate: () => "5 月 1 日，2026",
+      renderTravelRoutes: (c) => c,
+      getSeriesInfo: () => ({}),
+      url_for: makeUrlFor("/"),
+      date: () => "2026-05-01",
+      partial: () => "",
+      __: (k) => k,
+    };
+
+    // Auto-detect Giscus when repo_id / category_id are present
+    const giscusHtml = renderTemplate("layout/post.ejs", {
+      ...basePostLocals,
+      theme: {
+        version: "1.0.63",
+        comment: {
+          repo: "owner/blog",
+          repo_id: "R_kgDO123",
+          category: "Announcements",
+          category_id: "DIC_kwDO456",
+        },
+      },
+    });
+    assert.ok(giscusHtml.includes('id="giscus-container"'));
+    assert.ok(giscusHtml.includes('id="linen-giscus-config"'));
+    assert.ok(giscusHtml.includes("/linen-theme/js/giscus-init.js?v=1.0.63"));
+    assert.ok(!giscusHtml.includes('id="gitalk-container"'));
+
+    // Preserve Gitalk as default when client_id is configured
+    const gitalkHtml = renderTemplate("layout/post.ejs", {
+      ...basePostLocals,
+      theme: {
+        version: "1.0.63",
+        comment: {
+          client_id: "cid",
+          client_secret: "csec",
+          repo: "blog",
+          owner: "owner",
+        },
+      },
+    });
+    assert.ok(gitalkHtml.includes('id="gitalk-container"'));
+    assert.ok(!gitalkHtml.includes('id="giscus-container"'));
+
+    // Execute giscus-init.js in a minimal VM sandbox to verify lazy load and theme sync
+    const configMatch = giscusHtml.match(
+      /<script id="linen-giscus-config" type="application\/json">([\s\S]*?)<\/script>/,
+    );
+    assert.ok(configMatch);
+    const giscusInitCode = fs.readFileSync(
+      path.join(ROOT_DIR, "source/linen-theme/js/giscus-init.js"),
+      "utf8",
+    );
+
+    const appendedScripts = [];
+    const postedMessages = [];
+    const windowListeners = {};
+    let observerCallback = null;
+    const mockIframe = {
+      contentWindow: {
+        postMessage: (msg, origin) => postedMessages.push({ msg, origin }),
+      },
+    };
+    const mockContainer = {
+      appendChild: (node) => appendedScripts.push(node),
+      querySelector: (sel) => (sel === "iframe.giscus-frame" ? mockIframe : null),
+    };
+    const mockDocument = {
+      readyState: "complete",
+      documentElement: {
+        getAttribute: (name) => (name === "data-theme" ? "dark" : null),
+      },
+      getElementById: (id) => {
+        if (id === "linen-giscus-config") return { textContent: configMatch[1] };
+        if (id === "giscus-container") return mockContainer;
+        return null;
+      },
+      createElement: () => {
+        const attrs = {};
+        return {
+          attrs,
+          setAttribute: (k, v) => {
+            attrs[k] = v;
+          },
+        };
+      },
+    };
+    const mockWindow = {
+      addEventListener: (type, fn) => {
+        (windowListeners[type] ||= []).push(fn);
+      },
+      matchMedia: () => ({ matches: false }),
+    };
+    function MockIntersectionObserver(cb) {
+      observerCallback = cb;
+      this.observe = () => {};
+      this.disconnect = () => {};
+    }
+
+    vm.runInNewContext(giscusInitCode, {
+      window: mockWindow,
+      document: mockDocument,
+      IntersectionObserver: MockIntersectionObserver,
+    });
+
+    assert.equal(appendedScripts.length, 0, "Giscus script should wait for intersection");
+    observerCallback([{ isIntersecting: true }], { disconnect: () => {} });
+    assert.equal(appendedScripts.length, 1);
+    assert.equal(appendedScripts[0].src, "https://giscus.app/client.js");
+    assert.equal(appendedScripts[0].attrs["data-repo"], "owner/blog");
+    assert.equal(appendedScripts[0].attrs["data-theme"], "dark_dimmed");
+    assert.equal(appendedScripts[0].attrs["data-lang"], "zh-CN");
+
+    (windowListeners["linen:themechange"] || []).forEach((fn) =>
+      fn({ detail: { theme: "light" } }),
+    );
+    assert.equal(postedMessages.length, 1);
+    assert.equal(postedMessages[0].origin, "https://giscus.app");
+    assert.equal(
+      JSON.stringify(postedMessages[0].msg),
+      JSON.stringify({ giscus: { setConfig: { theme: "light" } } }),
+    );
+  });
+
   it("page.ejs and 404.ejs render styled standalone markup", () => {
     const pageHtml = renderTemplate("layout/page.ejs", {
       page: { title: "About", content: "<p>Hello</p>" },

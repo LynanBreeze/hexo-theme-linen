@@ -264,7 +264,8 @@
       .copyright-desc,
       .sponsor-list,
       #related-posts,
-      #gitalk-container {
+      #gitalk-container,
+      #giscus-container {
         max-width: calc(var(--linen-prose-width, #{$proseMaxWidth}) + #{$commonPadding} * 2);
         margin-left: auto;
         margin-right: auto;
@@ -272,6 +273,12 @@
       .series-nav {
         max-width: var(--linen-prose-width, #{$proseMaxWidth});
       }
+    }
+    #giscus-container {
+      margin: 1.5em 0 0;
+      padding: 1.25rem $commonPadding 0;
+      background-color: $bg;
+      border-top: 1px solid $borderSubtle;
     }
     #gitalk-container {
       --gt-avatar-size: 2.25rem;

@@ -11,7 +11,7 @@ A clean, editorial Hexo theme focused on readability, photography, and minimal c
 - **Photography & Lightbox** — PhotoSwipe 5 lightbox with mobile frosted-glass captions, two-tier EXIF display, HDR toggle, Live Photos, lazy loading, and flexible `:::image-grid` containers (`scroll`, `switcher`, multi-column & ratio grids)
 - **Rich Content Support** — KaTeX math rendering, footnotes, link cards, warm syntax highlighting, on-demand self-hosted Fluent Emoji SVGs, and interactive TOC
 - **Taxonomies, Map Series & 404** — Unified archives, tags, categories, standalone pages, 404 layout, and series pages with MapLibre GL (with Leaflet fallback and live dark-mode styling) for travel series
-- **Opt-in Local Search & Linen RSS/Atom** — Optional zero-dependency client-side search (`⌘K` / `Ctrl+K`), built-in RSS generator with Linen-styled XSL stylesheets, Gitalk comments, and i18n (`en` / `zh-CN`)
+- **Opt-in Local Search & Linen RSS/Atom** — Optional zero-dependency client-side search (`⌘K` / `Ctrl+K`), built-in RSS generator with Linen-styled XSL stylesheets, Giscus & Gitalk comments, and i18n (`en` / `zh-CN`)
 
 ## Installation
 
@@ -56,6 +56,17 @@ post:
 # Optional custom footer logo (set to false to hide)
 # footer:
 #   logo: /img/custom-logo.svg
+
+# Comments: Giscus (recommended) or Gitalk
+# comment:
+#   provider: giscus
+#   repo: owner/repo
+#   repo_id: R_kgDO...
+#   category: General
+#   category_id: DIC_kwDO...
+#   mapping: pathname
+#   light_theme: light
+#   dark_theme: dark_dimmed
 ```
 
 You can also override `layoutStyle` and `editorialBreakout` / `proseWidth` in an individual post's front-matter, or create `source/404.md` with `layout: 404` and `permalink: /404.html` to enable the built-in 404 page.

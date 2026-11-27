@@ -182,6 +182,35 @@ const seriesInfo = getSeriesInfo(page?.series);
 <% } %>
 
 <% if (theme.comment && page.comment !== false) {
+  const rawCommentProvider = String(theme.comment.provider || '').trim().toLowerCase();
+  const commentProvider =
+    rawCommentProvider === 'giscus' ||
+    (!rawCommentProvider && (theme.comment.repo_id || theme.comment.category_id))
+      ? 'giscus'
+      : 'gitalk';
+%>
+<% if (commentProvider === 'giscus') {
+  const giscusConfig = {
+    repo: theme.comment.repo || '',
+    repoId: theme.comment.repo_id || '',
+    category: theme.comment.category || '',
+    categoryId: theme.comment.category_id || '',
+    mapping: theme.comment.mapping || 'pathname',
+    term: theme.comment.term || '',
+    strict: theme.comment.strict ?? '0',
+    reactionsEnabled: theme.comment.reactions_enabled ?? '1',
+    emitMetadata: theme.comment.emit_metadata ?? '0',
+    inputPosition: theme.comment.input_position || 'top',
+    theme: theme.comment.theme || '',
+    lightTheme: theme.comment.light_theme || 'light',
+    darkTheme: theme.comment.dark_theme || 'dark_dimmed',
+    lang: theme.comment.lang || page.language || config.language || 'en',
+  };
+%>
+<div id="giscus-container" class="giscus-container"></div>
+<script id="linen-giscus-config" type="application/json"><%- JSON.stringify(giscusConfig).replace(/<\//g, '<\\/') %></script>
+<script src="<%=url_for(`/linen-theme/js/giscus-init.js?v=${theme.version}`)%>" defer></script>
+<% } else {
   const gitalkConfig = {
     cssUrl: url_for(`/linen-theme/js/gitalk/gitalk.css?v=${theme.version}-gitalk`),
     jsUrl: url_for(`/linen-theme/js/gitalk/gitalk.min.js?v=${theme.version}-gitalk`),
@@ -198,6 +227,7 @@ const seriesInfo = getSeriesInfo(page?.series);
 <div id="gitalk-container"></div>
 <script id="linen-gitalk-config" type="application/json"><%- JSON.stringify(gitalkConfig).replace(/<\//g, '<\\/') %></script>
 <script src="<%=url_for(`/linen-theme/js/gitalk-init.js?v=${theme.version}`)%>" defer></script>
+<% } %>
 <% } %>
 
 <% if ([theme?.photoswipe ?? config?.theme_config?.photoswipe, page.photoswipe ?? true, /<img|\/static\/live-photo\/|live-photo-gallery-item|data-live-photo-src/.test(page?.content)].every(enable=>enable)) {
