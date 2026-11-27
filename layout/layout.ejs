@@ -64,7 +64,10 @@ const version = theme.version;
   <% if (theme.stylesheets !== undefined
     && theme.stylesheets.length > 0) { %>
   <% if (is_post() || is_page()) { %>
+  <link rel="stylesheet" href="<%=url_for(`/linen-theme/css/post.css?v=${version}`)%>" />
   <link rel="stylesheet" href="<%=url_for(`/linen-theme/css/linkcard.css?v=${version}`)%>" />
+  <% } else if (page.series) { %>
+  <link rel="stylesheet" href="<%=url_for(`/linen-theme/css/series.css?v=${version}`)%>" />
   <% } %>
   <!-- stylesheets list from _config.yml -->
   <% theme.stylesheets.forEach(url => { %>
@@ -194,6 +197,9 @@ const version = theme.version;
   <% theme.scripts.forEach(url => { %>
   <script src="<%=url_for(`${url}?v=${version}`)%>" defer></script>
   <% }); %>
+  <% } %>
+  <% if (is_post() || is_page()) { %>
+  <script src="<%=url_for(`/linen-theme/js/post.js?v=${version}`)%>" defer></script>
   <% } %>
   <% if (page.hdrAssetsPrefix) { %>
   <script>

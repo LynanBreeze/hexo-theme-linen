@@ -70,6 +70,10 @@ describe("scripts/footnote.js", () => {
       path.join(ROOT_DIR, "source/linen-theme/js/linen.js"),
       "utf8",
     );
+    const postJs = fs.readFileSync(
+      path.join(ROOT_DIR, "source/linen-theme/js/post.js"),
+      "utf8",
+    );
 
     function createClassList(initial = []) {
       const set = new Set(initial);
@@ -347,6 +351,7 @@ describe("scripts/footnote.js", () => {
     };
 
     vm.runInNewContext(linenJs, sandbox, { filename: "linen.js" });
+    vm.runInNewContext(postJs, sandbox, { filename: "post.js" });
 
     const popover = mockDocument.getElementById("footnote-popover");
     assert.ok(popover, "Footnote popover element should be created");

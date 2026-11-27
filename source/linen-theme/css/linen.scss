@@ -1,17 +1,14 @@
-@use "./normalize.css" as *;
-@use "./mediaquery.scss" as mq;
+@use "./normalize" as *;
+@use "./mediaquery" as mq;
 
 @use "./partials/tokens";
 @use "./partials/base";
 @use "./partials/header";
-@use "./partials/post";
 @use "./partials/taxonomy";
 @use "./partials/layout";
 @use "./partials/post-list";
 @use "./partials/footer";
 @use "./partials/widgets";
-@use "./partials/series-travel";
-@use "./partials/image-grid";
 @use "./partials/misc";
 
 @include mq.rules;

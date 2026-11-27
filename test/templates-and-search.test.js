@@ -405,7 +405,7 @@ describe("Template Bugfixes & Refactors", () => {
     );
     assert.ok(configMatch);
     const giscusInitCode = fs.readFileSync(
-      path.join(ROOT_DIR, "source/linen-theme/js/giscus-init.js"),
+      path.join(ROOT_DIR, "assets/vendor/giscus/giscus-init.js"),
       "utf8",
     );
 
@@ -586,5 +586,65 @@ describe("scripts/search.js & XSL / Print CSS", () => {
       "@media print should reset [data-theme=dark] to light palette",
     );
     assert.ok(printChunk.includes("color-scheme:light"));
+  });
+
+  it("emits optional vendor assets strictly on demand via scripts/vendor-assets.js", () => {
+    const registerVendorAssets = require("../scripts/vendor-assets");
+
+    // 1. Minimal site: no comments, no photoswipe, no map series, no search, no hdr
+    const minimalHexo = createMockHexo({});
+    registerVendorAssets(minimalHexo);
+    const minimalAssets = minimalHexo._generators["linen-vendor-assets"]({
+      posts: [{ title: "Hello", series: "Notes" }],
+      pages: [],
+    });
+    assert.deepEqual(minimalAssets, [], "Minimal site should emit zero vendor assets");
+
+    // 2. Giscus-only site must NOT emit 800KB Gitalk or Leaflet
+    const giscusHexo = createMockHexo({
+      themeConfig: {
+        comment: {
+          enable: false,
+          provider: "giscus",
+          repo: "owner/repo",
+          repo_id: "R1",
+          category_id: "C1",
+        },
+        search: { enable: true },
+        photoswipe: true,
+      },
+    });
+    registerVendorAssets(giscusHexo);
+    const giscusPaths = giscusHexo._generators["linen-vendor-assets"]({
+      posts: [{ title: "Comment Demo", comment: true, hdrSwitch: true }],
+      pages: [],
+    }).map((a) => a.path);
+
+    assert.ok(giscusPaths.includes("linen-theme/js/giscus-init.js"));
+    assert.ok(!giscusPaths.some((p) => p.includes("gitalk")), "Must not emit Gitalk on Giscus site");
+    assert.ok(!giscusPaths.some((p) => p.includes("leaflet")), "Must not emit Leaflet without map series");
+    assert.ok(giscusPaths.includes("linen-theme/js/search.js"));
+    assert.ok(giscusPaths.includes("linen-theme/js/hdr.js"));
+    assert.ok(giscusPaths.includes("linen-theme/js/photoswipe-init.js"));
+    assert.ok(giscusPaths.includes("linen-theme/js/photoswipe/photoswipe.esm.min.js"));
+
+    // 3. Gitalk + Travel map series emits Gitalk and Leaflet/travel-map
+    const fullHexo = createMockHexo({
+      themeConfig: {
+        comment: { client_id: "cid" },
+      },
+    });
+    registerVendorAssets(fullHexo);
+    const fullPaths = fullHexo._generators["linen-vendor-assets"]({
+      posts: [{ title: "Kyoto", series: "旅行" }],
+      pages: [],
+    }).map((a) => a.path);
+    assert.ok(fullPaths.includes("linen-theme/js/gitalk/gitalk.min.js"));
+    assert.ok(fullPaths.includes("linen-theme/js/gitalk-init.js"));
+    assert.ok(!fullPaths.includes("linen-theme/js/giscus-init.js"));
+    assert.ok(fullPaths.includes("linen-theme/js/leaflet.js"));
+    assert.ok(fullPaths.includes("linen-theme/js/travel-map.js"));
+    assert.ok(fullPaths.includes("linen-theme/css/leaflet.css"));
+    assert.ok(fullPaths.includes("linen-theme/img/travel-map-fallback.svg"));
   });
 });

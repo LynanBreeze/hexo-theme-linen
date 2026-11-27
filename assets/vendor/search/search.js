@@ -294,8 +294,12 @@
   });
 
   if (input) {
+    var inputDebounceTimer = null;
     input.addEventListener("input", function () {
-      runSearch(input.value);
+      clearTimeout(inputDebounceTimer);
+      inputDebounceTimer = setTimeout(function () {
+        runSearch(input.value);
+      }, 120);
     });
   }
 

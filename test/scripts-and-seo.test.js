@@ -55,6 +55,34 @@ describe("SEO, Date Helper, HoverTexts, ImageGrid & Archive Fixes", () => {
     assert.ok(html.includes('<meta property="og:description" content="Intro to Linen &amp; Hexo line 2">'));
     assert.ok(html.includes('<meta name="twitter:card" content="summary_large_image">'));
     assert.ok(html.includes('<meta name="twitter:image" content="https://example.com/img/cover.jpg">'));
+
+    const ldMatch = html.match(
+      /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
+    );
+    assert.ok(ldMatch, "Post share-meta should emit BlogPosting JSON-LD");
+    const postLd = JSON.parse(ldMatch[1]);
+    assert.equal(postLd["@type"], "BlogPosting");
+    assert.equal(postLd.headline, "Hello");
+    assert.equal(postLd.url, "https://example.com/2026/hello/");
+    assert.deepEqual(postLd.image, ["https://example.com/img/cover.jpg"]);
+
+    const homeCtx = {
+      ...ctx,
+      page: { path: "index.html" },
+      is_post: () => false,
+      is_home: () => true,
+      is_home_first_page: () => true,
+    };
+    const homeHtml = renderTemplate("layout/partials/share-meta.ejs", {
+      ...homeCtx,
+      getPageTitle: () => hexo._helpers.getPageTitle.call(homeCtx),
+      getPageDescription: () => hexo._helpers.getPageDescription.call(homeCtx),
+    });
+    const homeLdMatch = homeHtml.match(
+      /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
+    );
+    assert.ok(homeLdMatch, "Home share-meta should emit WebSite JSON-LD");
+    assert.equal(JSON.parse(homeLdMatch[1])["@type"], "WebSite");
   });
 
   it("getPostDate accepts both post objects and raw date strings/Date values", () => {

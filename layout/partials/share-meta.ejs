@@ -26,3 +26,56 @@ var ogImage = ogImageRaw ? full_url_for(ogImageRaw) : '';
 <% if (ogImage) { %>
 <meta name="twitter:image" content="<%=ogImage%>">
 <% } %>
+<%
+var toIsoDate = function (d) {
+  if (!d) return '';
+  if (typeof d.toISOString === 'function') {
+    var iso = d.toISOString();
+    return iso && !iso.startsWith('1970') ? iso : '';
+  }
+  var parsed = new Date(d);
+  if (Number.isNaN(parsed.getTime())) return '';
+  var parsedIso = parsed.toISOString();
+  return !parsedIso.startsWith('1970') ? parsedIso : '';
+};
+var jsonLd = null;
+var siteRootUrl = full_url_for('/').replace(/\/index\.html$/, '/');
+var authorName = config.author || config.title || '';
+if (is_post()) {
+  var datePublished = toIsoDate(page.date);
+  var dateModified = toIsoDate(page.updated) || datePublished;
+  var postTags = (page?.tags?.data || []).map(function (t) { return t?.name; }).filter(Boolean);
+  jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: pageTitle,
+    description: pageDescription,
+    url: canonicalUrl,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl },
+    inLanguage: page.language || config.language || 'en',
+  };
+  if (datePublished) jsonLd.datePublished = datePublished;
+  if (dateModified) jsonLd.dateModified = dateModified;
+  if (authorName) {
+    jsonLd.author = { '@type': 'Person', name: authorName };
+    jsonLd.publisher = { '@type': 'Person', name: authorName };
+  }
+  if (ogImage) jsonLd.image = [ogImage];
+  if (postTags.length) jsonLd.keywords = postTags.join(', ');
+} else if (typeof is_home === 'function' && is_home() && (typeof is_home_first_page !== 'function' || is_home_first_page())) {
+  jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: config.title || pageTitle,
+    url: siteRootUrl,
+    description: pageDescription,
+    inLanguage: config.language || 'en',
+  };
+  if (authorName) {
+    jsonLd.author = { '@type': 'Person', name: authorName };
+  }
+}
+%>
+<% if (jsonLd) { %>
+<script type="application/ld+json"><%- JSON.stringify(jsonLd).replace(/<\//g, '<\\/') %></script>
+<% } %>

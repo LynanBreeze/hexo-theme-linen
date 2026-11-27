@@ -52,7 +52,7 @@ hexo.extend.generator.register("linen-search-index", function (locals) {
     searchConfig.path || "linen-theme/search-index.json",
   ).replace(/^\/+/, "");
   const includeContent = searchConfig.content !== false;
-  const maxContentLength = Number(searchConfig.maxContentLength) || 2000;
+  const maxContentLength = Number(searchConfig.maxContentLength) || 10000;
 
   const rawPosts = locals.posts ? locals.posts.sort("-date") : [];
   const posts =

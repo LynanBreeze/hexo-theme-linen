@@ -9,9 +9,11 @@ const ejs = require("ejs");
 const { ROOT_DIR } = require("./helpers/mock-hexo");
 
 describe("Stylesheets & Templates Smoke Tests", () => {
-  it("compiles linen.scss and linkcard.scss with zero Dart Sass warnings", () => {
+  it("compiles linen.scss, post.scss, series.scss, and linkcard.scss with zero Dart Sass warnings", () => {
     for (const rel of [
       "source/linen-theme/css/linen.scss",
+      "source/linen-theme/css/post.scss",
+      "source/linen-theme/css/series.scss",
       "source/linen-theme/css/linkcard.scss",
     ]) {
       const warnings = [];
@@ -28,20 +30,22 @@ describe("Stylesheets & Templates Smoke Tests", () => {
       assert.deepEqual(warnings, [], `Unexpected Sass warnings in ${rel}`);
       if (rel.endsWith("linen.scss")) {
         assert.ok(
+          res.css.includes("U+2103") && !res.css.includes("U+0043"),
+          "source-serif unicode-range should use U+2103 instead of redundant U+0043",
+        );
+      }
+      if (rel.endsWith("post.scss")) {
+        assert.ok(
           !res.css.includes("#raw-markdown-block.travel-post"),
-          "linen.scss must not generate dead #raw-markdown-block.travel-post selectors",
+          "post.scss must not generate dead #raw-markdown-block.travel-post selectors",
         );
         assert.ok(
           !res.css.includes("#raw-markdown-block.layout-style-journal"),
-          "linen.scss must not generate dead #raw-markdown-block.layout-style-journal selectors",
+          "post.scss must not generate dead #raw-markdown-block.layout-style-journal selectors",
         );
         assert.ok(
           res.css.includes(".footnote-anchor-wrap.anchor-highlight .footnote-href"),
-          "linen.scss should contain anchor highlight styles moved out of linen.js",
-        );
-        assert.ok(
-          res.css.includes("U+2103") && !res.css.includes("U+0043"),
-          "source-serif unicode-range should use U+2103 instead of redundant U+0043",
+          "post.scss should contain anchor highlight styles moved out of JS",
         );
       }
     }
