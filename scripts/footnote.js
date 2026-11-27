@@ -83,10 +83,15 @@ hexo.extend.filter.register("before_post_render", function (data) {
           .map((p) => (p.trim() ? p : ""))
           .join("\n");
 
-        const backrefs = Array.from({ length: refCount[id] || 0 }, (_, i) => {
+        const totalRefs = refCount[id] || 0;
+        const backrefs = Array.from({ length: totalRefs }, (_, i) => {
           const n = i + 1;
-          return `<a href="#fnref-${id}-${n}" class="footnote-backref" aria-label="${backrefLabel}" title="${backrefLabel}"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 6v5a3 3 0 0 1-3 3H4m0 0 4-4m-4 4 4 4" /></svg></a>`;
-        }).join(" ");
+          const indexBadge =
+            totalRefs > 1
+              ? `<span class="footnote-backref-index" aria-hidden="true">${n}</span>`
+              : "";
+          return `<a href="#fnref-${id}-${n}" class="footnote-backref" aria-label="${backrefLabel}" title="${backrefLabel}"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 12.5h4.25a3.25 3.25 0 0 0 3.25-3.25V3.5" /><path d="M7.75 6.25 10.5 3.5l2.75 2.75" /></svg>${indexBadge}</a>`;
+        }).join("");
 
         return `<li id="fn-${id}">${html}${backrefs}</li>`;
       })

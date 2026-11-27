@@ -135,9 +135,6 @@
   .post-series {
     display: none;
   }
-  #post .commented-text::after {
-    white-space: normal;
-  }
 }
 
 @media (pointer: coarse) {
@@ -269,9 +266,6 @@
     h3::before {
       display: none;
     }
-  }
-  .commented-text {
-    display: inline-block;
   }
   figure.highlight {
     .gutter {
@@ -758,7 +752,8 @@
   #page-donates,
   .sponsor-list,
   #back-to-top,
-  #search-modal {
+  #search-modal,
+  #footnote-popover {
     display: none;
   }
   .nav-header.nav-header {

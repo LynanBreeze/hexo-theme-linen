@@ -901,18 +901,78 @@
     scroll-margin-top: 2rem;
   }
 
+  .footnote-anchor-wrap {
+    margin-left: 0.08em;
+
+    .footnote-href {
+      display: inline-block;
+      padding: 0 0.24em;
+      border-radius: $radiusSm;
+      color: $accent;
+      font-family: $linkFontFamily;
+      font-size: 0.92em;
+      font-weight: 500;
+      line-height: 1.3;
+      text-decoration: none;
+      transition:
+        color 160ms $easeOut,
+        background-color 160ms $easeOut;
+
+      &:hover,
+      &:focus-visible,
+      &.is-popover-open {
+        color: $accentDark;
+        background-color: $accentSoft;
+        text-decoration: none;
+      }
+
+      &:focus-visible {
+        outline: 1.5px solid $accentFocus;
+        outline-offset: 1px;
+      }
+    }
+  }
+
   .footnotes .footnote-backref {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.12em;
     margin-left: 0.35em;
-    font-weight: normal;
+    padding: 0.12em 0.28em;
+    border-radius: $radiusMd;
+    color: $moreGrayText;
+    font-family: $linkFontFamily;
+    font-weight: 500;
+    line-height: 1;
     text-decoration: none;
+    vertical-align: -0.1em;
+    transition:
+      color 160ms $easeOut,
+      background-color 160ms $easeOut,
+      transform 160ms $easeOut;
+
+    + .footnote-backref {
+      margin-left: 0.12em;
+    }
+
+    &:hover,
+    &:focus-visible {
+      color: $accent;
+      background-color: $accentSoft;
+      text-decoration: none;
+      transform: translateY(-1px);
+    }
+
+    &:focus-visible {
+      outline: 1.5px solid $accentFocus;
+      outline-offset: 1px;
+    }
 
     svg {
-      display: inline-block;
-      width: 1em;
-      height: 1em;
+      display: block;
+      width: 0.88em;
+      height: 0.88em;
       overflow: visible;
-      vertical-align: -0.16em;
     }
 
     path {
@@ -920,7 +980,14 @@
       stroke: currentColor;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-width: 2;
+      stroke-width: 1.45;
+    }
+
+    .footnote-backref-index {
+      font-size: 0.68em;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      opacity: 0.85;
     }
   }
 
@@ -1339,52 +1406,27 @@
     }
   }
   .commented-text {
-    word-break: break-all;
+    cursor: help;
     text-decoration: underline;
     text-decoration-style: dotted;
-    position: relative;
-    &::before,
-    &::after {
-      position: absolute;
-      z-index: 99;
-      opacity: 0;
-      transition: ease-in-out 0.3s;
-      pointer-events: none;
+    text-decoration-color: $accentUnderline;
+    text-underline-offset: 0.24em;
+    text-decoration-thickness: 1.5px;
+    border-radius: $radiusSm;
+    transition:
+      background-color 160ms $easeOut,
+      text-decoration-color 160ms $easeOut;
+
+    &:hover,
+    &:focus-visible,
+    &.is-popover-open {
+      background-color: $accentSoft;
+      text-decoration-color: $accent;
     }
 
-    &::before {
-      content: "";
-      border-width: 4px 6px 0 6px;
-      border-style: solid;
-      border-color: transparent;
-      border-top-color: $darkText;
-      top: -5px;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    &::after {
-      content: attr(data-comment);
-      background: $darkText;
-      color: $bg;
-      border-radius: 5px;
-      padding: 6px 8px;
-      min-width: 80px;
-      max-width: calc(100vw - 20px); /* 避免溢出屏幕左右 */
-      white-space: nowrap; /* 允许换行 */
-      text-align: center;
-      font-size: 13px;
-      word-break: keep-all;
-      top: -5px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-100%);
-    }
-
-    &:hover {
-      &::before,
-      &::after {
-        opacity: 1;
-      }
+    &:focus-visible {
+      outline: 1.5px solid $accentFocus;
+      outline-offset: 1px;
     }
   }
   &::after {
@@ -1520,4 +1562,182 @@
   font-size: 13px;
   color: $moreGrayText;
   text-align: center;
+}
+
+.footnote-popover {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 200;
+  width: max-content;
+  max-width: min(360px, calc(100vw - 32px));
+  background-color: $bgElevated;
+  border: 1px solid $borderColor;
+  border-radius: $radiusLg;
+  box-shadow:
+    0 8px 28px $shadowColor,
+    0 2px 6px $borderSubtle;
+  color: $darkText;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(6px);
+  transition:
+    opacity 180ms $easeOut,
+    transform 180ms $easeOut,
+    visibility 180ms;
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: 11px;
+  }
+
+  &.placement-bottom {
+    transform: translateY(-6px);
+
+    &::before {
+      top: auto;
+      bottom: 100%;
+    }
+
+    .footnote-popover-arrow {
+      top: -5px;
+      bottom: auto;
+      border-right: none;
+      border-bottom: none;
+      border-left: 1px solid $borderColor;
+      border-top: 1px solid $borderColor;
+    }
+  }
+
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &.is-comment {
+    max-width: min(320px, calc(100vw - 32px));
+
+    .footnote-popover-inner {
+      padding: 8px 12px;
+    }
+
+    .footnote-popover-body {
+      font-size: 13.5px;
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+  }
+
+  .footnote-popover-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 14px;
+    max-height: min(45vh, 280px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .footnote-popover-index {
+    flex-shrink: 0;
+    font-family: $linkFontFamily;
+    font-size: 11.5px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: $accent;
+    line-height: 23px;
+    user-select: none;
+  }
+
+  .footnote-popover-body {
+    @include sourceSerifFont;
+    min-width: 0;
+    font-size: 14px;
+    line-height: 1.65;
+    color: $darkText;
+    overflow-wrap: anywhere;
+
+    p {
+      margin: 0;
+
+      + p {
+        margin-top: 0.55em;
+      }
+    }
+
+    a {
+      color: $accent;
+      font-weight: 500;
+      text-decoration: underline;
+      text-decoration-color: $accentUnderline;
+      text-underline-offset: 0.2em;
+      text-decoration-thickness: 1px;
+      transition:
+        color 160ms $easeOut,
+        text-decoration-color 160ms $easeOut;
+
+      &:hover {
+        color: $accentDark;
+        text-decoration-color: $accent;
+      }
+    }
+
+    code {
+      font-family: $linkFontFamily;
+      font-size: 0.88em;
+      padding: 0.1em 0.35em;
+      border-radius: $radiusMd;
+      background-color: $surface;
+      color: $darkText;
+    }
+
+    blockquote {
+      margin: 0.5em 0;
+      padding-left: 0.8em;
+      border-left: 2px solid $borderStrong;
+      color: $grayerText;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: $radiusMd;
+      margin: 0.4em 0;
+    }
+  }
+
+  .footnote-popover-arrow {
+    position: absolute;
+    bottom: -5px;
+    left: var(--arrow-left, 50%);
+    width: 8px;
+    height: 8px;
+    background-color: $bgElevated;
+    border-right: 1px solid $borderColor;
+    border-bottom: 1px solid $borderColor;
+    transform: translateX(-50%) rotate(45deg);
+    pointer-events: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footnote-popover {
+    transition: opacity 120ms ease;
+    transform: none;
+
+    &.placement-bottom {
+      transform: none;
+    }
+  }
 }

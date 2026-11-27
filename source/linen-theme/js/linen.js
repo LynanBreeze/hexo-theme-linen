@@ -68,18 +68,77 @@ function copyToClipboard(text) {
 
 function highlightAnchor(hash, highlightClass = "anchor-highlight") {
   if (!hash) return;
-  const id = hash.replace(/^#/, "");
+  let id = hash.replace(/^#/, "");
+  try {
+    id = decodeURIComponent(id);
+  } catch (e) {}
   const el = document.getElementById(id);
-  if (el) {
+  if (!el) return;
+
+  function triggerHighlight() {
     el.classList.remove(highlightClass);
     void el.offsetWidth;
     el.classList.add(highlightClass);
+
+    if (
+      el.classList.contains("footnote-anchor-wrap") &&
+      typeof el.closest === "function"
+    ) {
+      const contextBlock = el.closest(
+        "p, li, blockquote, dd, td, th, figcaption"
+      );
+      if (contextBlock) {
+        contextBlock.classList.remove("footnote-context-highlight");
+        void contextBlock.offsetWidth;
+        contextBlock.classList.add("footnote-context-highlight");
+      }
+    }
   }
+
+  const rect =
+    typeof el.getBoundingClientRect === "function"
+      ? el.getBoundingClientRect()
+      : null;
+  const vh = window.innerHeight || document.documentElement.clientHeight || 0;
+  const inViewport = !rect || !vh || (rect.bottom > 0 && rect.top < vh);
+
+  if (inViewport || typeof IntersectionObserver !== "function") {
+    triggerHighlight();
+    return;
+  }
+
+  // Wait until smooth scroll brings the target into view so the flash
+  // does not finish before the user arrives at the anchor.
+  let triggered = false;
+  let observer = null;
+  let fallbackTimer = null;
+
+  const fire = () => {
+    if (triggered) return;
+    triggered = true;
+    if (observer) observer.disconnect();
+    if (fallbackTimer) clearTimeout(fallbackTimer);
+    triggerHighlight();
+  };
+
+  observer = new IntersectionObserver(
+    (entries) => {
+      for (let i = 0; i < entries.length; i++) {
+        if (entries[i].isIntersecting) {
+          setTimeout(fire, 120);
+          return;
+        }
+      }
+    },
+    { threshold: 0.1 }
+  );
+  observer.observe(el);
+  fallbackTimer = setTimeout(fire, 900);
 }
 
 function initAnchorHighlighter({
   highlightClass = "anchor-highlight",
-  duration = 2000,
+  duration = 2200,
 } = {}) {
   // 动态注入高亮样式
   if (!document.getElementById("anchor-highlight-style")) {
@@ -88,11 +147,62 @@ function initAnchorHighlighter({
     style.textContent = `
       @keyframes anchorFlash {
         0%   { background-color: var(--linen-accent-soft-strong, rgba(168, 69, 46, 0.14)); }
+        45%  { background-color: var(--linen-accent-soft-strong, rgba(168, 69, 46, 0.14)); }
         100% { background-color: transparent; }
+      }
+      @keyframes footnoteContextFlash {
+        0% {
+          background-color: var(--linen-accent-soft, rgba(168, 69, 46, 0.08));
+          box-shadow: 0 0 0 4px var(--linen-accent-soft, rgba(168, 69, 46, 0.08));
+        }
+        45% {
+          background-color: var(--linen-accent-soft, rgba(168, 69, 46, 0.08));
+          box-shadow: 0 0 0 4px var(--linen-accent-soft, rgba(168, 69, 46, 0.08));
+        }
+        100% {
+          background-color: transparent;
+          box-shadow: 0 0 0 4px transparent;
+        }
+      }
+      @keyframes footnoteAnchorFlash {
+        0% {
+          background-color: var(--linen-accent, #a8452e);
+          color: var(--linen-on-accent, #fcfbf8);
+          transform: scale(1.22);
+          box-shadow: 0 0 0 0 var(--linen-accent-focus, rgba(168, 69, 46, 0.45));
+        }
+        18% {
+          background-color: var(--linen-accent, #a8452e);
+          color: var(--linen-on-accent, #fcfbf8);
+          transform: scale(1.16);
+          box-shadow: 0 0 0 8px rgba(168, 69, 46, 0);
+        }
+        52% {
+          background-color: var(--linen-accent, #a8452e);
+          color: var(--linen-on-accent, #fcfbf8);
+          transform: scale(1.06);
+          box-shadow: 0 0 0 3px var(--linen-accent-soft-strong, rgba(168, 69, 46, 0.14));
+        }
+        100% {
+          background-color: transparent;
+          color: var(--linen-accent, #a8452e);
+          transform: scale(1);
+          box-shadow: 0 0 0 0 transparent;
+        }
       }
       .${highlightClass} {
         border-radius: 3px;
         animation: anchorFlash ${duration}ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .footnote-context-highlight {
+        border-radius: 4px;
+        animation: footnoteContextFlash ${duration}ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .footnote-anchor-wrap.${highlightClass} {
+        animation: none;
+      }
+      .footnote-anchor-wrap.${highlightClass} .footnote-href {
+        animation: footnoteAnchorFlash ${duration}ms cubic-bezier(0.22, 1, 0.36, 1);
       }
     `;
     document.head.appendChild(style);
@@ -103,10 +213,30 @@ function initAnchorHighlighter({
   window.addEventListener("hashchange", () => {
     highlightAnchor(location.hash);
   });
+  // Clicking a footnote anchor or backref pointing to the current hash does not
+  // fire hashchange; re-trigger the highlight so repeated jumps still flash.
+  document.addEventListener("click", (e) => {
+    const link =
+      e.target && typeof e.target.closest === "function"
+        ? e.target.closest('a.footnote-backref[href^="#"], a.footnote-href[href^="#"]')
+        : null;
+    if (!link) return;
+    const href = link.getAttribute("href");
+    if (!href) return;
+    let currentHash = location.hash;
+    let targetHash = href;
+    try {
+      currentHash = decodeURIComponent(currentHash);
+      targetHash = decodeURIComponent(targetHash);
+    } catch (err) {}
+    if (currentHash === targetHash) {
+      highlightAnchor(href);
+    }
+  });
 }
 
 initAnchorHighlighter({
-  duration: 1800,
+  duration: 2200,
 });
 
 function initImageGridSwitchers() {
@@ -521,12 +651,18 @@ function handleClick(e) {
   }
 }
 
+var closeFootnotePopover = null;
+
 function closeActiveOverlays() {
   var tocElement = document.getElementById("toc");
   var seriesElement = document.getElementById("series");
   var maskElement = document.getElementById("mask");
   var donateModal = document.getElementById("donate-modal");
   var closedAny = false;
+
+  if (typeof closeFootnotePopover === "function" && closeFootnotePopover()) {
+    closedAny = true;
+  }
 
   if (tocElement && tocElement.classList.contains("visible")) {
     tocElement.classList.remove("visible");
@@ -750,14 +886,528 @@ function initThemeToggle() {
   }
 }
 
+function initFootnotePopover() {
+  var footnoteAnchors = Array.prototype.slice.call(
+    document.querySelectorAll('a.footnote-href[href^="#"], .footnote-ref a[href^="#"]')
+  );
+  var commentTriggers = Array.prototype.slice.call(
+    document.querySelectorAll(".commented-text[data-comment]")
+  ).filter(function (el) {
+    return Boolean(String(el.getAttribute("data-comment") || "").trim());
+  });
+
+  function getFootnoteTarget(anchor) {
+    var href = anchor.getAttribute("href");
+    if (!href || href.charAt(0) !== "#") return null;
+    var id = href.slice(1);
+    try {
+      id = decodeURIComponent(id);
+    } catch (e) {}
+    return id ? document.getElementById(id) : null;
+  }
+
+  var validFootnoteAnchors = footnoteAnchors.filter(function (anchor) {
+    return Boolean(getFootnoteTarget(anchor));
+  });
+  if (!validFootnoteAnchors.length && !commentTriggers.length) return;
+
+  var popover = document.getElementById("footnote-popover");
+  if (!popover) {
+    popover = document.createElement("div");
+    popover.id = "footnote-popover";
+    popover.className = "footnote-popover";
+    popover.setAttribute("role", "tooltip");
+    popover.setAttribute("tabindex", "-1");
+    popover.setAttribute("aria-hidden", "true");
+    popover.innerHTML =
+      '<div class="footnote-popover-inner">' +
+      '<span class="footnote-popover-index" aria-hidden="true"></span>' +
+      '<div class="footnote-popover-body"></div>' +
+      "</div>" +
+      '<span class="footnote-popover-arrow" aria-hidden="true"></span>';
+    document.body.appendChild(popover);
+  }
+
+  var indexEl = popover.querySelector(".footnote-popover-index");
+  var bodyEl = popover.querySelector(".footnote-popover-body");
+  var activeAnchor = null;
+  var activeRectIndex = -1;
+  var hideTimer = null;
+  var repositionRaf = null;
+  var lastTouchTime = 0;
+  var isPointerInsideAnchor = false;
+  var isPointerInsidePopover = false;
+  var isPointerDownInPopover = false;
+  var lastPopoverPointerUpTime = 0;
+  var HIDE_DELAY = 180;
+
+  function hasSelectionInPopover() {
+    if (typeof window.getSelection !== "function") return false;
+    var sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !String(sel.toString() || "").trim()) {
+      return false;
+    }
+    var anchorNode = sel.anchorNode;
+    var focusNode = sel.focusNode;
+    return Boolean(
+      (anchorNode && popover.contains(anchorNode)) ||
+      (focusNode && popover.contains(focusNode))
+    );
+  }
+
+  function getSafeTop(margin) {
+    var safeTop = margin;
+    var header = document.querySelector(".nav-header");
+    if (header && !header.classList.contains("hide")) {
+      var headerStyle = window.getComputedStyle(header);
+      if (
+        headerStyle.position === "fixed" ||
+        headerStyle.position === "sticky"
+      ) {
+        var headerRect = header.getBoundingClientRect();
+        if (headerRect.bottom > 0) {
+          safeTop = Math.max(safeTop, headerRect.bottom + 8);
+        }
+      }
+    }
+    return safeTop;
+  }
+
+  function buildFootnoteFragment(targetEl) {
+    var clone = targetEl.cloneNode(true);
+    var backrefs = clone.querySelectorAll(".footnote-backref");
+    for (var i = 0; i < backrefs.length; i++) {
+      if (backrefs[i].parentNode) {
+        backrefs[i].parentNode.removeChild(backrefs[i]);
+      }
+    }
+    var elementsWithId = clone.querySelectorAll("[id]");
+    for (var j = 0; j < elementsWithId.length; j++) {
+      elementsWithId[j].removeAttribute("id");
+    }
+
+    while (clone.lastChild) {
+      var last = clone.lastChild;
+      if (last.nodeType === 3 && !String(last.nodeValue || "").trim()) {
+        clone.removeChild(last);
+      } else if (
+        last.nodeType === 1 &&
+        last.tagName === "P" &&
+        !String(last.textContent || "").trim() &&
+        !last.querySelector("img, svg, math, table, pre, code")
+      ) {
+        clone.removeChild(last);
+      } else {
+        break;
+      }
+    }
+
+    var hasContent =
+      Boolean(String(clone.textContent || "").trim()) ||
+      Boolean(clone.querySelector("img, svg, math, table, pre, code"));
+    if (!hasContent) return null;
+
+    var fragment = document.createDocumentFragment();
+    while (clone.firstChild) {
+      fragment.appendChild(clone.firstChild);
+    }
+    return fragment;
+  }
+
+  function resolveAnchorRect(anchor, pointerEvent) {
+    if (typeof anchor.getClientRects === "function") {
+      var rects = anchor.getClientRects();
+      if (rects && rects.length > 1) {
+        if (
+          pointerEvent &&
+          typeof pointerEvent.clientX === "number" &&
+          typeof pointerEvent.clientY === "number"
+        ) {
+          var bestIdx = 0;
+          var bestDist = Infinity;
+          for (var i = 0; i < rects.length; i++) {
+            var r = rects[i];
+            if (!r.width && !r.height) continue;
+            var dx =
+              pointerEvent.clientX < r.left
+                ? r.left - pointerEvent.clientX
+                : pointerEvent.clientX > r.right
+                  ? pointerEvent.clientX - r.right
+                  : 0;
+            var dy =
+              pointerEvent.clientY < r.top
+                ? r.top - pointerEvent.clientY
+                : pointerEvent.clientY > r.bottom
+                  ? pointerEvent.clientY - r.bottom
+                  : 0;
+            var dist = dx * dx + dy * dy;
+            if (dist < bestDist) {
+              bestDist = dist;
+              bestIdx = i;
+            }
+          }
+          activeRectIndex = bestIdx;
+          return rects[bestIdx];
+        }
+        if (activeRectIndex >= 0 && activeRectIndex < rects.length) {
+          return rects[activeRectIndex];
+        }
+        activeRectIndex = 0;
+        return rects[0];
+      }
+    }
+    activeRectIndex = -1;
+    return anchor.getBoundingClientRect();
+  }
+
+  function positionPopover(anchor, pointerEvent) {
+    var margin = 16;
+    var gap = 10;
+    var viewportWidth =
+      document.documentElement.clientWidth || window.innerWidth;
+    var viewportHeight =
+      window.innerHeight || document.documentElement.clientHeight;
+    var safeTop = getSafeTop(margin);
+
+    var anchorRect = resolveAnchorRect(anchor, pointerEvent);
+    popover.style.top = "0px";
+    popover.style.left = "0px";
+    var popoverWidth = popover.offsetWidth;
+    var popoverHeight = popover.offsetHeight;
+    if (!popoverWidth || !popoverHeight) return;
+
+    var spaceAbove = anchorRect.top - safeTop;
+    var spaceBelow = viewportHeight - anchorRect.bottom - margin;
+    var openBelow =
+      spaceAbove < popoverHeight + gap && spaceBelow >= spaceAbove;
+    popover.classList.toggle("placement-bottom", openBelow);
+
+    var top = openBelow
+      ? anchorRect.bottom + gap
+      : anchorRect.top - popoverHeight - gap;
+    var maxTop = Math.max(safeTop, viewportHeight - margin - popoverHeight);
+    top = Math.min(Math.max(top, safeTop), maxTop);
+
+    var anchorCenter = anchorRect.left + anchorRect.width / 2;
+    var centeredLeft = anchorCenter - popoverWidth / 2;
+    var maxLeft = viewportWidth - margin - popoverWidth;
+    var left =
+      maxLeft < margin
+        ? (viewportWidth - popoverWidth) / 2
+        : Math.min(Math.max(centeredLeft, margin), maxLeft);
+
+    var arrowLeft = Math.min(
+      Math.max(anchorCenter - left, 14),
+      Math.max(14, popoverWidth - 14)
+    );
+
+    popover.style.top = top.toFixed(1) + "px";
+    popover.style.left = left.toFixed(1) + "px";
+    popover.style.setProperty("--arrow-left", arrowLeft.toFixed(1) + "px");
+  }
+
+  function clearHideTimer() {
+    if (hideTimer) {
+      clearTimeout(hideTimer);
+      hideTimer = null;
+    }
+  }
+
+  function hidePopover() {
+    clearHideTimer();
+    var wasVisible = popover.classList.contains("visible");
+    if (activeAnchor) {
+      activeAnchor.classList.remove("is-popover-open");
+      if (activeAnchor.getAttribute("aria-describedby") === popover.id) {
+        activeAnchor.removeAttribute("aria-describedby");
+      }
+      activeAnchor = null;
+      activeRectIndex = -1;
+    }
+    isPointerInsideAnchor = false;
+    isPointerInsidePopover = false;
+    isPointerDownInPopover = false;
+    popover.classList.remove("visible", "is-comment");
+    popover.setAttribute("aria-hidden", "true");
+    return wasVisible;
+  }
+
+  function scheduleHide() {
+    clearHideTimer();
+    if (
+      isPointerInsidePopover ||
+      isPointerInsideAnchor ||
+      isPointerDownInPopover ||
+      hasSelectionInPopover()
+    ) {
+      return;
+    }
+    hideTimer = setTimeout(function () {
+      if (
+        isPointerInsidePopover ||
+        isPointerInsideAnchor ||
+        isPointerDownInPopover ||
+        hasSelectionInPopover()
+      ) {
+        return;
+      }
+      hidePopover();
+    }, HIDE_DELAY);
+  }
+
+  function activateAnchor(anchor) {
+    if (activeAnchor && activeAnchor !== anchor) {
+      activeAnchor.classList.remove("is-popover-open");
+      if (activeAnchor.getAttribute("aria-describedby") === popover.id) {
+        activeAnchor.removeAttribute("aria-describedby");
+      }
+      activeRectIndex = -1;
+    }
+    activeAnchor = anchor;
+    activeAnchor.classList.add("is-popover-open");
+    activeAnchor.setAttribute("aria-describedby", popover.id);
+  }
+
+  function showFootnotePopover(anchor, pointerEvent) {
+    clearHideTimer();
+    var targetEl = getFootnoteTarget(anchor);
+    if (!targetEl) return;
+
+    var fragment = buildFootnoteFragment(targetEl);
+    if (!fragment) return;
+
+    activateAnchor(anchor);
+    popover.classList.remove("is-comment");
+
+    var labelText = String(anchor.textContent || "").trim();
+    if (indexEl) {
+      indexEl.textContent = labelText;
+      indexEl.style.display = labelText ? "" : "none";
+    }
+    if (bodyEl) {
+      bodyEl.innerHTML = "";
+      bodyEl.appendChild(fragment);
+    }
+
+    positionPopover(anchor, pointerEvent);
+    popover.setAttribute("aria-hidden", "false");
+    popover.classList.add("visible");
+  }
+
+  function showCommentPopover(trigger, pointerEvent) {
+    clearHideTimer();
+    var commentText = String(trigger.getAttribute("data-comment") || "").trim();
+    if (!commentText) return;
+
+    activateAnchor(trigger);
+    popover.classList.add("is-comment");
+
+    if (indexEl) {
+      indexEl.textContent = "";
+      indexEl.style.display = "none";
+    }
+    if (bodyEl) {
+      bodyEl.innerHTML = "";
+      bodyEl.textContent = commentText;
+    }
+
+    positionPopover(trigger, pointerEvent);
+    popover.setAttribute("aria-hidden", "false");
+    popover.classList.add("visible");
+  }
+
+  closeFootnotePopover = hidePopover;
+
+  document.addEventListener(
+    "touchstart",
+    function () {
+      lastTouchTime = Date.now();
+    },
+    { passive: true }
+  );
+
+  validFootnoteAnchors.forEach(function (anchor) {
+    anchor.addEventListener("pointerenter", function (e) {
+      if (e.pointerType === "touch" || Date.now() - lastTouchTime < 500) {
+        return;
+      }
+      isPointerInsideAnchor = true;
+      showFootnotePopover(anchor, e);
+    });
+
+    anchor.addEventListener("pointerleave", function (e) {
+      if (e.pointerType === "touch") return;
+      isPointerInsideAnchor = false;
+      scheduleHide();
+    });
+
+    anchor.addEventListener("focusin", function () {
+      if (Date.now() - lastTouchTime < 500) return;
+      try {
+        if (typeof anchor.matches === "function" && !anchor.matches(":focus-visible")) {
+          return;
+        }
+      } catch (e) {}
+      showFootnotePopover(anchor);
+    });
+
+    anchor.addEventListener("focusout", function (e) {
+      if (
+        (e.relatedTarget && popover.contains(e.relatedTarget)) ||
+        isPointerInsidePopover ||
+        isPointerDownInPopover ||
+        hasSelectionInPopover()
+      ) {
+        return;
+      }
+      scheduleHide();
+    });
+
+    // Preserve native anchor jump; dismiss the hover popover immediately on click
+    anchor.addEventListener("click", function () {
+      hidePopover();
+    });
+  });
+
+  commentTriggers.forEach(function (trigger) {
+    if (!trigger.hasAttribute("tabindex")) {
+      trigger.setAttribute("tabindex", "0");
+    }
+
+    trigger.addEventListener("pointerenter", function (e) {
+      if (e.pointerType === "touch" || Date.now() - lastTouchTime < 500) {
+        return;
+      }
+      isPointerInsideAnchor = true;
+      showCommentPopover(trigger, e);
+    });
+
+    trigger.addEventListener("pointerleave", function (e) {
+      if (e.pointerType === "touch") return;
+      isPointerInsideAnchor = false;
+      scheduleHide();
+    });
+
+    trigger.addEventListener("focusin", function () {
+      if (Date.now() - lastTouchTime < 500) return;
+      try {
+        if (typeof trigger.matches === "function" && !trigger.matches(":focus-visible")) {
+          return;
+        }
+      } catch (e) {}
+      showCommentPopover(trigger);
+    });
+
+    trigger.addEventListener("focusout", function (e) {
+      if (
+        (e.relatedTarget && popover.contains(e.relatedTarget)) ||
+        isPointerInsidePopover ||
+        isPointerDownInPopover ||
+        hasSelectionInPopover()
+      ) {
+        return;
+      }
+      scheduleHide();
+    });
+
+    // Allow tap-to-toggle on touch devices while leaving desktop hover smooth
+    trigger.addEventListener("click", function (e) {
+      if (Date.now() - lastTouchTime >= 500) return;
+      if (activeAnchor === trigger && popover.classList.contains("visible")) {
+        hidePopover();
+      } else {
+        showCommentPopover(trigger, e);
+      }
+    });
+  });
+
+  popover.addEventListener("pointerenter", function (e) {
+    if (e.pointerType === "touch") return;
+    isPointerInsidePopover = true;
+    clearHideTimer();
+  });
+
+  popover.addEventListener("pointerleave", function (e) {
+    if (e.pointerType === "touch") return;
+    isPointerInsidePopover = false;
+    scheduleHide();
+  });
+
+  popover.addEventListener("pointerdown", function () {
+    isPointerDownInPopover = true;
+    clearHideTimer();
+  });
+
+  function onDocumentPointerUp() {
+    if (!isPointerDownInPopover) return;
+    isPointerDownInPopover = false;
+    lastPopoverPointerUpTime = Date.now();
+  }
+
+  document.addEventListener("pointerup", onDocumentPointerUp);
+  document.addEventListener("pointercancel", onDocumentPointerUp);
+
+  popover.addEventListener("focusin", function () {
+    clearHideTimer();
+  });
+
+  popover.addEventListener("focusout", function (e) {
+    if (
+      (e.relatedTarget &&
+        (popover.contains(e.relatedTarget) || e.relatedTarget === activeAnchor)) ||
+      isPointerInsidePopover ||
+      isPointerInsideAnchor ||
+      isPointerDownInPopover ||
+      hasSelectionInPopover()
+    ) {
+      return;
+    }
+    scheduleHide();
+  });
+
+  document.addEventListener("click", function (e) {
+    if (!activeAnchor) return;
+    if (Date.now() - lastPopoverPointerUpTime < 100) {
+      return;
+    }
+    if (popover.contains(e.target) || activeAnchor.contains(e.target)) {
+      return;
+    }
+    hidePopover();
+  });
+
+  function syncPopoverPosition() {
+    if (!activeAnchor) return;
+    if (repositionRaf) return;
+    repositionRaf = window.requestAnimationFrame(function () {
+      repositionRaf = null;
+      if (!activeAnchor) return;
+      var rect = resolveAnchorRect(activeAnchor);
+      var viewportHeight =
+        window.innerHeight || document.documentElement.clientHeight;
+      var safeTop = getSafeTop(16);
+      if (rect.bottom < safeTop || rect.top > viewportHeight) {
+        hidePopover();
+        return;
+      }
+      positionPopover(activeAnchor);
+    });
+  }
+
+  window.addEventListener("scroll", syncPopoverPosition, { passive: true });
+  window.addEventListener("resize", syncPopoverPosition);
+}
+
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", function () {
     initThemeToggle();
     initMaskScrollLock();
     initCopyrightPopover();
+    initFootnotePopover();
   });
 } else {
   initThemeToggle();
   initMaskScrollLock();
   initCopyrightPopover();
+  initFootnotePopover();
 }
