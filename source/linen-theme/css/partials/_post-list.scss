@@ -109,12 +109,20 @@
     margin-top: $postItemGap;
     width: calc((100% - $postItemGap * 2) / 3);
     margin-right: $postItemGap;
-    &:hover {
-      .cover-img img {
-        transform: scale(1.028);
+    -webkit-tap-highlight-color: transparent;
+    @media (hover: hover) {
+      &:hover {
+        .cover-img img {
+          transform: scale(1.028);
+        }
+        .title {
+          color: $accent;
+        }
       }
-      .title {
-        color: $accent;
+    }
+    &:active {
+      .item-body {
+        opacity: 0.68;
       }
     }
     .title-excerpt {
@@ -135,7 +143,6 @@
       margin: 0.5rem 0 0.65rem;
       color: $grayerText;
       line-height: 1.65;
-      cursor: text;
     }
     .post-meta {
       @include defaultFont;
@@ -163,6 +170,7 @@
       display: flex;
       justify-content: space-between;
       flex-direction: column;
+      transition: opacity 160ms $easeOut;
     }
     .cover-img {
       width: 100%;

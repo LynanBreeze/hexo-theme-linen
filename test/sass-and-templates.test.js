@@ -49,6 +49,12 @@ describe("Stylesheets & Templates Smoke Tests", () => {
           res.css.includes('html[lang^=en]') && !res.css.includes('html[lang=en]'),
           "linen.scss should match English language tags with html[lang^=en]",
         );
+        assert.ok(
+          res.css.includes(".post-item:has(.title:active) .item-body") &&
+            (res.css.includes("-webkit-tap-highlight-color:transparent") ||
+              res.css.includes("-webkit-tap-highlight-color:rgba(0,0,0,0)")),
+          "linen.scss should apply unified whole-item active feedback and suppress disjointed title tap highlight",
+        );
       }
       if (rel.endsWith("post.scss")) {
         assert.ok(
@@ -85,6 +91,10 @@ describe("Stylesheets & Templates Smoke Tests", () => {
         assert.ok(
           res.css.includes(".travel-map-copy h1"),
           "series.scss should style .travel-map-copy h1",
+        );
+        assert.ok(
+          res.css.includes(".travel-place-card:has(.travel-place-title:active)"),
+          "series.scss should apply unified active feedback to travel-place-card",
         );
       }
     }

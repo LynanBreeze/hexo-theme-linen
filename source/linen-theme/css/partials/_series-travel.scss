@@ -416,12 +416,31 @@
     transition:
       border-color 0.22s $easeOut,
       box-shadow 0.22s $easeOut,
-      transform 0.22s $easeOut;
-    &.active,
-    &:hover {
+      transform 0.22s $easeOut,
+      opacity 160ms $easeOut;
+    &.active {
       border-color: $accentBorder;
       box-shadow: $shadowColor 0 12px 26px;
       transform: translateY(-1px);
+    }
+    @media (hover: hover) {
+      &:hover {
+        border-color: $accentBorder;
+        box-shadow: $shadowColor 0 12px 26px;
+        transform: translateY(-1px);
+      }
+    }
+    &:has(.travel-place-title:active) {
+      opacity: 0.72;
+    }
+    @supports selector(:has(*)) {
+      &:has(.travel-place-title:focus-visible) {
+        outline: 2px solid $accentFocus;
+        outline-offset: 2px;
+      }
+      .travel-place-title:focus-visible {
+        outline: none;
+      }
     }
   }
 
@@ -504,14 +523,21 @@
     font-size: 18px;
     font-weight: bold;
     line-height: 1.25;
+    -webkit-tap-highlight-color: transparent;
+    &:visited,
+    &:active {
+      color: $darkText;
+    }
     &::after {
       content: "";
       position: absolute;
       inset: 0;
       z-index: 3;
     }
-    &:hover {
-      opacity: 0.72;
+    @media (hover: hover) {
+      &:hover {
+        opacity: 0.72;
+      }
     }
     .sub-title {
       @include subTitle;
