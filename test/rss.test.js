@@ -173,8 +173,21 @@ describe("scripts/rss.js", () => {
     });
 
     assert.ok(
-      out.data.includes('<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">'),
-      "Should declare Media RSS namespace",
+      out.data.includes(
+        '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">',
+      ),
+      "Should declare Atom and Media RSS namespaces",
+    );
+    assert.ok(
+      out.data.includes(
+        '<atom:link href="https://example.com/blog/feed.xml" rel="self" type="application/rss+xml" />',
+      ),
+      "Should include atom:link self reference",
+    );
+    assert.ok(out.data.includes("<language>zh-CN</language>"), "Should emit channel language");
+    assert.ok(
+      out.data.includes("<lastBuildDate>Thu, 26 Nov 2026 08:00:00 GMT</lastBuildDate>"),
+      "Should derive deterministic lastBuildDate from latest post",
     );
 
     const items = out.data.match(/<item>[\s\S]*?<\/item>/g) || [];

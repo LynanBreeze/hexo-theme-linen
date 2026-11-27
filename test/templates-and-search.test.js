@@ -366,10 +366,14 @@ describe("Template Bugfixes & Refactors", () => {
 
     const hiddenHtml = renderTemplate("layout/footer.ejs", {
       ...baseLocals,
+      config: { title: "My Site" },
       theme: { navItems: [], feed: false, footer: { logo: false }, info: { registration: "京ICP备123456号" } },
     });
     assert.ok(!hiddenHtml.includes("footerLogo"));
+    assert.ok(!hiddenHtml.includes("common.navigation"), "Footer must omit empty navigation column when navItems is empty");
     assert.ok(!hiddenHtml.includes("common.subscribe"), "Footer must omit empty subscribe column when feed is disabled");
+    assert.ok(!hiddenHtml.includes("undefined"), "Footer must not render undefined when config.author is omitted");
+    assert.ok(hiddenHtml.includes('role="button" tabindex="0" aria-haspopup="true" aria-label="common.copyrightTitle"'));
     assert.ok(hiddenHtml.includes('href="https://beian.miit.gov.cn/"'));
   });
 
@@ -652,6 +656,7 @@ describe("Template Bugfixes & Refactors", () => {
     });
     httpObserverCb([{ isIntersecting: true }], { disconnect: () => {} });
     assert.equal(httpScripts[0].attrs["data-theme"], "dark_dimmed");
+    assert.ok(giscusInitCode.includes("LOAD_TIMEOUT_MS"), "giscus-init.js should guard hung network loads with a timeout");
   });
 
   it("page.ejs and 404.ejs render styled standalone markup", () => {

@@ -22,10 +22,12 @@
   // widget height so users never see two consecutive loading indicators.
   var MIN_READY_HEIGHT = 180;
   var IFRAME_LOAD_FALLBACK_MS = 8000;
+  var LOAD_TIMEOUT_MS = 12000;
   var loaded = false;
   var ready = false;
   var frameObserver = null;
   var fallbackTimer = null;
+  var loadTimeoutTimer = null;
 
   function getEffectiveColorScheme() {
     var explicit = document.documentElement.getAttribute("data-theme");
@@ -96,6 +98,10 @@
       clearTimeout(fallbackTimer);
       fallbackTimer = null;
     }
+    if (loadTimeoutTimer) {
+      clearTimeout(loadTimeoutTimer);
+      loadTimeoutTimer = null;
+    }
     if (frameObserver) {
       frameObserver.disconnect();
       frameObserver = null;
@@ -111,6 +117,10 @@
     if (fallbackTimer) {
       clearTimeout(fallbackTimer);
       fallbackTimer = null;
+    }
+    if (loadTimeoutTimer) {
+      clearTimeout(loadTimeoutTimer);
+      loadTimeoutTimer = null;
     }
     if (frameObserver) {
       frameObserver.disconnect();
@@ -214,6 +224,14 @@
     script.setAttribute("data-lang", normalizeLang(config.lang));
 
     script.onerror = markError;
+
+    if (typeof setTimeout === "function") {
+      loadTimeoutTimer = setTimeout(function () {
+        if (!ready) {
+          markError();
+        }
+      }, LOAD_TIMEOUT_MS);
+    }
 
     container.appendChild(script);
   }

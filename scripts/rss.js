@@ -465,14 +465,24 @@ hexo.extend.generator.register("rss", function (locals) {
     </image>`
     : "";
 
+  const feedPath = feedConfig.path ?? "/feed.xml";
+  const feedSelfUrl = full_url_for.call(hexo, feedPath);
+  const languageXml = language
+    ? `\n  <language>${escape(language)}</language>`
+    : "";
+  const latestPostDate =
+    posts.map((post) => toRfc822Date(post.date)).find(Boolean) || "";
+  const lastBuildDate = latestPostDate || new Date().toUTCString();
+
   const feed = `<?xml version="1.0" encoding="UTF-8" ?>
 <?xml-stylesheet type="text/xsl" href="${escape(cssUrl)}"?>
-<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
 <channel>
   <title>${escape(config.title)}</title>
   <link>${escape(siteUrl)}</link>
-  <description>${escape(config.description || "")}</description>
-  <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>${followChallengeXml}${imageXml}
+  <atom:link href="${escape(feedSelfUrl)}" rel="self" type="application/rss+xml" />
+  <description>${escape(config.description || "")}</description>${languageXml}
+  <lastBuildDate>${lastBuildDate}</lastBuildDate>${followChallengeXml}${imageXml}
   ${posts
     .map((post) => {
       const postUrl = full_url_for.call(hexo, post.path);
@@ -584,7 +594,7 @@ hexo.extend.generator.register("rss", function (locals) {
     <item>
       <title>${escape(titleText)}</title>
       <link>${escape(postUrl)}</link>
-      <guid>${escape(postUrl)}</guid>${pubDate ? `\n      <pubDate>${pubDate}</pubDate>` : ""}${mediaXml}
+      <guid isPermaLink="true">${escape(postUrl)}</guid>${pubDate ? `\n      <pubDate>${pubDate}</pubDate>` : ""}${mediaXml}
       <description><![CDATA[${rawHtml}]]></description>
     </item>`;
     })
@@ -593,7 +603,7 @@ hexo.extend.generator.register("rss", function (locals) {
 </rss>`;
 
   return {
-    path: feedConfig.path ?? "/feed.xml",
+    path: feedPath,
     data: feed,
   };
 });
