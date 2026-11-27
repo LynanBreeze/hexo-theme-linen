@@ -48,7 +48,7 @@ describe("Template Bugfixes & Refactors", () => {
     const enHtml = renderTemplate("layout/partials/words.ejs", {
       post: {
         content:
-          '<p>Hello   world\nfrom   Linen!</p><img src="/a.jpg"><img src="/b.jpg"><img class="linen-emoji" src="/e.svg">',
+          '<p>&ldquo;Hello&rdquo;   world\nfrom&nbsp;Linen!</p><img src="/a.jpg"><img src="/b.jpg"><img class="linen-emoji" src="/e.svg">',
       },
       page: { language: "en" },
       config: { language: "en" },
@@ -693,6 +693,13 @@ describe("scripts/search.js & XSL / Print CSS", () => {
     assert.deepEqual(parsed[0].tags, ["Linen"]);
     assert.equal(parsed[0].excerpt, "Excerpt bold");
     assert.equal(parsed[0].content, "Body text editorialBreakout: true");
+
+    const searchJs = fs.readFileSync(
+      path.join(ROOT_DIR, "assets/vendor/search/search.js"),
+      "utf8",
+    );
+    assert.ok(searchJs.includes("e.isComposing || e.keyCode === 229"));
+    assert.ok(searchJs.includes('key === "Enter" && document.activeElement === input'));
   });
 
   it("uses Linen styling in RSS/Atom XSL files without third-party RSS.Beauty bloat", () => {

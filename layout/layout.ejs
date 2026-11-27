@@ -102,11 +102,11 @@ const version = theme.version;
         <div class="toc-items">
           <% tocs.forEach((toc, index) => { %>
           <div class="toc-item-wrap<%-index ===0 ? ' active': ''%>">
-            <a class="toc-item-link" data-id="<%-toc.id%>" href="#<%-toc.id%>"><%-toc.title%></a>
+            <a class="toc-item-link" data-id="<%=toc.id%>" href="#<%=toc.id%>"><%=toc.title%></a>
             <% if(toc?.children?.length) { %>
             <ul class="toc-sub-item-wrap">
               <% toc.children.forEach(subItem => { %>
-              <li><a class="toc-sub-item-link" data-id="<%-subItem.id%>" href="#<%-subItem.id%>"><%-subItem.title%></a></li>
+              <li><a class="toc-sub-item-link" data-id="<%=subItem.id%>" href="#<%=subItem.id%>"><%=subItem.title%></a></li>
               <% }); %>
             </ul>
             <% }; %>

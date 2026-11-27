@@ -350,7 +350,9 @@
   }
 
   document.addEventListener("keydown", function (e) {
-    var key = e.key;
+    if (e.isComposing || e.keyCode === 229) return;
+    var key = typeof e.key === "string" ? e.key : "";
+    if (!key) return;
     if ((e.metaKey || e.ctrlKey) && key.toLowerCase() === "k") {
       e.preventDefault();
       if (modal.hidden) {
@@ -374,7 +376,7 @@
     } else if (key === "ArrowUp") {
       e.preventDefault();
       updateActiveItem(activeIndex - 1);
-    } else if (key === "Enter") {
+    } else if (key === "Enter" && document.activeElement === input) {
       var activeItem = resultsEl.querySelector(".search-result-item.active");
       if (activeItem && activeItem.href) {
         e.preventDefault();

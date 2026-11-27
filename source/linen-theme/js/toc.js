@@ -1,16 +1,20 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const tocContainer = document.getElementById("toc");
-  if (!tocContainer) return;
+(function () {
+  "use strict";
 
-  const contentContainer =
-    document.getElementById("page-content") ||
-    document.getElementById("post") ||
-    document.body;
+  function initToc() {
+    const tocContainer = document.getElementById("toc");
+    if (!tocContainer || tocContainer.dataset.tocInitialized === "true") return;
+    tocContainer.dataset.tocInitialized = "true";
 
-  const headerElements = Array.from(
-    contentContainer.querySelectorAll("h2, h3"),
-  );
-  if (headerElements.length === 0) return;
+    const contentContainer =
+      document.getElementById("page-content") ||
+      document.getElementById("post") ||
+      document.body;
+
+    const headerElements = Array.from(
+      contentContainer.querySelectorAll("h2:not(.hidden), h3:not(.hidden)"),
+    );
+    if (headerElements.length === 0) return;
 
   // 1. Ensure every heading has a valid ID, filling in missing IDs in the DOM.
   headerElements.forEach((header, index) => {
@@ -211,4 +215,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Run once on initialization.
   updateActive();
-});
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initToc);
+  } else {
+    initToc();
+  }
+})();

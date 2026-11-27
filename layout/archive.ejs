@@ -1,6 +1,16 @@
 <%
 const visiblePosts = site.posts.filter(post => !post?.hide?.archive);
-const tagsList = list_tags({ show_count: false });
+const visibleTags = site.tags && typeof site.tags.toArray === 'function'
+  ? site.tags.toArray()
+      .map(tag => ({
+        name: tag.name,
+        path: tag.path,
+        count: tag.posts ? tag.posts.filter(post => !post?.hide?.archive).length : tag.length
+      }))
+      .filter(tag => tag.count > 0)
+      .sort((a, b) => String(a.name).localeCompare(String(b.name)))
+  : null;
+const tagsList = visibleTags ? '' : list_tags({ show_count: false });
 const seriesList = Array.from(new Set(visiblePosts.filter(item=>item.series).map(item=>item.series))).map(seriesName=>({
   name: seriesName,
   count: visiblePosts.filter(post=>post.series === seriesName).length
@@ -21,7 +31,9 @@ const archivesList = Object.entries(visiblePosts.reduce((acc, post) => {
   const year = post.date.year();
   acc[year] = (acc[year] || 0) + 1;
   return acc;
-}, {})).map(([name, count]) => ({ year: name, name: name.startsWith('1970') ? '__' : name, count })).reverse();
+}, {}))
+  .map(([name, count]) => ({ year: name, name: name.startsWith('1970') ? '__' : name, count }))
+  .sort((a, b) => Number(b.year) - Number(a.year));
 %>
 
 <% if (is_year() === false) { %>
@@ -81,12 +93,24 @@ const archivesList = Object.entries(visiblePosts.reduce((acc, post) => {
   </aside>
   <% } %>
 
-  <% if(tagsList.length) { %>
+  <% if((visibleTags && visibleTags.length) || tagsList.length) { %>
   <br>
   <aside>
     <h2 id="tags"><%=__('common.tags')%></h2>
     <div class="tag-list-wrap">
-      <% if (tagsList !== "") { %>
+      <% if (visibleTags) { %>
+      <ul class="tag-list">
+        <% visibleTags.forEach(tag => {
+          const tagHref = tag.path
+            ? url_for(`/${String(tag.path).replace(/^\/+/, '')}`)
+            : url_for(`/tags/${encodeURIComponent(tag.name)}/`);
+        %>
+        <li class="tag-list-item">
+          <a class="tag-list-link" href="<%=tagHref%>"><%=tag.name%></a>
+        </li>
+        <% }) %>
+      </ul>
+      <% } else if (tagsList !== "") { %>
       <%-tagsList%>
       <% } %>
     </div>

@@ -20,6 +20,49 @@ const EN_SHORT_MONTHS = [
   "Dec",
 ];
 
+function decodeHtmlEntities(str) {
+  return String(str || "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&#(\d+);/g, (_, dec) => {
+      const code = Number(dec);
+      return Number.isFinite(code) && code >= 0 && code <= 0x10ffff
+        ? String.fromCodePoint(code)
+        : "";
+    })
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => {
+      const code = parseInt(hex, 16);
+      return Number.isFinite(code) && code >= 0 && code <= 0x10ffff
+        ? String.fromCodePoint(code)
+        : "";
+    })
+    .replace(
+      /&(amp|lt|gt|quot|apos|ldquo|rdquo|lsquo|rsquo|mdash|ndash|hellip);/gi,
+      (_, name) =>
+        ({
+          amp: "&",
+          lt: "<",
+          gt: ">",
+          quot: '"',
+          apos: "'",
+          ldquo: "“",
+          rdquo: "”",
+          lsquo: "‘",
+          rsquo: "’",
+          mdash: "—",
+          ndash: "–",
+          hellip: "…",
+        })[name.toLowerCase()] || " ",
+    );
+}
+
+function encodePathSegments(rawPath) {
+  return String(rawPath || "")
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+}
+
 hexo.extend.helper.register("take", function (arr, n = 1) {
   return arr.slice(0, Math.max(0, n));
 });
@@ -99,15 +142,16 @@ hexo.extend.helper.register("getTranslationPage", function () {
           : "en";
     const categoriesInfo = getSiteData(hexo, "categories");
     const tagsInfo = getSiteData(hexo, "tags");
-    let hasTranslatation = Object.keys(
-      config?.theme_config?.siteOriginLocaleMap || {},
-    ).length
+    const localeMap =
+      this.theme?.siteOriginLocaleMap ||
+      config?.theme_config?.siteOriginLocaleMap ||
+      {};
+    let hasTranslatation = Object.keys(localeMap).length
       ? this.is_post()
         ? translations.length >= 1
-        : !page?.series || page?.seriesInfo?.mappingName
+        : !page?.series || Boolean(page?.seriesInfo?.mappingName)
       : false;
-    let origin =
-      config?.theme_config?.siteOriginLocaleMap?.[targetLanguage] || config.url;
+    let origin = localeMap?.[targetLanguage] || config.url;
     // `url_for` includes the current site's `root` (for example, the GitHub
     // Pages repository path). The locale origin may already include its own
     // root, so only append the page path portion to avoid duplicating it.
@@ -120,20 +164,20 @@ hexo.extend.helper.register("getTranslationPage", function () {
     const originBase = String(origin || "").replace(/\/+$/, "");
     let targetLanguagePath = `${originBase}/${String(pagePath).replace(/^\/+/, "")}`;
     if (page?.seriesInfo?.mappingName) {
-      targetLanguagePath = `${originBase}/series/${page?.seriesInfo?.mappingName}/`;
+      targetLanguagePath = `${originBase}/series/${encodePathSegments(page.seriesInfo.mappingName)}/`;
     }
     if (this.is_category()) {
       if (categoriesInfo?.[page.category]?.mappingName) {
-        targetLanguagePath = `${originBase}/categories/${
-          categoriesInfo?.[page.category]?.mappingName
-        }/`;
+        targetLanguagePath = `${originBase}/categories/${encodePathSegments(
+          categoriesInfo[page.category].mappingName,
+        )}/`;
       } else {
         hasTranslatation = false;
       }
     }
     if (this.is_tag()) {
       if (tagsInfo?.[page.tag]?.mappingName) {
-        targetLanguagePath = `${originBase}/tags/${tagsInfo?.[page.tag]?.mappingName}/`;
+        targetLanguagePath = `${originBase}/tags/${encodePathSegments(tagsInfo[page.tag].mappingName)}/`;
       } else {
         hasTranslatation = false;
       }
@@ -222,6 +266,15 @@ hexo.extend.helper.register("getPostDate", function (post, lang) {
     year = rawDate.year();
     monthIndex = rawDate.month();
     day = rawDate.date();
+  } else if (
+    typeof rawDate === "string" &&
+    /^(\d{4})-(\d{1,2})-(\d{1,2})$/.test(rawDate.trim())
+  ) {
+    const dateParts = rawDate.trim().match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    year = Number(dateParts[1]);
+    monthIndex = Number(dateParts[2]) - 1;
+    day = Number(dateParts[3]);
+    if (monthIndex < 0 || monthIndex > 11 || day < 1 || day > 31) return "";
   } else {
     const parsed = rawDate instanceof Date ? rawDate : new Date(rawDate);
     if (Number.isNaN(parsed.getTime())) return "";
@@ -254,7 +307,10 @@ hexo.extend.helper.register(
       imgSec = 2,
     } = options;
 
-    const safeText = String(text || "");
+    const safeText = decodeHtmlEntities(String(text || "")).replace(
+      /&[a-zA-Z]+;/g,
+      " ",
+    );
     const safeContent = String(content || "");
 
     // Strip Hexo highlight line-number gutter cells before counting code tokens
@@ -298,7 +354,7 @@ hexo.extend.helper.register(
 hexo.extend.helper.register("extractTocFromHtml", function (htmlString) {
   if (!htmlString || typeof htmlString !== "string") return [];
   // Match h2 and h3 headings and capture their id attributes
-  const headingRegex = /<(h2|h3)(?:[^>]*?\sid=(?:"([^"]*)"|'([^']*)'))?[^>]*>([\s\S]*?)<\/\1>/gi;
+  const headingRegex = /<(h2|h3)([^>]*)>([\s\S]*?)<\/\1>/gi;
 
   const toc = [];
   let currentH2 = null;
@@ -306,14 +362,19 @@ hexo.extend.helper.register("extractTocFromHtml", function (htmlString) {
   let match;
   while ((match = headingRegex.exec(htmlString)) !== null) {
     const tag = match[1].toLowerCase(); // h2 or h3
-    const id = match[2] ?? match[3]; // Existing id
-    let content = match[4].trim(); // Extract inner heading content
+    const attrs = match[2] || "";
+    if (/\bclass=(?:"[^"]*\bhidden\b[^"]*"|'[^']*\bhidden\b[^']*')/i.test(attrs)) {
+      continue;
+    }
+    const idMatch = attrs.match(/\sid=(?:"([^"]*)"|'([^']*)')/i);
+    const id = idMatch ? (idMatch[1] ?? idMatch[2]) : undefined;
+    let content = match[3].trim(); // Extract inner heading content
 
     // Strip hidden KaTeX MathML so plain text extraction does not duplicate formulas
     content = content.replace(/<span class="katex-mathml">[\s\S]*?<\/span>/g, "");
 
-    // Strip remaining HTML tags to get plain heading text
-    content = content.replace(/<[^>]*>/g, "");
+    // Strip remaining HTML tags and decode entities to get clean plain heading text
+    content = decodeHtmlEntities(content.replace(/<[^>]*>/g, "")).trim();
 
     if (tag === "h2") {
       // Create a new top-level h2 entry

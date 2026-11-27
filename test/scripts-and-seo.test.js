@@ -150,13 +150,29 @@ describe("SEO, Date Helper, HoverTexts, ImageGrid & Archive Fixes", () => {
       "Line numbers in .gutter must not inflate reading time",
     );
 
-    // extractTocFromHtml supports multiline headings, uppercase tags, and single-quoted ids
+    // extractTocFromHtml supports multiline headings, uppercase tags, single-quoted ids, entity decoding, and skips .hidden
     const toc = hexo._helpers.extractTocFromHtml(
-      "<H2 id='sec-1'>Section\nOne</H2><h3 id=\"sub-1\">Sub</h3>",
+      "<h2 id='to-page-top'>Overview</h2><h2 id='secret' class='hidden'>Skip Me</h2><H2 id='sec-1'>A &lt; B &amp; C\nOne</H2><h3 id=\"sub-1\">Sub</h3>",
     );
-    assert.equal(toc.length, 1);
-    assert.equal(toc[0].id, "sec-1");
-    assert.equal(toc[0].children[0].id, "sub-1");
+    assert.equal(toc.length, 2);
+    assert.equal(toc[0].id, "to-page-top");
+    assert.equal(toc[1].id, "sec-1");
+    assert.equal(toc[1].title, "A < B & C\nOne");
+    assert.equal(toc[1].children[0].id, "sub-1");
+
+    // getTranslationPage reads theme.siteOriginLocaleMap and URL-encodes mappingName
+    const transCtx = {
+      theme: { siteOriginLocaleMap: { en: "https://en.example.com" } },
+      config: { language: "zh-CN", root: "/", url: "https://zh.example.com" },
+      page: { path: "series/用户指南/", series: "用户指南", seriesInfo: { mappingName: "User Guide" } },
+      is_post: () => false,
+      is_category: () => false,
+      is_tag: () => false,
+      url_for: (p) => `/${String(p).replace(/^\/+/, "")}`,
+    };
+    const trans = hexo._helpers.getTranslationPage.call(transCtx);
+    assert.equal(trans.hasTranslatation, true);
+    assert.equal(trans.targetLanguagePath, "https://en.example.com/series/User%20Guide/");
   });
 
   it("getPostDate accepts both post objects and raw date strings/Date values", () => {
@@ -351,6 +367,22 @@ describe("SEO, Date Helper, HoverTexts, ImageGrid & Archive Fixes", () => {
             },
           ],
         },
+        tags: {
+          toArray: () => [
+            {
+              name: "PublicTag",
+              path: "tags/public-tag/",
+              length: 1,
+              posts: [sitePosts[0]],
+            },
+            {
+              name: "HiddenTag",
+              path: "tags/hidden-tag/",
+              length: 1,
+              posts: [sitePosts[1]],
+            },
+          ],
+        },
       },
       list_tags: () => "",
       is_year: () => false,
@@ -362,6 +394,8 @@ describe("SEO, Date Helper, HoverTexts, ImageGrid & Archive Fixes", () => {
     assert.ok(!archiveHtml.includes("Hidden Cat"));
     assert.ok(archiveHtml.includes("Travel"));
     assert.ok(!archiveHtml.includes("Secret"));
+    assert.ok(archiveHtml.includes('href="/tags/public-tag/">PublicTag</a>'));
+    assert.ok(!archiveHtml.includes("HiddenTag"));
   });
 
   it("layout.ejs links noscript.css in <head> independently of lazyload and noscript.css avoids hardcoded #333", () => {
