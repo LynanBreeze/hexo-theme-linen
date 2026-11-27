@@ -347,5 +347,78 @@ describe("scripts/rss.js", () => {
     assert.ok(out.data.includes('src="https://example.com/img/pic.png"'));
     assert.ok(out.data.includes('src="https://example.com/img/day.jpg"'));
     assert.ok(out.data.includes('src="https://example.com/img/night.jpg"'));
+    assert.ok(
+      out.data.includes('</span><br><span class="grid-item"'),
+      "Adjacent grid items should be separated by <br> in RSS",
+    );
+  });
+
+  it("supports follow_challenge, assetDomainMap, Live Photo iframes, shared-link cards, and warm db.json lazyload unwrap", () => {
+    const hexo = createMockHexo({
+      config: {
+        title: "Lynan's Page",
+        url: "https://lynan.cn",
+        root: "/",
+        language: "zh-CN",
+      },
+      themeConfig: {
+        feed: {
+          limit: 10,
+          icon: "https://r2-assets.thelynan.com/favicon.svg",
+          follow_challenge: {
+            feedId: "87515885886472192",
+            userId: "42003325751014400",
+          },
+          assetDomainMap: {
+            "https://lynan.cn": {
+              "https://r2-assets.thelynan.com": "https://r2-assets.lynan.cn",
+            },
+            "https://cn.thelynan.com": {
+              "https://r2-assets.thelynan.com": "https://r2-assets-cn.thelynan.com",
+            },
+          },
+        },
+      },
+    });
+    loadHexoScript("scripts/rss.js", hexo);
+
+    // Simulate a warm db.json cached post (after_post_render did NOT run, only post.content exists with lazyload wrappers)
+    const cachedPost = {
+      source: "_posts/cached.md",
+      path: "cached/",
+      title: "Cached Post",
+      date: new Date("2026-11-26T08:00:00Z"),
+      cover: "https://r2-assets.thelynan.com/u/cover.jpg",
+      content: [
+        '<p><span class="lazyload-outer-wrap" style="width: 100%;"><a class="gallery-item" href="https://r2-assets.thelynan.com/u/p1.jpg"><noscript><img src="https://r2-assets.thelynan.com/u/p1.jpg" alt="P1"></noscript><span class="lazyload-wrap" data-content="abc"><span class="placeholder"></span></span></a></span></p>',
+        '<p><span class="lazyload-outer-wrap" style="width: 100%;"><a class="gallery-item live-photo-gallery-item" data-live-photo-pic-url="https://r2-assets.thelynan.com/u/live.jpg"></a><span class="lazyload-wrap" data-content="xyz"><span class="placeholder"></span></span><noscript>[This iframe content needs to be loaded by JavaScript.]</noscript></span></p>',
+        '<iframe src="/static/live-photo/?picUrl=https%3A%2F%2Fr2-assets.thelynan.com%2Fu%2Flive2.jpg"></iframe>',
+        '<a href="/other-post/"><div class="shared-link"><div class="link-content"><span class="link-title">Related Guide</span><span class="link-desc">Short summary</span></div></div></a>',
+        '<div class="copy-btn"></div><div id="gitalk-initiator"></div>',
+      ].join("\n"),
+    };
+
+    const out = hexo._generators.rss({
+      posts: { sort: () => ({ toArray: () => [cachedPost] }) },
+    });
+
+    assert.ok(out.data.includes("<follow_challenge>"));
+    assert.ok(out.data.includes("<feedId>87515885886472192</feedId>"));
+    assert.ok(out.data.includes("<userId>42003325751014400</userId>"));
+    assert.ok(out.data.includes("<url>https://r2-assets.lynan.cn/favicon.svg</url>"));
+    assert.ok(out.data.includes('url="https://r2-assets.lynan.cn/u/cover.jpg"'));
+    assert.ok(out.data.includes('src="https://r2-assets.lynan.cn/u/p1.jpg"'));
+    assert.ok(out.data.includes('src="https://r2-assets.lynan.cn/u/live.jpg"'));
+    assert.ok(out.data.includes('src="https://r2-assets.lynan.cn/u/live2.jpg"'));
+    assert.ok(!out.data.includes("r2-assets.thelynan.com"), "All asset domains should be rewritten");
+    assert.ok(!out.data.includes("lazyload-outer-wrap"), "Cached lazyload wrappers must be unwrapped");
+    assert.ok(!out.data.includes("copy-btn"));
+    assert.ok(!out.data.includes("gitalk-initiator"));
+    assert.ok(
+      out.data.includes(
+        '<p><a href="https://lynan.cn/other-post/">Related Guide</a><br>Short summary</p>',
+      ),
+      "Shared link cards should be simplified for RSS readers",
+    );
   });
 });

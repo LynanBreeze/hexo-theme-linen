@@ -27,6 +27,33 @@ function escape(value) {
   return str.replace(re, (ch) => map[ch]);
 }
 
+function decodeHtmlAttribute(value) {
+  return String(value || "")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#96;/g, "`")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
+}
+
+function getAttribute(html, name) {
+  const pattern = new RegExp(`\\b${name}\\s*=\\s*(["'])(.*?)\\1`, "i");
+  return html.match(pattern)?.[2] || "";
+}
+
+function stripHtml(value) {
+  return decodeHtmlAttribute(String(value || "").replace(/<[^>]*>/g, "")).trim();
+}
+
+function getClassContent(html, className) {
+  const pattern = new RegExp(
+    `<[^>]*\\bclass\\s*=\\s*(["'])[^"']*\\b${className}\\b[^"']*\\1[^>]*>([\\s\\S]*?)<\\/[^>]+>`,
+    "i",
+  );
+  return stripHtml(html.match(pattern)?.[2] || "");
+}
+
 function toRfc822Date(dateValue) {
   if (!dateValue) return "";
   const d =
@@ -46,6 +73,90 @@ function stripSwitcherLabel(line) {
     return line.slice(delimiterIndex + 1).trim();
   }
   return line;
+}
+
+function resolveDomainReplacements(feedConfig, configUrl) {
+  const rawMap = feedConfig?.assetDomainMap || feedConfig?.asset_domain_map;
+  if (!rawMap || typeof rawMap !== "object") {
+    return [];
+  }
+
+  const normalizedSiteUrl = String(configUrl || "").replace(/\/+$/, "");
+  const entries = Object.entries(rawMap);
+  const hasNestedObjects = entries.some(
+    ([, val]) => val && typeof val === "object" && !Array.isArray(val),
+  );
+
+  let targetMap = null;
+  if (hasNestedObjects) {
+    const matched =
+      rawMap[configUrl] ||
+      rawMap[normalizedSiteUrl] ||
+      rawMap[`${normalizedSiteUrl}/`];
+    if (matched && typeof matched === "object") {
+      targetMap = matched;
+    }
+  } else {
+    targetMap = rawMap;
+  }
+
+  if (!targetMap) return [];
+  return Object.entries(targetMap).filter(
+    ([from, to]) =>
+      typeof from === "string" && from && typeof to === "string" && to,
+  );
+}
+
+function applyDomainReplacements(value, replacements) {
+  let out = String(value || "");
+  if (!out || !replacements || !replacements.length) {
+    return out;
+  }
+  for (const [from, to] of replacements) {
+    out = out.split(from).join(to);
+  }
+  return out;
+}
+
+function replaceLivePhotoIframes(html, baseUrl, replacements) {
+  return String(html || "").replace(/<iframe\b[\s\S]*?<\/iframe>/gi, (iframe) => {
+    const src = decodeHtmlAttribute(getAttribute(iframe, "src"));
+    if (!src.includes("/static/live-photo/")) return iframe;
+
+    let picUrl = "";
+    try {
+      const parsed = new URL(src, baseUrl || "https://example.invalid");
+      picUrl =
+        parsed.searchParams.get("picUrl") ||
+        parsed.searchParams.get("photoSrc") ||
+        "";
+    } catch {
+      return iframe;
+    }
+
+    return picUrl
+      ? `<br><img src="${escape(applyDomainReplacements(picUrl, replacements))}" alt=""><br>`
+      : iframe;
+  });
+}
+
+function replaceSharedLinkCards(html, baseUrl) {
+  return String(html || "").replace(
+    /<a\b[^>]*>(?:(?!<\/a>)[\s\S])*?<div\b[^>]*\bclass\s*=\s*(["'])[^"']*\bshared-link\b[^"']*\1[^>]*>(?:(?!<\/a>)[\s\S])*?<\/a>/gi,
+    (linkCard) => {
+      const href = decodeHtmlAttribute(getAttribute(linkCard, "href"));
+      const title = getClassContent(linkCard, "link-title");
+      const desc = getClassContent(linkCard, "link-desc");
+      if (!href || !title) return linkCard;
+
+      let url = href;
+      try {
+        url = new URL(href, baseUrl).href;
+      } catch {}
+
+      return `<p><a href="${escape(url)}">${escape(title)}</a>${desc ? `<br>${escape(desc)}` : ""}</p>`;
+    },
+  );
 }
 
 const IMAGE_MIME_TYPES = {
@@ -78,47 +189,62 @@ function isHttpUrl(url) {
   return /^https?:\/\//i.test(String(url || ""));
 }
 
-function resolveAssetUrl(rawUrl, siteUrl, root, baseUrl) {
+function resolveAssetUrl(rawUrl, siteUrl, root, baseUrl, replacements) {
   if (rawUrl == null) return "";
   const trimmed = String(rawUrl).trim();
   if (!trimmed) return "";
+
+  let resolved = "";
   if (/^(?:https?:|data:|mailto:|tel:|#)/i.test(trimmed)) {
-    return trimmed;
-  }
-  if (trimmed.startsWith("//")) {
-    return `https:${trimmed}`;
-  }
-  if (trimmed.startsWith("/")) {
+    resolved = trimmed;
+  } else if (trimmed.startsWith("//")) {
+    resolved = `https:${trimmed}`;
+  } else if (trimmed.startsWith("/")) {
     const normalizedRoot = root && root.endsWith("/") ? root : `${root || ""}/`;
     if (normalizedRoot !== "/" && trimmed.startsWith(normalizedRoot)) {
       try {
-        return new URL(trimmed, siteUrl).href;
+        resolved = new URL(trimmed, siteUrl).href;
       } catch {
-        return full_url_for.call(hexo, trimmed);
+        resolved = full_url_for.call(hexo, trimmed);
       }
+    } else {
+      resolved = full_url_for.call(hexo, trimmed);
     }
-    return full_url_for.call(hexo, trimmed);
-  }
-  if (baseUrl) {
+  } else if (baseUrl) {
     try {
-      return new URL(trimmed, baseUrl).href;
+      resolved = new URL(trimmed, baseUrl).href;
     } catch {
-      return full_url_for.call(hexo, trimmed);
+      resolved = full_url_for.call(hexo, trimmed);
     }
+  } else {
+    resolved = full_url_for.call(hexo, trimmed);
   }
-  return full_url_for.call(hexo, trimmed);
+
+  return applyDomainReplacements(resolved, replacements);
 }
 
-function absolutizeImgSrc(html, siteUrl, root, postUrl) {
+function absolutizeImgSrc(html, siteUrl, root, postUrl, replacements) {
   return String(html || "").replace(
     /(<img\b[^>]*?\bsrc=)(?:"([^"]+)"|'([^']+)')/gi,
     (match, prefix, doubleQuoted, singleQuoted) => {
       const rawSrc = doubleQuoted ?? singleQuoted ?? "";
       const decodedSrc = rawSrc.replace(/&amp;/g, "&").trim();
-      if (!decodedSrc || /^(?:https?:|data:)/i.test(decodedSrc)) {
+      if (!decodedSrc || /^data:/i.test(decodedSrc)) {
         return match;
       }
-      const absoluteSrc = resolveAssetUrl(decodedSrc, siteUrl, root, postUrl);
+      if (/^https?:/i.test(decodedSrc)) {
+        const replaced = applyDomainReplacements(decodedSrc, replacements);
+        if (replaced === decodedSrc) return match;
+        const quote = doubleQuoted != null ? '"' : "'";
+        return `${prefix}${quote}${escape(replaced)}${quote}`;
+      }
+      const absoluteSrc = resolveAssetUrl(
+        decodedSrc,
+        siteUrl,
+        root,
+        postUrl,
+        replacements,
+      );
       const quote = doubleQuoted != null ? '"' : "'";
       return `${prefix}${quote}${escape(absoluteSrc)}${quote}`;
     },
@@ -175,6 +301,30 @@ function replaceBalancedSpanByClass(html, classRe, replacer) {
   return cursor === 0 ? html : result + html.slice(cursor);
 }
 
+function unwrapLazyloadWrappers(html, replacements) {
+  if (!html || !html.includes("lazyload-outer-wrap")) return html;
+  return replaceBalancedSpanByClass(
+    html,
+    /\bclass=["'][^"']*\blazyload-outer-wrap\b[^"']*["']/i,
+    (block) => {
+      const livePhotoPic = decodeHtmlAttribute(
+        getAttribute(block, "data-live-photo-pic-url"),
+      );
+      if (livePhotoPic) {
+        return `<br><img src="${escape(applyDomainReplacements(livePhotoPic, replacements))}" alt=""><br>`;
+      }
+      const noscriptMatch = block.match(/<noscript>([\s\S]*?)<\/noscript>/i);
+      if (noscriptMatch) {
+        const inner = noscriptMatch[1].trim();
+        if (/^<(?:img|video)\b/i.test(inner)) {
+          return inner;
+        }
+      }
+      return "";
+    },
+  );
+}
+
 function simplifyKatexForRss(html) {
   if (!html || !html.includes("katex")) return html;
   return replaceBalancedSpanByClass(
@@ -209,8 +359,15 @@ function cleanImgDirectivesForRss(html) {
   });
 }
 
-function sanitizeHtmlForRss(html, siteUrl, root, postUrl) {
+function sanitizeHtmlForRss(html, siteUrl, root, configUrl, postUrl, replacements) {
   let out = String(html || "");
+  out = unwrapLazyloadWrappers(out, replacements);
+  out = out
+    .replace(/<div\s+class=["']copy-btn["']><\/div>/gi, "")
+    .replace(/<div\s+class=["']fold-toggle["']><\/div>/gi, "")
+    .replace(/<div\s+id=["']gitalk-initiator["']><\/div>/gi, "");
+  out = replaceLivePhotoIframes(out, configUrl || siteUrl, replacements);
+  out = replaceSharedLinkCards(out, configUrl || siteUrl);
   out = out.replace(/<iframe[\s\S]*?<\/iframe>/gi, "");
   out = replaceBalancedSpanByClass(
     out,
@@ -221,9 +378,14 @@ function sanitizeHtmlForRss(html, siteUrl, root, postUrl) {
     /(<span\b[^>]*\bclass=["'][^"']*\bgrid-item\b[^"']*["'][^>]*?)\s+aria-hidden=["']true["']/gi,
     "$1",
   );
+  out = out.replace(
+    /<\/span>\s*(?=<span\b[^>]*\bclass=["'][^"']*\bgrid-item\b)/gi,
+    "</span><br>",
+  );
   out = simplifyKatexForRss(out);
   out = cleanImgDirectivesForRss(out);
-  out = absolutizeImgSrc(out, siteUrl, root, postUrl);
+  out = applyDomainReplacements(out, replacements);
+  out = absolutizeImgSrc(out, siteUrl, root, postUrl, replacements);
   return out.trim();
 }
 
@@ -247,7 +409,12 @@ hexo.extend.filter.register(
 
 hexo.extend.generator.register("rss", function (locals) {
   const themeConfig = hexo.theme.config;
-  const limit = themeConfig?.feed?.limit ?? 10;
+  if (themeConfig?.feed === false) return;
+  const feedConfig =
+    themeConfig?.feed && typeof themeConfig.feed === "object"
+      ? themeConfig.feed
+      : {};
+  const limit = feedConfig.limit ?? 10;
   const rawSorted = locals.posts.sort("-date");
   const allPosts =
     typeof rawSorted.toArray === "function"
@@ -268,11 +435,27 @@ hexo.extend.generator.register("rss", function (locals) {
     .slice(0, limit);
   const config = hexo.config;
   const language = config.language || "";
-  const cssUrl = url_for.bind(hexo)(`/linen-theme/css/rss-${language.startsWith("zh") ? "zh" : "en"}.xsl`);
+  const cssUrl = url_for.bind(hexo)(
+    `/linen-theme/css/rss-${language.startsWith("zh") ? "zh" : "en"}.xsl`,
+  );
   const siteUrl = full_url_for.call(hexo, "/");
-  const feedIcon = themeConfig?.feed?.icon
-    ? full_url_for.call(hexo, themeConfig.feed.icon)
+  const replacements = resolveDomainReplacements(feedConfig, config.url);
+  const feedIcon = feedConfig.icon
+    ? applyDomainReplacements(
+        full_url_for.call(hexo, feedConfig.icon),
+        replacements,
+      )
     : "";
+  const followChallenge =
+    feedConfig.follow_challenge || feedConfig.followChallenge;
+  const followChallengeXml =
+    followChallenge?.feedId && followChallenge?.userId
+      ? `
+  <follow_challenge>
+    <feedId>${escape(followChallenge.feedId)}</feedId>
+    <userId>${escape(followChallenge.userId)}</userId>
+  </follow_challenge>`
+      : "";
   const imageXml = feedIcon
     ? `
   <image>
@@ -289,7 +472,7 @@ hexo.extend.generator.register("rss", function (locals) {
   <title>${escape(config.title)}</title>
   <link>${escape(siteUrl)}</link>
   <description>${escape(config.description || "")}</description>
-  <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>${imageXml}
+  <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>${followChallengeXml}${imageXml}
   ${posts
     .map((post) => {
       const postUrl = full_url_for.call(hexo, post.path);
@@ -301,19 +484,41 @@ hexo.extend.generator.register("rss", function (locals) {
         rawThumbnail || rawCover || rawOgImage,
         siteUrl,
         config.root,
+        undefined,
+        replacements,
       );
       const coverUrl = resolveAssetUrl(
         rawCover || rawThumbnail || rawOgImage,
         siteUrl,
         config.root,
+        undefined,
+        replacements,
       );
 
       const snapshotKey = getPostSnapshotKey(post);
-      const snapshotHtml = snapshotKey ? rssSnapshotMap.get(snapshotKey) : undefined;
+      const snapshotHtml = snapshotKey
+        ? rssSnapshotMap.get(snapshotKey)
+        : undefined;
       let rawHtml = "";
 
       if (typeof snapshotHtml === "string") {
-        rawHtml = sanitizeHtmlForRss(snapshotHtml, siteUrl, config.root, postUrl);
+        rawHtml = sanitizeHtmlForRss(
+          snapshotHtml,
+          siteUrl,
+          config.root,
+          config.url,
+          postUrl,
+          replacements,
+        );
+      } else if (typeof post.content === "string" && post.content.trim()) {
+        rawHtml = sanitizeHtmlForRss(
+          post.content,
+          siteUrl,
+          config.root,
+          config.url,
+          postUrl,
+          replacements,
+        );
       } else {
         const postContent = String(post._content || "").replace(
           /:::image-grid(?:\s+([\w-]+))?([\s\S]*?):::/g,
@@ -332,6 +537,7 @@ hexo.extend.generator.register("rss", function (locals) {
                 engine: "markdown",
               })
               .replace(/<p>/g, '<span class="grid-item">')
+              .replace(/<\/p>\s*(?=<p>)/g, "</span><br>")
               .replace(/<\/p>/g, "</span>")}</span>`;
           },
         );
@@ -339,7 +545,14 @@ hexo.extend.generator.register("rss", function (locals) {
           text: postContent,
           engine: "markdown",
         });
-        rawHtml = sanitizeHtmlForRss(renderedFallback, siteUrl, config.root, postUrl);
+        rawHtml = sanitizeHtmlForRss(
+          renderedFallback,
+          siteUrl,
+          config.root,
+          config.url,
+          postUrl,
+          replacements,
+        );
       }
 
       if (isHttpUrl(coverUrl) && !startsWithImageUrl(rawHtml, coverUrl)) {
@@ -380,7 +593,7 @@ hexo.extend.generator.register("rss", function (locals) {
 </rss>`;
 
   return {
-    path: themeConfig?.feed?.path ?? '/feed.xml',
+    path: feedConfig.path ?? "/feed.xml",
     data: feed,
   };
 });
