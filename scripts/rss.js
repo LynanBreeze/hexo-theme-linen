@@ -46,6 +46,92 @@ function stripSwitcherLabel(line) {
   return line;
 }
 
+const IMAGE_MIME_TYPES = {
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".webp": "image/webp",
+  ".gif": "image/gif",
+  ".avif": "image/avif",
+  ".svg": "image/svg+xml",
+  ".bmp": "image/bmp",
+  ".ico": "image/x-icon",
+};
+
+function getImageMimeType(url) {
+  if (!url) return "image/jpeg";
+  try {
+    const pathname = new URL(url).pathname.toLowerCase();
+    const match = pathname.match(/\.[a-z0-9]+$/);
+    if (match && IMAGE_MIME_TYPES[match[0]]) {
+      return IMAGE_MIME_TYPES[match[0]];
+    }
+  } catch {
+    // Fall back to default image MIME type when URL parsing fails.
+  }
+  return "image/jpeg";
+}
+
+function isHttpUrl(url) {
+  return /^https?:\/\//i.test(String(url || ""));
+}
+
+function resolveAssetUrl(rawUrl, siteUrl, root, baseUrl) {
+  if (rawUrl == null) return "";
+  const trimmed = String(rawUrl).trim();
+  if (!trimmed) return "";
+  if (/^(?:https?:|data:|mailto:|tel:|#)/i.test(trimmed)) {
+    return trimmed;
+  }
+  if (trimmed.startsWith("//")) {
+    return `https:${trimmed}`;
+  }
+  if (trimmed.startsWith("/")) {
+    const normalizedRoot = root && root.endsWith("/") ? root : `${root || ""}/`;
+    if (normalizedRoot !== "/" && trimmed.startsWith(normalizedRoot)) {
+      try {
+        return new URL(trimmed, siteUrl).href;
+      } catch {
+        return full_url_for.call(hexo, trimmed);
+      }
+    }
+    return full_url_for.call(hexo, trimmed);
+  }
+  if (baseUrl) {
+    try {
+      return new URL(trimmed, baseUrl).href;
+    } catch {
+      return full_url_for.call(hexo, trimmed);
+    }
+  }
+  return full_url_for.call(hexo, trimmed);
+}
+
+function absolutizeImgSrc(html, siteUrl, root, postUrl) {
+  return String(html || "").replace(
+    /(<img\b[^>]*?\bsrc=)(?:"([^"]+)"|'([^']+)')/gi,
+    (match, prefix, doubleQuoted, singleQuoted) => {
+      const rawSrc = doubleQuoted ?? singleQuoted ?? "";
+      const decodedSrc = rawSrc.replace(/&amp;/g, "&").trim();
+      if (!decodedSrc || /^(?:https?:|data:)/i.test(decodedSrc)) {
+        return match;
+      }
+      const absoluteSrc = resolveAssetUrl(decodedSrc, siteUrl, root, postUrl);
+      const quote = doubleQuoted != null ? '"' : "'";
+      return `${prefix}${quote}${escape(absoluteSrc)}${quote}`;
+    },
+  );
+}
+
+function startsWithImageUrl(html, targetUrl) {
+  const match = String(html || "").match(
+    /^\s*(?:<(?:p|figure|div|a)\b[^>]*>\s*)*<img\b[^>]*\bsrc=(?:"([^"]+)"|'([^']+)')/i,
+  );
+  if (!match) return false;
+  const firstSrc = (match[1] || match[2] || "").replace(/&amp;/g, "&");
+  return firstSrc === targetUrl;
+}
+
 hexo.extend.generator.register("rss", function (locals) {
   const themeConfig = hexo.theme.config;
   const limit = themeConfig?.feed?.limit ?? 10;
@@ -85,7 +171,7 @@ hexo.extend.generator.register("rss", function (locals) {
 
   const feed = `<?xml version="1.0" encoding="UTF-8" ?>
 <?xml-stylesheet type="text/xsl" href="${escape(cssUrl)}"?>
-<rss version="2.0">
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
 <channel>
   <title>${escape(config.title)}</title>
   <link>${escape(siteUrl)}</link>
@@ -93,6 +179,22 @@ hexo.extend.generator.register("rss", function (locals) {
   <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>${imageXml}
   ${posts
     .map((post) => {
+      const postUrl = full_url_for.call(hexo, post.path);
+      const titleText = `${post.title}${post?.subTitle ? `(${post.subTitle})` : ""}`;
+      const rawThumbnail = String(post.thumbnail || "").trim();
+      const rawCover = String(post.cover || "").trim();
+      const rawOgImage = String(post.ogImage || "").trim();
+      const thumbnailUrl = resolveAssetUrl(
+        rawThumbnail || rawCover || rawOgImage,
+        siteUrl,
+        config.root,
+      );
+      const coverUrl = resolveAssetUrl(
+        rawCover || rawThumbnail || rawOgImage,
+        siteUrl,
+        config.root,
+      );
+
       let postContent = String(post._content || "")
         .replace(
           /:::image-grid(?:\s+([\w-]+))?([\s\S]*?):::/g,
@@ -115,25 +217,52 @@ hexo.extend.generator.register("rss", function (locals) {
           },
         )
         .replace(/\s*data-placeholderimg="[^"]*"/g, "");
-      const rawHtml = hexo.render
-        .renderSync({
-          text: postContent,
-          engine: "markdown",
-        })
-        .replace(
-          /<img\b(?![^>]*\bloading=)([^>]*)>/gi,
-          '<img loading="lazy"$1>',
-        )
-        .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
-        .replace(/\]\]>/g, "]]]]><![CDATA[>");
-      const postUrl = full_url_for.call(hexo, post.path);
+      let rawHtml = absolutizeImgSrc(
+        hexo.render
+          .renderSync({
+            text: postContent,
+            engine: "markdown",
+          })
+          .replace(
+            /<img\b(?![^>]*\bloading=)([^>]*)>/gi,
+            '<img loading="lazy"$1>',
+          )
+          .replace(/<iframe[\s\S]*?<\/iframe>/gi, ""),
+        siteUrl,
+        config.root,
+        postUrl,
+      );
+
+      if (isHttpUrl(coverUrl) && !startsWithImageUrl(rawHtml, coverUrl)) {
+        const coverImgHtml = `<p><img src="${escape(coverUrl)}" alt="${escape(titleText)}" /></p>`;
+        rawHtml = rawHtml ? `${coverImgHtml}\n${rawHtml}` : coverImgHtml;
+      }
+
+      rawHtml = rawHtml.replace(/\]\]>/g, "]]]]><![CDATA[>");
+
+      const mediaTags = [];
+      if (isHttpUrl(thumbnailUrl)) {
+        mediaTags.push(`<media:thumbnail url="${escape(thumbnailUrl)}" />`);
+      }
+      if (isHttpUrl(coverUrl)) {
+        const coverMimeType = getImageMimeType(coverUrl);
+        mediaTags.push(
+          `<media:content url="${escape(coverUrl)}" medium="image" type="${coverMimeType}" />`,
+        );
+        mediaTags.push(
+          `<enclosure url="${escape(coverUrl)}" length="0" type="${coverMimeType}" />`,
+        );
+      }
+      const mediaXml = mediaTags.length
+        ? `\n      ${mediaTags.join("\n      ")}`
+        : "";
       const pubDate = toRfc822Date(post.date);
 
       return `
     <item>
-      <title>${escape(`${post.title}${post?.subTitle ? `(${post.subTitle})` : ""}`)}</title>
+      <title>${escape(titleText)}</title>
       <link>${escape(postUrl)}</link>
-      <guid>${escape(postUrl)}</guid>${pubDate ? `\n      <pubDate>${pubDate}</pubDate>` : ""}
+      <guid>${escape(postUrl)}</guid>${pubDate ? `\n      <pubDate>${pubDate}</pubDate>` : ""}${mediaXml}
       <description><![CDATA[${rawHtml}]]></description>
     </item>`;
     })
