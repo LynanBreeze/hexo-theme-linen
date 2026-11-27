@@ -185,7 +185,8 @@ function formatAttributes(str, src, imgsIndex, language) {
         .replace(/\$placeholder=(\S+)=placeholder/gi, "")
         .replace(/\$aspect-ratio=(\S+)=aspect-ratio/gi, "")
         .replace(/(\$)?no-lazy/, "")
-        .replace(/(\$)?no-link/, "");
+        .replace(/(\$)?no-link/, "")
+        .replace(/(?:^|\s+)\$?hide-placeholder\b/gi, "");
     }
     return alt.trim();
   };
@@ -198,6 +199,26 @@ function formatAttributes(str, src, imgsIndex, language) {
     return isLink;
   };
 
+  const getKeepPlaceholder = () => {
+    if (attributesObj["data-keep-placeholder"] === "false") {
+      return false;
+    }
+    if (attributesObj["data-keep-placeholder"] === "true") {
+      return true;
+    }
+    if (
+      /(?:^|\s|["'])\$?hide-placeholder(?=$|\s|["'/>])/i.test(str) ||
+      imgItem?.hidePlaceholder === true ||
+      imgItem?.keepPlaceholder === false
+    ) {
+      return false;
+    }
+    if (imgItem?.keepPlaceholder === true) {
+      return true;
+    }
+    return undefined;
+  };
+
   res["pswp-src"] = imgItem?.originalUrl || attributesObj["pswp-src"] || "";
   res.alt = getAltText();
   res.paddingBottom = getAspectRatio();
@@ -205,6 +226,7 @@ function formatAttributes(str, src, imgsIndex, language) {
   res.placeholderImage = getPlaceholderImage();
   res.placeholderImageStr = getPlaceholderImage(true);
   res.isLink = getIsLink();
+  res.keepPlaceholder = getKeepPlaceholder();
   res.style = styleAttr;
   res.caption = imgItem?.[`caption_${language}`] || imgItem?.caption || "";
   res.exif = imgItem?.exif || "";
@@ -218,9 +240,18 @@ function formatAttributes(str, src, imgsIndex, language) {
   return res;
 }
 
+const stripHidePlaceholderDirective = (input) =>
+  input
+    .replace(/\s+data-keep-placeholder\s*=\s*(?:"[^"]*"|'[^']*'|[\w-]+)/gi, "")
+    .replace(/\s+hide-placeholder\b(?=\s|>|\/)/gi, "")
+    .replace(/(\balt\s*=\s*["'])([^"']*)(["'])/gi, (_, open, altVal, close) => {
+      const cleaned = altVal.replace(/(?:^|\s+)\$?hide-placeholder\b/gi, "").trim();
+      return `${open}${cleaned}${close}`;
+    });
+
 const getformatedStr = (str, attrs, placeholerStyle = "") => {
-  let formatedStr = decodeHexEntity(str);
-  let noScriptElementStr = decodeHexEntity(str)
+  let formatedStr = stripHidePlaceholderDirective(decodeHexEntity(str));
+  let noScriptElementStr = stripHidePlaceholderDirective(decodeHexEntity(str))
     .replace(/\$placeholder=(\S+)=placeholder/gi, "")
     .replace(/\$aspect-ratio=(\S+)=aspect-ratio/gi, "")
     .replace(/(\$)?no-lazy/, "")
@@ -331,12 +362,16 @@ function lazyProcess(htmlContent) {
         ? ` href="${src}" target="_blank" rel="noopener"`
         : "";
       const widthStyle = getInlineWidthStyle(wrapStyle || "");
+      const keepPlaceholderAttr =
+        formatedAttributes.keepPlaceholder !== undefined
+          ? ` data-keep-placeholder="${formatedAttributes.keepPlaceholder}"`
+          : "";
 
       return `<span class="lazyload-outer-wrap" style="width: 100%;"><${itemTag} class="gallery-item"${linkAttrs} ${pswpConfig} ${
         theme === "landscape" ? 'data-fancybox="gallery"' : ""
       } ${widthStyle}><noscript>${noScriptElementStr}</noscript><span class="lazyload-wrap" data-content="${encodeURIComponent(
         formatedStr
-      )}" ${
+      )}"${keepPlaceholderAttr} ${
         wrapStyle ? `style="${wrapStyle}"` : ""
       }><span class="placeholder" ${placeholerStyle}></span></span>${
         formatedAttributes.caption
@@ -432,7 +467,7 @@ module.exports.processPost = function (data) {
 };
 
 function stripNoLazyFromMediaTag(tag) {
-  return tag
+  return stripHidePlaceholderDirective(tag)
     .replace(/\s+no-lazy\b(?=\s|>|\/)/gi, "")
     .replace(/(\balt\s*=\s*["'])([^"']*)(["'])/gi, (_, open, altVal, close) => {
       const cleaned = altVal.replace(/(?:^|\s+)\$?no-lazy\b/gi, "").trim();
@@ -462,12 +497,24 @@ module.exports.processCovers = function (str, data) {
 
         const imgData = imgsIndex.findByUrl(src || "");
         const placeholder = imgData?.placeholder || "";
-        const contentImgStr = appendAttributeToTag(imgStr, "data-placeholderimg", placeholder);
+        const cleanedImgStr = stripHidePlaceholderDirective(imgStr);
+        const contentImgStr = appendAttributeToTag(cleanedImgStr, "data-placeholderimg", placeholder);
         const placeholderStyle = getPlaceholderStyle(placeholder);
+        const keepPlaceholder =
+          imgData?.hidePlaceholder === true ||
+          imgData?.keepPlaceholder === false ||
+          /(?:^|\s|["'])\$?hide-placeholder(?=$|\s|["'/>])/i.test(imgStr) ||
+          /\bdata-keep-placeholder\s*=\s*(?:"false"|'false'|false)\b/i.test(imgStr)
+            ? false
+            : imgData?.keepPlaceholder === true
+              ? true
+              : undefined;
+        const keepPlaceholderAttr =
+          keepPlaceholder !== undefined ? ` data-keep-placeholder="${keepPlaceholder}"` : "";
 
-        return `<div class="cover-img"><noscript>${imgStr}</noscript><span class="lazyload-wrap post-list-cover-lazy" data-content="${encodeURIComponent(
+        return `<div class="cover-img"><noscript>${cleanedImgStr}</noscript><span class="lazyload-wrap post-list-cover-lazy" data-content="${encodeURIComponent(
           contentImgStr
-        )}"><span class="placeholder"${
+        )}"${keepPlaceholderAttr}><span class="placeholder"${
           placeholderStyle ? ` style="${placeholderStyle}"` : ""
         }></span></span></div>`;
       }

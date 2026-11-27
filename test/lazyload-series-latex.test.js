@@ -9,6 +9,7 @@ const ejs = require("ejs");
 const { ROOT_DIR, createMockHexo, loadHexoScript } = require("./helpers/mock-hexo");
 const { getAssetsDbImgsIndex, clearCache } = require("../scripts/lib/site-data");
 const { processPost, processCovers } = require("../scripts/lazyload/process");
+const { buildLazyloadStyles } = require("../scripts/lazyload/assets");
 const latex = require("../scripts/latex");
 
 function renderTemplate(relPath, locals) {
@@ -194,5 +195,73 @@ describe("Series Template, Lazyload Pipeline & LaTeX Config Fixes", () => {
     assert.ok(!clientCode.includes('.replace("iframe>", "iframe>")'));
     assert.ok(clientCode.includes("getSharedObserver"));
     assert.ok(clientCode.includes("width > 0"));
+    assert.ok(clientCode.includes('getAttribute("data-keep-placeholder")'));
+    assert.ok(clientCode.includes("!showTransition || !inViewport"));
+  });
+
+  it("supports per-image hide-placeholder via alt directive, HTML attr, and assets-db, and hides blurhash canvas on load", () => {
+    const tmpBase = fs.mkdtempSync(path.join(os.tmpdir(), "linen-lazy-ph-"));
+    try {
+      const imgsDir = path.join(tmpBase, "assets-db/imgs");
+      fs.mkdirSync(imgsDir, { recursive: true });
+      fs.writeFileSync(
+        path.join(imgsDir, "transparent.json"),
+        JSON.stringify([
+          {
+            url: "https://cdn.example.com/icons/logo.png",
+            width: 400,
+            height: 200,
+            hidePlaceholder: true,
+          },
+        ]),
+      );
+
+      clearCache();
+      const ctx = {
+        base_dir: tmpBase,
+        config: {
+          theme: "linen",
+          language: "zh-CN",
+          theme_config: { photoswipe: true, lazyload: { enable: true } },
+        },
+      };
+
+      const postData = {
+        content: [
+          '<p><img src="/img/alpha.png" alt="透明图 $hide-placeholder"></p>',
+          '<p><img src="/img/beta.png" hide-placeholder alt="Beta"></p>',
+          '<p><img src="/img/gamma.png" data-keep-placeholder="true" alt="Gamma"></p>',
+          '<p><img src="https://cdn.example.com/icons/logo.png" alt="Logo"></p>',
+        ].join("\n"),
+      };
+      processPost.call(ctx, postData);
+
+      // 1. Markdown alt directive
+      assert.ok(postData.content.includes('<span class="caption" >透明图</span>'));
+      assert.ok(!postData.content.includes("$hide-placeholder"));
+      assert.ok(!postData.content.includes("%24hide-placeholder"));
+
+      // 2. HTML attributes & assets-db metadata emit data-keep-placeholder
+      const falseMatches =
+        postData.content.match(/data-keep-placeholder="false"/g) || [];
+      assert.equal(falseMatches.length, 3);
+      assert.ok(postData.content.includes('data-keep-placeholder="true"'));
+      assert.ok(!postData.content.includes("<noscript><img src=\"/img/beta.png\" hide-placeholder"));
+
+      // 3. processCovers also honors assets-db hidePlaceholder
+      const coverHtml = processCovers.call(
+        ctx,
+        '<div class="cover-img"><img src="https://cdn.example.com/icons/logo.png" alt=""></div>',
+        { page: {} },
+      );
+      assert.ok(coverHtml.includes('data-keep-placeholder="false"'));
+
+      // 4. Generated CSS hides blurhash canvas once .placeholder.loaded is applied
+      const css = buildLazyloadStyles(createMockHexo());
+      assert.ok(css.includes(".lazyload-wrap .placeholder.loaded canvas"));
+    } finally {
+      clearCache();
+      fs.rmSync(tmpBase, { recursive: true, force: true });
+    }
   });
 });

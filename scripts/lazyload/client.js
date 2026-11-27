@@ -232,10 +232,14 @@
       var clearPlaceholder = function clearPlaceholder() {
         // Keep the placeholder underneath by default to prevent blank frames or flashes
         // caused by asynchronous GPU decoding and rasterization delays.
+        var attrKeepPlaceholder = element.getAttribute("data-keep-placeholder");
         var keepPlaceholder =
           element.getAttribute("data-hdr-active") === "true" ||
-          !window.$lazyload ||
-          window.$lazyload.keepPlaceholder !== false;
+          (attrKeepPlaceholder === "false"
+            ? false
+            : attrKeepPlaceholder === "true"
+              ? true
+              : !window.$lazyload || window.$lazyload.keepPlaceholder !== false);
         if (!keepPlaceholder) {
           element.children[0].classList.add("loaded");
         }
@@ -274,8 +278,10 @@
           resourceElement.style.opacity = "1";
           resourceElement.classList.add("loaded");
           element.classList.add("loaded");
-          if (!showTransition) {
+          if (!showTransition || !inViewport) {
             clearPlaceholder();
+          } else {
+            setTimeout(clearPlaceholder, 400);
           }
         });
       };

@@ -171,6 +171,9 @@ function buildLazyloadStyles(hexo) {
     background-image: none !important;
     background-color: unset !important;
   }
+  .lazyload-wrap .placeholder.loaded canvas {
+    display: none;
+  }
   .lazyload-wrap.loaded .inner-wrap {
     opacity: 1;
   }
