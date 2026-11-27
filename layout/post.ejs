@@ -80,7 +80,7 @@
   </div>
 </article>
 
-<% if (!page?.series) { %>
+<% if (!page?.series && (page.prev || page.next)) { %>
 <div class="post-nav-wrap">
   <div class="post-nav">
     <% if (page.prev) { %>
@@ -245,6 +245,8 @@ const seriesInfo = getSeriesInfo(page?.series);
 <% } %>
 <% } %>
 
+<%-partial('partials/related-posts')%>
+
 <% if ([theme?.photoswipe ?? config?.theme_config?.photoswipe, page.photoswipe ?? true, /<img|\/static\/live-photo\/|live-photo-gallery-item|data-live-photo-src/.test(page?.content)].every(enable=>enable)) {
   const version = theme.version;
   const hdrAssetsPrefix = page?.hdrAssetsPrefix || '';
@@ -265,5 +267,3 @@ const seriesInfo = getSeriesInfo(page?.series);
   data-use-msrc-placeholder="<%=useMsrcPlaceholder ? 'true' : 'false'%>"
 ></script>
 <% } %>
-
-<%-partial('partials/related-posts')%>

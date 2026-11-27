@@ -15,6 +15,8 @@
     .site-info {
       background-color: $bg;
       padding: 20px 0 0 28px;
+      container-type: inline-size;
+      container-name: site-info;
       &.home {
         padding-top: 35px;
       }
@@ -69,11 +71,14 @@
           font-size: 13px;
           display: flex;
           justify-content: space-between;
-          flex-wrap: wrap;
+          align-items: center;
+          flex-wrap: nowrap;
+          gap: 4px;
           padding-top: 10px;
           border-top: 1px solid $borderSubtle;
           a {
             flex: 0 0 auto;
+            white-space: nowrap;
             color: $darkText;
             transition: color 160ms $easeOut;
             &:hover {
@@ -83,9 +88,18 @@
             }
           }
           .divider {
-            flex: 1 1 auto;
+            flex: 0 0 auto;
             text-align: center;
             color: $grayc;
+            user-select: none;
+          }
+          @container site-info (max-width: 228px) {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(max-content, 1fr);
+            gap: 6px 12px;
+            .divider {
+              display: none;
+            }
           }
         }
         &.about {

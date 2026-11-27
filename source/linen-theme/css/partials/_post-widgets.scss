@@ -173,6 +173,12 @@
       min-height: 0;
     }
   }
+
+  .post-nav-wrap + #giscus-container,
+  .post-nav-wrap + #gitalk-container {
+    margin-top: 0;
+    border-top: none;
+  }
 }
 
 @keyframes giscusSpin {
@@ -455,14 +461,113 @@
   margin-top: 0.2em;
 }
 
-html[lang="en"] {
-  #post {
+html[lang^="en"] {
+  :is(#post, #page) {
     @include sourceSansProFont;
+
+    h1,
+    .post-title {
+      font-size: 2.25rem;
+      line-height: 1.2;
+      letter-spacing: -0.022em;
+    }
+    h2 {
+      font-size: 1.65rem;
+      line-height: 1.28;
+      letter-spacing: -0.016em;
+    }
+    h3 {
+      font-size: 1.35rem;
+      line-height: 1.34;
+      letter-spacing: -0.01em;
+    }
+    h4 {
+      font-size: 1.1875rem;
+      line-height: 1.4;
+    }
+    #page-content {
+      @include sourceSansProFont;
+      font-size: 20px;
+      line-height: 1.66;
+
+      > p {
+        margin-bottom: 1.12em;
+      }
+
+      :not(pre) > code {
+        font-size: 0.8em;
+      }
+
+      blockquote {
+        font-size: 0.95em;
+        line-height: 1.62;
+      }
+    }
+  }
+
+  @media (max-width: 900px) {
+    :is(#post, #page) {
+      h1,
+      .post-title {
+        font-size: 1.9rem;
+        line-height: 1.22;
+      }
+      h2 {
+        font-size: 1.5rem;
+      }
+      h3 {
+        font-size: 1.28rem;
+      }
+      h4 {
+        font-size: 1.125rem;
+      }
+      #page-content {
+        font-size: 19px;
+        line-height: 1.65;
+      }
+    }
+  }
+
+  @media (max-width: 728px) {
+    :is(#post, #page) {
+      h1,
+      .post-title {
+        font-size: 1.75rem;
+      }
+      h2 {
+        font-size: 1.42rem;
+      }
+      h3 {
+        font-size: 1.22rem;
+      }
+      h4 {
+        font-size: 1.1rem;
+      }
+      #page-content {
+        font-size: 18px;
+        line-height: 1.64;
+      }
+    }
+  }
+
+  @media (max-width: 479px) {
+    :is(#post, #page) {
+      h1,
+      .post-title {
+        font-size: clamp(24px, 6.8vw, 28px);
+      }
+      h2 {
+        font-size: clamp(20.5px, 5.6vw, 22.72px);
+      }
+      h3 {
+        font-size: clamp(18.5px, 4.8vw, 19.52px);
+      }
+    }
   }
 }
 
-html[lang="zh-CN"] {
-  #post {
+html[lang^="zh"] {
+  :is(#post, #page) {
     @include sourceSerifFont;
   }
 }
@@ -477,6 +582,11 @@ html[lang="zh-CN"] {
     font-weight: 600;
     color: $darkText;
   }
+}
+
+.post-nav-wrap + #related-posts {
+  margin-top: 0;
+  border-top: none;
 }
 
 #page-donates {

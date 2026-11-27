@@ -1364,8 +1364,9 @@
 .post-nav-wrap {
   margin: 1.5em auto 0 auto;
   box-sizing: border-box;
-  padding: 1.25em $commonPadding 0 $commonPadding;
+  padding: 1.25em $commonPadding;
   border-top: 1px solid $borderSubtle;
+  border-bottom: 1px solid $borderSubtle;
   background-color: $bg;
   .post-nav {
     display: flex;

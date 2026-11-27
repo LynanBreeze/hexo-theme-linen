@@ -45,6 +45,10 @@ describe("Stylesheets & Templates Smoke Tests", () => {
           !res.css.includes("#page-donates{") && !res.css.includes("#giscus-container{"),
           "linen.scss must not bundle post-only widget styles",
         );
+        assert.ok(
+          res.css.includes('html[lang^=en]') && !res.css.includes('html[lang=en]'),
+          "linen.scss should match English language tags with html[lang^=en]",
+        );
       }
       if (rel.endsWith("post.scss")) {
         assert.ok(
@@ -69,6 +73,12 @@ describe("Stylesheets & Templates Smoke Tests", () => {
         assert.ok(
           !res.css.includes(".gt-comment"),
           "post.scss must not bundle Gitalk .gt-comment overrides (loaded on demand with gitalk.css)",
+        );
+        assert.ok(
+          res.css.includes('html[lang^=en]') &&
+            res.css.includes('font-size:20px') &&
+            res.css.includes('font-size:18px'),
+          "post.scss should include optimized English prose typography (20px desktop / 18px mobile) under html[lang^=en]",
         );
       }
       if (rel.endsWith("series.scss")) {

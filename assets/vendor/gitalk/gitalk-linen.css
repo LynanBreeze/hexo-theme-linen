@@ -194,7 +194,7 @@
   text-decoration: underline;
 }
 
-html[lang="zh-CN"] #content-outer.post-outer #gitalk-container .gt-comments .gt-comment-reply::after {
+html[lang^="zh"] #content-outer.post-outer #gitalk-container .gt-comments .gt-comment-reply::after {
   content: "回复";
 }
 
@@ -214,7 +214,7 @@ html[lang="zh-CN"] #content-outer.post-outer #gitalk-container .gt-comments .gt-
   text-decoration: underline;
 }
 
-html[lang="zh-CN"] #content-outer.post-outer #gitalk-container .gt-comments .gt-comment-edit::after {
+html[lang^="zh"] #content-outer.post-outer #gitalk-container .gt-comments .gt-comment-edit::after {
   content: "编辑";
 }
 
@@ -466,19 +466,17 @@ html[lang="zh-CN"] #content-outer.post-outer #gitalk-container .gt-comments .gt-
   color: var(--linen-ink-subtle);
 }
 
-html[lang="en"] .gt-comment-body {
+html[lang^="en"] .gt-comment-body {
   font-family:
     "source-serif",
-    "source han serif cn",
     Georgia,
     "Times New Roman",
-    "Songti SC",
-    "Noto Serif SC",
-    "SimSun",
     serif;
+  font-size: 16.5px;
+  line-height: 1.65;
 }
 
-html[lang="zh-CN"] .gt-comment-body {
+html[lang^="zh"] .gt-comment-body {
   font-family:
     "source-serif",
     "source han serif cn",
