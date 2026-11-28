@@ -132,10 +132,11 @@ describe("Stylesheets & Templates Smoke Tests", () => {
         );
         assert.ok(
           res.css.includes("clamp(112px,28%,140px)") &&
-            res.css.includes(".travel-place-cover{display:block;position:relative;width:100%;height:100%") &&
+            res.css.includes(".travel-place-cover{display:block;position:relative;z-index:0;pointer-events:none;width:100%;height:100%") &&
+            !res.css.includes(".travel-place-title:hover{opacity:") &&
             res.css.includes("padding-top:42.85714286%") &&
             res.css.includes("padding-top:56.25%"),
-          "series.scss should keep 21:9 desktop / 16:9 mobile hero cover and full-height compact card thumbnails",
+          "series.scss should keep 21:9 desktop / 16:9 mobile hero cover, clickable full-height compact card thumbnails, and no stacking-context hover opacity on stretched title link",
         );
       }
       if (rel.endsWith("linkcard.scss")) {
