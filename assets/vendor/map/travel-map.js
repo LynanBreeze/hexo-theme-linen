@@ -310,6 +310,32 @@
       "bottom-right",
     );
 
+    let attributionToggled = false;
+    const collapseAttribution = () => {
+      const attribEl = mapEl.querySelector(".maplibregl-ctrl-attrib");
+      if (!attribEl) return;
+      attribEl.classList.remove("maplibregl-compact-show");
+      attribEl.removeAttribute("open");
+      const btn = attribEl.querySelector(".maplibregl-ctrl-attrib-button");
+      if (btn && btn.hasAttribute("aria-expanded")) {
+        btn.setAttribute("aria-expanded", "false");
+      }
+    };
+    const attribButton = mapEl.querySelector(".maplibregl-ctrl-attrib-button");
+    if (attribButton) {
+      attribButton.addEventListener("click", () => {
+        attributionToggled = true;
+      });
+    }
+    const collapseIfUntoggled = () => {
+      if (!attributionToggled) collapseAttribution();
+    };
+    collapseAttribution();
+    map.on("styledata", collapseIfUntoggled);
+    map.on("sourcedata", collapseIfUntoggled);
+    map.on("terrain", collapseIfUntoggled);
+    map.on("resize", collapseIfUntoggled);
+
     const fallbackTimer = setTimeout(() => {
       if (!styleLoaded) {
         cleanupMapLibre();
@@ -328,6 +354,7 @@
     map.on("style.load", () => {
       styleLoaded = true;
       clearTimeout(fallbackTimer);
+      collapseIfUntoggled();
 
       const labelExpr =
         mapLanguage === "zh"
@@ -400,7 +427,9 @@
         maxZoom: 11,
         duration: 0,
       });
-      map.setMinZoom(Math.max(1, map.getZoom() - 0.5));
+      const minZoom = Math.max(1, map.getZoom() - 0.5);
+      map.setMinZoom(minZoom);
+      map.setZoom(minZoom);
     }
 
     bindCardEvents(markers);

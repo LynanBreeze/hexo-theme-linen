@@ -184,7 +184,7 @@ const travelPlacesJson = encodeURIComponent(
       </div>
       <div class="travel-place-body">
         <a class="travel-place-title" href="<%=place.path%>"><%=place.title%><% if (place.subTitle) { %><span class="sub-title"><%=place.subTitle%></span><% } %></a>
-        <div class="travel-place-meta"><%=place.location%><% if (place.date) { %><span><%=place.date%></span><% } %></div>
+        <div class="travel-place-meta"><span class="travel-place-location"><%=place.location%></span><% if (place.date) { %><span class="travel-place-date"><%=place.date%></span><% } %></div>
         <div class="travel-place-excerpt"><%-place.excerpt%></div>
       </div>
     </article>

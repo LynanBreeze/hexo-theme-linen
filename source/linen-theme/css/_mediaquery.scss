@@ -440,14 +440,11 @@
       padding: 0 14px;
     }
     .travel-place-card {
-      grid-template-columns: 144px minmax(0, 1fr);
-      min-height: 108px;
+      grid-template-columns: clamp(112px, 26%, 132px) minmax(0, 1fr);
+      min-height: 100px;
     }
     .travel-place-cover {
-      width: 144px;
-      height: 100%;
-      aspect-ratio: auto;
-      min-height: 108px;
+      min-height: 100px;
     }
   }
   #top-posts {
@@ -604,14 +601,11 @@
 @media (max-width: 479px) {
   .series-layout {
     .travel-place-card {
-      grid-template-columns: 128px minmax(0, 1fr);
-      min-height: 96px;
+      grid-template-columns: 108px minmax(0, 1fr);
+      min-height: 104px;
     }
     .travel-place-cover {
-      width: 128px;
-      height: 100%;
-      aspect-ratio: auto;
-      min-height: 96px;
+      min-height: 104px;
     }
     .travel-place-index {
       top: 6px;
@@ -635,6 +629,14 @@
       margin-top: 4px;
       font-size: 11.5px;
       line-height: 1.35;
+      .travel-place-location {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .travel-place-date {
+        flex-shrink: 0;
+      }
     }
     .travel-place-excerpt {
       margin-top: 5px;
@@ -647,12 +649,11 @@
 @media (max-width: 350px) {
   .series-layout {
     .travel-place-card {
-      grid-template-columns: 112px minmax(0, 1fr);
-      min-height: 84px;
+      grid-template-columns: 92px minmax(0, 1fr);
+      min-height: 82px;
     }
     .travel-place-cover {
-      width: 112px;
-      min-height: 84px;
+      min-height: 82px;
     }
     .travel-place-body {
       padding: 8px 10px;

@@ -323,6 +323,18 @@ describe("Series Template, Lazyload Pipeline & LaTeX Config Fixes", () => {
       travelMapJs.includes("unbindCardEvents"),
       "travel-map.js should unbind card listeners when falling back from MapLibre to Leaflet",
     );
+    assert.ok(
+      travelMapJs.includes("collapseAttribution") &&
+        travelMapJs.includes('classList.remove("maplibregl-compact-show")') &&
+        travelMapJs.includes('removeAttribute("open")') &&
+        travelMapJs.includes('map.on("sourcedata", collapseIfUntoggled)'),
+      "travel-map.js should collapse MapLibre compact attribution control by default after source metadata loads",
+    );
+    assert.ok(
+      travelMapJs.includes("map.setMinZoom(minZoom)") &&
+        travelMapJs.includes("map.setZoom(minZoom)"),
+      "travel-map.js should default MapLibre initial view to its minimum zoom-out level",
+    );
 
     const postJs = fs.readFileSync(
       path.join(ROOT_DIR, "source/linen-theme/js/post.js"),

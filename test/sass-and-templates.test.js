@@ -116,8 +116,9 @@ describe("Stylesheets & Templates Smoke Tests", () => {
         assert.ok(
           res.css.includes("#toc .toc-item-wrap:not(.active){opacity:.68}") &&
             res.css.includes("text-align:right") &&
-            res.css.includes("padding-top:42.85714286%"),
-          "post.scss should keep right-aligned TOC with >=0.65 inactive opacity and 21:9 hero cover",
+            res.css.includes("padding-top:42.85714286%") &&
+            res.css.includes("padding-top:56.25%"),
+          "post.scss should keep right-aligned TOC with >=0.65 inactive opacity and 21:9 desktop / 16:9 mobile hero cover",
         );
       }
       if (rel.endsWith("series.scss")) {
@@ -130,8 +131,11 @@ describe("Stylesheets & Templates Smoke Tests", () => {
           "series.scss should apply unified active feedback to travel-place-card",
         );
         assert.ok(
-          res.css.includes("aspect-ratio:4/3") && res.css.includes("padding-top:42.85714286%"),
-          "series.scss should keep 21:9 hero cover and 4:3 card thumbnails",
+          res.css.includes("clamp(112px,28%,140px)") &&
+            res.css.includes(".travel-place-cover{display:block;position:relative;width:100%;height:100%") &&
+            res.css.includes("padding-top:42.85714286%") &&
+            res.css.includes("padding-top:56.25%"),
+          "series.scss should keep 21:9 desktop / 16:9 mobile hero cover and full-height compact card thumbnails",
         );
       }
       if (rel.endsWith("linkcard.scss")) {
