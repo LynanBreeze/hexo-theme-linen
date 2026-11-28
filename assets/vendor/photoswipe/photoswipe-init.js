@@ -138,7 +138,10 @@ const getExif = (element) => {
         (hdrAssetsPrefix &&
           element &&
           element.href &&
-          element.href.includes(hdrAssetsPrefix))) &&
+          element.href.includes(hdrAssetsPrefix)) ||
+        (element &&
+          element.href &&
+          element.href.includes("/livePhoto/hdr/"))) &&
       window.hdrEnabled
         ? "HDR"
         : "";
@@ -1166,11 +1169,21 @@ window.addEventListener("message", (event) => {
   }
 
   const targetUrl = normalizeUrl(messageUrl);
+  const altTargetUrl = targetUrl.includes("/hdr/")
+    ? targetUrl.replace("/hdr/", "/sdr/")
+    : targetUrl.includes("/sdr/")
+      ? targetUrl.replace("/sdr/", "/hdr/")
+      : "";
   const target = Array.from(
     document.querySelectorAll("#post a.gallery-item"),
   ).find((element) => {
-    const livePhotoPicUrl = element.dataset.livePhotoPicUrl;
-    return normalizeUrl(livePhotoPicUrl || element.href) === targetUrl;
+    const candidates = [element.dataset.livePhotoPicUrl, element.href]
+      .filter(Boolean)
+      .map(normalizeUrl);
+    return (
+      candidates.includes(targetUrl) ||
+      (altTargetUrl && candidates.includes(altTargetUrl))
+    );
   });
 
   if (target) {

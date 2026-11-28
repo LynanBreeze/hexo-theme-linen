@@ -177,7 +177,7 @@
 
 .pswp-live-photo-video {
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: none;
 }
 
 .pswp-live-photo-wrap.is-playing .pswp-live-photo-video {

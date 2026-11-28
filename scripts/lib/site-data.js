@@ -110,25 +110,28 @@ function getAssetsDbImgs(baseDir, hexoInstance) {
   }
 
   let merged = [];
-  try {
-    const files = fs.readdirSync(dirPath);
-    const jsonFiles = files.filter((file) => file.endsWith(".json"));
-    for (const file of jsonFiles) {
-      const fullPath = path.join(dirPath, file);
-      const content = fs.readFileSync(fullPath, "utf-8");
-      try {
-        const data = JSON.parse(content);
-        if (Array.isArray(data)) {
-          merged = merged.concat(data);
-        } else {
-          console.warn(`[linen] ${file} is not an array, skipping`);
+  const subDirs = [dirPath, path.join(baseDir, "assets-db/livePhotos")];
+  for (const subDir of subDirs) {
+    try {
+      const files = fs.readdirSync(subDir);
+      const jsonFiles = files.filter((file) => file.endsWith(".json"));
+      for (const file of jsonFiles) {
+        const fullPath = path.join(subDir, file);
+        const content = fs.readFileSync(fullPath, "utf-8");
+        try {
+          const data = JSON.parse(content);
+          if (Array.isArray(data)) {
+            merged = merged.concat(data);
+          } else {
+            console.warn(`[linen] ${file} is not an array, skipping`);
+          }
+        } catch (err) {
+          console.error(`❌ JSON parse error in ${file}:`, err);
         }
-      } catch (err) {
-        console.error(`❌ JSON parse error in ${file}:`, err);
       }
+    } catch (error) {
+      // Directory may not exist; skip cleanly
     }
-  } catch (error) {
-    merged = [];
   }
 
   imgsCache.set(dirPath, merged);

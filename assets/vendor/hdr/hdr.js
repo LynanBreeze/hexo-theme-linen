@@ -52,6 +52,51 @@
     if (SDRPath === HDRPath) return;
     var encodedHDRPath = encodeURIComponent(HDRPath);
     var encodedSDRPath = encodeURIComponent(SDRPath);
+    var livePhotoHDR = "/livePhoto/hdr/";
+    var livePhotoSDR = "/livePhoto/sdr/";
+    var encodedLivePhotoHDR = encodeURIComponent(livePhotoHDR);
+    var encodedLivePhotoSDR = encodeURIComponent(livePhotoSDR);
+
+    function swapStr(str, from, to) {
+      if (!str || !from || from === to || !str.includes(from)) return str;
+      return str.split(from).join(to);
+    }
+
+    function swapAssetValue(value, toHDR, isEncoded) {
+      if (!value) return value;
+      var from = toHDR
+        ? isEncoded
+          ? encodedSDRPath
+          : SDRPath
+        : isEncoded
+          ? encodedHDRPath
+          : HDRPath;
+      var to = toHDR
+        ? isEncoded
+          ? encodedHDRPath
+          : HDRPath
+        : isEncoded
+          ? encodedSDRPath
+          : SDRPath;
+      var next = swapStr(value, from, to);
+      if (next !== value) return next;
+      var lpFrom = toHDR
+        ? isEncoded
+          ? encodedLivePhotoSDR
+          : livePhotoSDR
+        : isEncoded
+          ? encodedLivePhotoHDR
+          : livePhotoHDR;
+      var lpTo = toHDR
+        ? isEncoded
+          ? encodedLivePhotoHDR
+          : livePhotoHDR
+        : isEncoded
+          ? encodedLivePhotoSDR
+          : livePhotoSDR;
+      return swapStr(value, lpFrom, lpTo);
+    }
+
     var articleElement = document.querySelector(".article");
     var targetState = !hdrEnabled;
     if (articleElement) {
@@ -59,47 +104,47 @@
       Array.from(lazyloadItems).forEach(function (item) {
         var links = item.querySelectorAll(".gallery-item");
         links.forEach(function (link) {
-          if (targetState) {
-            if (link.href && link.href.includes(SDRPath)) {
-              link.href = link.href.replace(SDRPath, HDRPath);
-            } else {
-              var hrefAttr = link.getAttribute("href");
-              if (hrefAttr && hrefAttr.includes(SDRPath)) {
-                link.setAttribute("href", hrefAttr.replace(SDRPath, HDRPath));
-              }
+          var hrefAttr = link.getAttribute("href");
+          if (hrefAttr) {
+            var nextHref = swapAssetValue(hrefAttr, targetState, false);
+            if (nextHref !== hrefAttr) {
+              link.setAttribute("href", nextHref);
             }
-          } else {
-            if (link.href && link.href.includes(HDRPath)) {
-              link.href = link.href.replace(HDRPath, SDRPath);
-            } else {
-              var hrefAttr = link.getAttribute("href");
-              if (hrefAttr && hrefAttr.includes(HDRPath)) {
-                link.setAttribute("href", hrefAttr.replace(HDRPath, SDRPath));
-              }
+          } else if (link.href) {
+            var nextLinkHref = swapAssetValue(link.href, targetState, false);
+            if (nextLinkHref !== link.href) {
+              link.href = nextLinkHref;
+            }
+          }
+
+          var livePhotoPicUrl = link.getAttribute("data-live-photo-pic-url");
+          if (livePhotoPicUrl) {
+            var nextPicUrl = swapAssetValue(livePhotoPicUrl, targetState, false);
+            if (nextPicUrl !== livePhotoPicUrl) {
+              link.setAttribute("data-live-photo-pic-url", nextPicUrl);
+            }
+          }
+
+          var livePhotoSrc = link.getAttribute("data-live-photo-src");
+          if (livePhotoSrc) {
+            var nextLivePhotoSrc = swapAssetValue(livePhotoSrc, targetState, true);
+            if (nextLivePhotoSrc !== livePhotoSrc) {
+              link.setAttribute("data-live-photo-src", nextLivePhotoSrc);
             }
           }
         });
         var lazyloadItem = item.querySelector(".lazyload-wrap");
         if (!lazyloadItem) return;
         var dcontent = lazyloadItem.getAttribute("data-content") || "";
-        if (targetState) {
-          if (dcontent.includes(encodedSDRPath)) {
-            lazyloadItem.setAttribute(
-              "data-content",
-              dcontent.split(encodedSDRPath).join(encodedHDRPath),
-            );
-          }
-        } else {
-          if (dcontent.includes(encodedHDRPath)) {
-            lazyloadItem.setAttribute(
-              "data-content",
-              dcontent.split(encodedHDRPath).join(encodedSDRPath),
-            );
-          }
+        var nextDcontent = swapAssetValue(dcontent, targetState, true);
+        if (nextDcontent !== dcontent) {
+          lazyloadItem.setAttribute("data-content", nextDcontent);
         }
         var isHDRAsset =
           dcontent.includes(encodedHDRPath) ||
-          dcontent.includes(encodedSDRPath);
+          dcontent.includes(encodedSDRPath) ||
+          dcontent.includes(encodedLivePhotoHDR) ||
+          dcontent.includes(encodedLivePhotoSDR);
         if (isHDRAsset) {
           lazyloadItem.setAttribute(
             "data-hdr-active",
@@ -110,14 +155,21 @@
         }
         var InnerImgs = lazyloadItem.querySelectorAll("img");
         InnerImgs.forEach(function (img) {
-          if (targetState) {
-            if (img.src && img.src.includes(SDRPath)) {
-              img.src = img.src.replace(SDRPath, HDRPath);
+          if (img.src) {
+            var nextImgSrc = swapAssetValue(img.src, targetState, false);
+            if (nextImgSrc !== img.src) {
+              img.src = nextImgSrc;
             }
-          } else {
-            if (img.src && img.src.includes(HDRPath)) {
-              img.src = img.src.replace(HDRPath, SDRPath);
-            }
+          }
+        });
+        var innerIframes = lazyloadItem.querySelectorAll(
+          'iframe[src*="/static/live-photo/"]',
+        );
+        innerIframes.forEach(function (iframe) {
+          var currentIframeSrc = iframe.getAttribute("src") || iframe.src || "";
+          var nextIframeSrc = swapAssetValue(currentIframeSrc, targetState, false);
+          if (nextIframeSrc && nextIframeSrc !== currentIframeSrc) {
+            iframe.setAttribute("src", nextIframeSrc);
           }
         });
       });

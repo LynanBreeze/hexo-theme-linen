@@ -394,7 +394,14 @@ function lazyProcess(htmlContent) {
       if (/no-lazy/gi.test(str)) {
         return str;
       }
-      const formatedAttributes = formatAttributes(str);
+      const rawAttrs = getElemAttributes(str);
+      const livePhotoInfo = enableGallery ? getLivePhotoInfo(src, rawAttrs.style || "") : null;
+      const formatedAttributes = formatAttributes(
+        str,
+        livePhotoInfo ? livePhotoInfo.picUrl : "",
+        imgsIndex,
+        language
+      );
       const wrapStyle = formatedAttributes.style;
       let placeholerStyle = "";
       if (formatedAttributes.paddingBottom || formatedAttributes.placeholderImage) {
@@ -416,8 +423,16 @@ function lazyProcess(htmlContent) {
           : ""
       );
 
-      const livePhotoInfo = enableGallery ? getLivePhotoInfo(src, wrapStyle || "") : null;
       const livePhotoThumbId = livePhotoInfo ? `live-photo-thumb-${livePhotoThumbIndex++}` : "";
+      const livePhotoExifAttr = formatedAttributes.exif
+        ? ` data-pswp-exif="${escapeAttribute(formatedAttributes.exif)}"`
+        : "";
+      const livePhotoLocationAttr = formatedAttributes.location
+        ? ` data-pswp-location="${escapeAttribute(formatedAttributes.location)}"`
+        : "";
+      const livePhotoCaptionHtml = formatedAttributes.caption
+        ? `<span class="pswp-caption-content">${formatedAttributes.caption}</span>`
+        : "";
       const livePhotoGalleryItem = livePhotoInfo
         ? `<a class="gallery-item live-photo-gallery-item" href="${escapeAttribute(
             livePhotoInfo.picUrl
@@ -425,7 +440,7 @@ function lazyProcess(htmlContent) {
             livePhotoInfo.height
           }" data-cropped="true" data-pswp-thumb-id="${livePhotoThumbId}" data-live-photo-src="${encodeURIComponent(src)}" data-live-photo-pic-url="${escapeAttribute(
             livePhotoInfo.picUrl
-          )}" target="_blank" rel="noopener" style="display: none;" aria-hidden="true"></a>`
+          )}"${livePhotoExifAttr}${livePhotoLocationAttr} target="_blank" rel="noopener" style="display: none;" aria-hidden="true">${livePhotoCaptionHtml}</a>`
         : "";
 
       const blurhashAttr = formatedAttributes.blurhash

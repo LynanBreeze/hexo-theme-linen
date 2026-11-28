@@ -169,6 +169,10 @@
   letter-spacing: 0.08em;
 }
 
+.img-exif-specs > .hdr:first-child {
+  margin-left: 0;
+}
+
 .img-exif .exif-location-link {
   display: inline-flex;
   align-items: center;
